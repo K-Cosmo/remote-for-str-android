@@ -2,7 +2,26 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## Unreleased — 0.1.0-rc3
+## 0.1.0 — 2026-09-26
+
+Initial public release candidate after MVP convergence and release hardening:
+
+- STR discovery via `_streborn._tcp` with legacy `_soundtouchstick._tcp` support.
+- Endpoint fallback across STR remote ports 8888 and 17008.
+- Speaker picker, manual host entry and last-speaker persistence.
+- Native Android wrapper around the existing STR phone remote with full-width WebView layout.
+- Android 13+ back handling plus legacy fallback for older supported Android versions.
+- Local-network permission handling/recovery and representative real-device STR control smoke tests.
+- Hardened top-level WebView navigation restricted to the selected speaker host and STR ports.
+- Required STR JavaScript/cleartext LAN access documented explicitly; no JavaScript bridge, tracking, cloud account or runtime AI integration.
+- Independent adaptive/themed STR Remote launcher artwork.
+- Gradle 9.7.1 frozen for the first release; daemon runtime pinned to Java 25 while application Java source/target remains 17.
+- Local lint converged to 0 errors and one informational Gradle-version warning.
+- GitHub Actions independently validates the Wrapper and builds debug/lint/release on Ubuntu/JDK 25.
+- GitHub Actions helper runtimes updated to current Node-24-based action releases before the public release.
+- Final application version promoted from `0.1.0-rc3` / versionCode 6 to `0.1.0` / versionCode 7.
+
+## 0.1.0-rc3
 
 Release-packaging convergence after the green rc2 lint/build pass:
 

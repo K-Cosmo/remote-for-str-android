@@ -1,19 +1,16 @@
 # Planned
 
-## Current step — 0.1.0-rc3 release packaging / BUILD-0005
+## Current step — 0.1.0 final publication / BUILD-0006
 
-Feature work is frozen unless new real-device evidence identifies a release blocker.
+Feature work remains frozen until the first public release is complete.
 
-1. Apply rc3 launcher/daemon packaging convergence.
-2. Ensure the development shell has a Java launcher (`JAVA_HOME`/`PATH`); daemon criteria alone do not bootstrap `gradlew`.
-3. Run `./gradlew --version` and verify Gradle 9.7.1 plus daemon Java 25.
-4. Run `clean :app:assembleDebug :app:lintDebug --stacktrace`; retain lint output.
-5. Run `:app:assembleRelease --stacktrace`.
-6. Visually verify normal and themed launcher icon.
-7. Explicitly verify native back navigation, reconnect, permission denial/recovery and representative STR controls.
-8. Configure release signing without storing signing secrets in the repository.
-9. Build/install/test the exact signed publication artifact.
-10. Converge `/doc`, then tag the final public `0.1.0` release.
+1. Apply the final source promotion to `0.1.0` / versionCode 7.
+2. Run final clean debug + lint + release assembly through the verified Wrapper.
+3. Build the signed APK locally with the private release keystore; do not store signing secrets in Git.
+4. Verify APK signature and SHA-256.
+5. Install and smoke-test that exact signed APK on the real device.
+6. Push the final source commit and require green GitHub CI for the same source.
+7. Converge the final artifact hash/evidence, tag `v0.1.0`, and publish the signed APK as the GitHub Release asset.
 
 ## After 0.1.0
 

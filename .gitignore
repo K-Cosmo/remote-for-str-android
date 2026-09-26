@@ -20,3 +20,5 @@
 # Signing material
 *.jks
 *.keystore
+# Locally generated signed publication artifacts
+/dist/

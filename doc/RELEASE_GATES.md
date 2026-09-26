@@ -5,15 +5,15 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 ## Build/toolchain
 
 - [x] real debug APK build has succeeded with AGP 9.4.1 / Gradle 9.7.1
-- [x] exact working Gradle JVM captured: JetBrains Runtime 25.0.3; daemon uses Android Studio JBR
+- [x] exact working Gradle JVM captured: JetBrains Runtime 25.0.3 on workstation
 - [x] trusted Gradle Wrapper 9.7.1 generated and verified on the development workstation
-- [x] rc2 clean `assembleDebug + lintDebug` succeeds
-- [x] rc2 lint contains 0 errors
-- [x] rc2 `assembleRelease` succeeds from the Wrapper
-- [ ] rc3 `assembleDebug + lintDebug` succeeds after launcher/daemon packaging convergence
-- [ ] rc3 `assembleRelease` succeeds
-- [ ] rc3 daemon criteria resolve to a Java-25 daemon on the development workstation
-- [ ] release signing configuration/process verified without committing private keys/secrets
+- [x] rc3 `assembleDebug + lintDebug` succeeds
+- [x] rc3 lint contains 0 errors
+- [x] rc3 `assembleRelease` succeeds from the Wrapper
+- [x] rc3 daemon criteria resolve to Java 25
+- [x] GitHub Actions independently validates the Wrapper and builds debug/lint/release on Ubuntu with Temurin 25
+- [x] release-signing identity/keystore created outside the repository
+- [ ] exact final `0.1.0` signed APK built and signature verified
 
 ## Real-device core path
 
@@ -23,12 +23,13 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] system-bar layout verified on real device
 - [x] discovery layout/readability verified on real device
 - [x] WebView full-content geometry verified on real device
-- [ ] rc3 adaptive launcher icon visually verified
-- [ ] rc3 themed/monochrome launcher icon visually verified where supported
-- [ ] native back-navigation behavior explicitly verified
-- [ ] reconnect after app restart explicitly verified
-- [ ] permission denial/recovery behavior explicitly verified
-- [ ] normal STR remote controls smoke-tested through the wrapper
+- [x] rc3 adaptive launcher icon visually verified
+- [x] rc3 themed/monochrome launcher icon visually verified where supported
+- [x] native back-navigation behavior explicitly verified
+- [x] reconnect after app restart explicitly verified
+- [x] permission denial/recovery behavior explicitly verified
+- [x] normal STR remote controls smoke-tested through the wrapper
+- [ ] exact final signed `0.1.0` publication APK installed and smoke-tested
 
 ## Product/security/documentation
 
@@ -39,8 +40,7 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] intentional JavaScript/cleartext requirements are documented rather than hidden by a lint baseline
 - [x] independent app branding is used; upstream STR logo is not copied as application identity
 - [x] original AI-generated icon source is retained outside packaged Android resources
-- [ ] security/privacy docs rechecked against the final release artifact/runtime
-- [x] findings/status/changelog converged from the latest real evidence
-- [ ] final release artifact (APK/AAB as applicable) installed/tested from the exact signed output intended for publication
+- [x] security/privacy docs rechecked against the final source/runtime behavior
+- [ ] final release artifact hash/signature recorded with publication evidence
 
-Until all applicable final gates are satisfied, the status remains release candidate rather than ACCEPTED final release.
+Until the exact signed publication artifact passes its install/smoke test, the status remains final release candidate rather than ACCEPTED final release.

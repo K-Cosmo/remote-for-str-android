@@ -116,3 +116,24 @@
 **Evidence:** the wrapper failed in a fresh PowerShell session until `JAVA_HOME`/`PATH` exposed Android Studio JBR; once Java was available, Gradle 9.7.1 reported Launcher JVM 25.0.3 and daemon JBR 25.0.3.  
 **Action:** pin daemon criterion to Java 25 for consistency, but document that CLI wrapper startup still requires a Java executable available through `JAVA_HOME` or `PATH`.  
 **State:** IMPLEMENTED/documented in rc3; daemon selection requires local re-verification.
+
+## F-019 — RC3 packaging and interaction gates converged
+
+**Evidence:** final rc3 local lint/build output and real-device verification supplied 2026-09-26.  
+**Observed:** lint reports 0 errors / 1 informational Gradle-version warning; debug/release assembly succeeds; adaptive/themed icon, native back navigation, reconnect, permission denial/recovery and representative STR controls are verified.  
+**Action:** promote the verified implementation to final `0.1.0` source without behavior changes.  
+**State:** VERIFIED.
+
+## F-020 — Public GitHub CI independently reproduces the build
+
+**Evidence:** public GitHub Actions runs supplied 2026-09-26.  
+**Observed:** Ubuntu 24.04 + Temurin 25 validates the Gradle Wrapper, runs Gradle 9.7.1 with Java-25 daemon criteria, completes debug/lint/release successfully and uploads the debug APK artifact.  
+**Action:** retain CI as an independent release gate.  
+**State:** VERIFIED.
+
+## F-021 — GitHub Actions helper runtime deprecations removed
+
+**Evidence:** first CI run emitted setup-java v4 / Node-20 deprecation warnings; follow-up run after action updates uses current Node-24-based checkout/setup-java/setup-gradle/upload-artifact releases and remains green.  
+**Action:** keep helper-action maintenance separate from application dependencies.  
+**State:** VERIFIED.
+
