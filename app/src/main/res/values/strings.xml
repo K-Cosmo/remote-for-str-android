@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">STR Remote</string>
+    <string name="devices">Devices</string>
+    <string name="searching">Searching for SoundTouch Reborn speakers…</string>
+    <string name="found_devices">Found devices</string>
+    <string name="manual_ip">Enter address manually</string>
+    <string name="manual_title">Connect manually</string>
+    <string name="manual_hint">192.168.1.42 or 192.168.1.42:17008</string>
+    <string name="connect">Connect</string>
+    <string name="cancel">Cancel</string>
+    <string name="connecting_last">Connecting to the last speaker…</string>
+    <string name="connecting_to">Connecting to %1$s…</string>
+    <string name="not_reachable">Speaker found, checking connection…</string>
+    <string name="permission_title">Local network access required</string>
+    <string name="permission_body">STR Remote needs local network access to discover and open the web remote served by your speaker.</string>
+    <string name="grant_permission">Allow local network</string>
+    <string name="discovery_failed">Discovery failed (error %1$d).</string>
+    <string name="manual_invalid">Please enter a valid host name or IP address.</string>
+    <string name="manual_failed">No STR web remote was reachable on ports 8888 or 17008.</string>
+    <string name="page_failed">The STR web remote is currently unreachable.</string>
+    <string name="version_format">STR %1$s</string>
+    <string name="status_connected">%1$s · %2$s:%3$d</string>
+</resources>

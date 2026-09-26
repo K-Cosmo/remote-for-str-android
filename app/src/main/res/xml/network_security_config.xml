@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      STR currently serves the phone remote over plain HTTP on a dynamically
+      assigned LAN address. Dynamic IPs cannot be narrowly enumerated here.
+      The WebView exposes no native JavaScript bridge or file/content access,
+      and top-level navigation is pinned to the selected speaker host on the
+      STR ports 8888/17008.
+    -->
+    <base-config
+        cleartextTrafficPermitted="true"
+        tools:ignore="InsecureBaseConfiguration">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

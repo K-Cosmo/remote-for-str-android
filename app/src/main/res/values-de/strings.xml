@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">STR Remote</string>
+    <string name="devices">Geräte</string>
+    <string name="searching">Suche nach SoundTouch-Reborn-Lautsprechern…</string>
+    <string name="found_devices">Gefundene Geräte</string>
+    <string name="manual_ip">Adresse manuell eingeben</string>
+    <string name="manual_title">Manuell verbinden</string>
+    <string name="manual_hint">192.168.1.42 oder 192.168.1.42:17008</string>
+    <string name="connect">Verbinden</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="connecting_last">Verbinde mit der zuletzt verwendeten Box…</string>
+    <string name="connecting_to">Verbinde mit %1$s…</string>
+    <string name="not_reachable">Box gefunden, Verbindung wird geprüft…</string>
+    <string name="permission_title">Zugriff auf das lokale Netzwerk erforderlich</string>
+    <string name="permission_body">STR Remote benötigt LAN-Zugriff, um deine Box zu finden und die dort bereitgestellte Web-Remote zu öffnen.</string>
+    <string name="grant_permission">Lokales Netzwerk erlauben</string>
+    <string name="discovery_failed">Gerätesuche fehlgeschlagen (Fehler %1$d).</string>
+    <string name="manual_invalid">Bitte einen gültigen Hostnamen oder eine IP-Adresse eingeben.</string>
+    <string name="manual_failed">Auf Port 8888 oder 17008 war keine STR-Web-Remote erreichbar.</string>
+    <string name="page_failed">Die STR-Web-Remote ist momentan nicht erreichbar.</string>
+    <string name="version_format">STR %1$s</string>
+    <string name="status_connected">%1$s · %2$s:%3$d</string>
+</resources>
