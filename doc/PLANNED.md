@@ -1,18 +1,19 @@
 # Planned
 
-## Current step — 0.1.1 Discovery & Network Resilience / BUILD-0007
+## Current step - 0.1.1 release finalization / BUILD-0007
 
-Implementation is complete. The current step is focused build/lint and real-device verification.
+The feature implementation, local build/lint/release assembly and committed-source GitHub CI are green. Current work is release finalization only.
 
-1. Run local documentation consistency check.
-2. Run clean debug build + lint and release assembly.
-3. Verify Wi-Fi-off behavior: no discovery, no indefinite spinner, clear same-Wi-Fi guidance.
-4. Verify no-device timeout after the finite discovery window and the STR prerequisite/help link.
-5. Verify discovered-but-STR-unreachable is distinct from no-device discovery.
-6. Verify normal saved-endpoint/discovery/controls path with the known speaker.
-7. Verify Retry recovers after Wi-Fi is enabled without restarting the app.
-8. Verify local Wi-Fi without Internet is not rejected solely because Internet validation is absent.
-9. Record evidence and converge status/release gates before accepting/publishing 0.1.1.
+1. Commit the release-preparation documentation/tooling snapshot.
+2. Confirm GitHub Actions is green for that exact commit.
+3. Run the signing tool from the clean committed tree.
+4. Record signature verification, post-sign alignment and SHA-256.
+5. Install exactly the signed APK and run the focused final Pixel smoke test.
+6. Create annotated tag `v0.1.1` on the exact source commit used to build the APK.
+7. Publish the APK and matching SHA-256 file in GitHub Releases.
+8. Close BUILD-0007 and publication evidence in a post-release documentation commit.
+
+Do not add further application behavior to 0.1.1 unless a release-blocking defect is found.
 
 ## After 0.1.1
 
@@ -21,4 +22,5 @@ Implementation is complete. The current step is focused build/lint and real-devi
 - evaluate Play/F-Droid/distribution improvements separately from app behavior;
 - add compatibility evidence from additional STR-supported SoundTouch models;
 - evaluate upstream STR authentication changes only when they become available;
+- track the non-blocking WebView destruction/lifecycle warning separately;
 - do not reimplement STR playback/business logic natively without an explicit architecture decision.

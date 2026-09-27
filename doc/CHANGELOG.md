@@ -7,7 +7,6 @@ Only implemented changes belong here. Verification/acceptance state is tracked s
 Discovery and network resilience:
 
 - require an available Wi-Fi transport before saved-endpoint probing, mDNS discovery or manual local probing;
-- track matching Wi-Fi networks with `ConnectivityManager.NetworkCallback` instead of deprecated `allNetworks` enumeration;
 - do not use Internet validation as an STR eligibility criterion;
 - replace indefinite no-Wi-Fi discovery with a stable same-Wi-Fi guidance state and Retry action;
 - stop mDNS discovery after a 10-second discovery window;
@@ -17,6 +16,7 @@ Discovery and network resilience:
 - allow retry after Wi-Fi becomes available without requiring an app restart;
 - keep WebView recovery on the same Wi-Fi-aware connection path;
 - bump application version to `0.1.1` / versionCode 8.
+- release tooling now derives signed artifact names from `versionName` and refuses dirty-tree release builds.
 
 ## 0.1.0 — 2026-09-26
 

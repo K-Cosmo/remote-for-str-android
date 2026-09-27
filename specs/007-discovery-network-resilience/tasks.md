@@ -1,4 +1,4 @@
-# Tasks — 007 Discovery & Network Resilience
+# Tasks - 007 Discovery & Network Resilience
 
 - [x] specify Wi-Fi transport without Internet validation
 - [x] implement Wi-Fi transport precondition
@@ -12,7 +12,12 @@
 - [x] update EN/DE resources
 - [x] bump 0.1.1 / versionCode 8
 - [x] converge implementation docs
-- [ ] clean debug build + lint
-- [ ] release assembly
-- [ ] focused real-device matrix
-- [ ] evidence convergence / acceptance
+- [x] clean debug build + lint
+- [x] release assembly
+- [x] focused Pixel behavior verification for error states / Retry / STR help
+- [x] committed-source GitHub CI
+- [x] BUILD-0007 evidence convergence to release candidate
+- [ ] final release-preparation commit + CI
+- [ ] exact signed APK verification and focused Pixel smoke
+- [ ] tag / GitHub Release
+- [ ] post-release acceptance closeout

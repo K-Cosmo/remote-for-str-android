@@ -63,3 +63,7 @@
 ## D-016 — Wi-Fi transport, not Internet validation, gates local STR discovery
 
 **Decision:** before automatic saved-endpoint probing or mDNS discovery, STR Remote requires an available Android Wi-Fi transport. It must not require `NET_CAPABILITY_VALIDATED` or other proof of Internet reachability because STR is local-LAN functionality. Missing Wi-Fi is a stable user-visible state with Retry, not an endless discovery attempt.
+
+## D-017 — Release APKs are built only from a clean committed source tree
+
+**Decision:** the local release-signing tool derives artifact names from the application `versionName`, records Git HEAD, and refuses to build a release artifact from a dirty working tree. The exact source commit used for the signed APK is the commit later tagged for that release.
