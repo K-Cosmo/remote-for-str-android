@@ -7,6 +7,7 @@ Only implemented changes belong here. Verification/acceptance state is tracked s
 Discovery and network resilience:
 
 - require an available Wi-Fi transport before saved-endpoint probing, mDNS discovery or manual local probing;
+- track matching Wi-Fi networks with `ConnectivityManager.NetworkCallback` instead of deprecated `allNetworks` enumeration;
 - do not use Internet validation as an STR eligibility criterion;
 - replace indefinite no-Wi-Fi discovery with a stable same-Wi-Fi guidance state and Retry action;
 - stop mDNS discovery after a 10-second discovery window;
