@@ -4,7 +4,7 @@ Only implemented changes belong here. Verification/acceptance state is tracked s
 
 ## 0.1.0 — 2026-09-26
 
-Initial public release candidate after MVP convergence and release hardening:
+Initial public release after MVP convergence and release hardening:
 
 - STR discovery via `_streborn._tcp` with legacy `_soundtouchstick._tcp` support.
 - Endpoint fallback across STR remote ports 8888 and 17008.

@@ -1,41 +1,37 @@
 # Status
 
 **Development version:** 0.1.0  
-**Status:** FINAL RELEASE CANDIDATE; signed-publication-artifact verification pending  
+**Latest public release:** 0.1.0  
+**Status:** RELEASED / ACCEPTED  
 **Date:** 2026-09-26
+
+## Accepted 0.1.0 release
+
+The first public STR Remote release is accepted from the verified final source and publication artifact.
+
+- final release source commit: `4583e27deb734a5ac268af0c16939009f76c0d63`;
+- annotated tag `v0.1.0` points to that commit;
+- GitHub Actions is green for the final source commit and the release-tag run;
+- final signed publication artifact: `STR-Remote-0.1.0.apk`;
+- publication APK SHA-256: `5f48f99f604b7d861f305f4fda0b6383188ded6e45dc660d65d66ea68da8a2fe`;
+- GitHub Release publishes the APK and matching SHA-256 file;
+- the exact signed APK installs successfully on the real Android device;
+- Android App Info reports version `0.1.0`;
+- discovery, connection and normal STR control behavior work with the publication APK.
 
 ## Verified product path
 
-Real workstation/device evidence verifies the STR Remote 0.1.0 product path:
-
-- Gradle Wrapper 9.7.1 is generated, committed and independently validated by GitHub Actions;
-- Gradle 9.7.1 runs with Java 25 daemon criteria; workstation uses Android Studio JBR 25 and CI uses Temurin 25;
-- rc3 clean `assembleDebug + lintDebug` succeeds;
-- rc3 lint reports **0 errors and 1 informational Gradle-version warning**;
-- rc3 `assembleRelease` succeeds;
-- GitHub Actions independently completes `assembleDebug`, `lintDebug` and `assembleRelease` on Ubuntu 24.04;
-- the APK installs and starts on a real Android device;
-- STR discovery finds the real speaker and endpoint probing resolves the live STR remote;
+- Gradle Wrapper 9.7.1 is committed and independently validated by GitHub Actions;
+- Gradle 9.7.1 runs with Java 25 daemon criteria;
+- debug assembly, lint and release assembly are green locally and in GitHub Actions;
+- lint is free of blocking errors;
+- STR discovery and endpoint probing resolve the real speaker;
 - the embedded STR web UI loads and normal remote controls work;
-- normal and themed/adaptive launcher icon behavior is verified on the real device;
-- native back navigation is verified;
-- reconnect after app restart is verified;
-- local-network permission denial/recovery is verified.
+- adaptive/themed icon, native back navigation, reconnect and local-network permission recovery are verified;
+- signing material remains outside the repository.
 
-## 0.1.0 finalization
+## Next development step
 
-The final source version is `0.1.0` / versionCode `7`.
+The next planned application build is **BUILD-0007 / 0.1.1 — Discovery & Network Resilience**.
 
-Release signing identity has been created locally and remains outside the repository. No private signing key or password is committed or required by normal CI.
-
-## Remaining final release evidence
-
-Before tagging/publication:
-
-- build the exact `0.1.0` signed release APK from the final source commit;
-- verify the APK signature and SHA-256;
-- install that exact signed APK on the real device and smoke-test discovery/connection/control once;
-- confirm final GitHub CI is green for the same source commit;
-- tag `v0.1.0` and publish the signed APK as the GitHub Release asset.
-
-Feature work remains frozen until the first public release is complete.
+The first scope is error handling around missing Wi-Fi/local-network connectivity, finite discovery, no-device guidance, STR-unreachable guidance and retry without an app restart. No Internet connection is required for STR operation and must not be used as the connectivity criterion.
