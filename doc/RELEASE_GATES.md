@@ -2,7 +2,7 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## 0.1.1 - RELEASE CANDIDATE
+## 0.1.1 - ACCEPTED
 
 ### Build/toolchain
 
@@ -11,8 +11,8 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] lint contains no blocking errors
 - [x] `assembleRelease` succeeds
 - [x] deprecated `ConnectivityManager.allNetworks` warning removed
-- [x] GitHub Actions builds debug/lint/release from committed source `34d64aeb452be4b9d2e30c998e2b57888ff84c95` (run `36324489315`)
-- [ ] GitHub Actions is green for the final release-preparation source commit
+- [x] GitHub Actions builds debug/lint/release from committed feature source `34d64aeb452be4b9d2e30c998e2b57888ff84c95` (run `36324489315`)
+- [x] GitHub Actions is green for the final release source commit `d01b47dd348f0a52d7b81917c60c74c5229e17c4` (run `36325864924`)
 
 ### Discovery/network resilience
 
@@ -23,21 +23,25 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] automatic local networking uses a Wi-Fi `NetworkCallback` without requiring Internet validation
 - [x] no new Android permission or application dependency was added
 - [x] normal app start/WebView path remains operational on the Pixel after the NetworkCallback cleanup
-- [ ] exact signed final APK passes focused Pixel smoke: no-Wi-Fi -> Retry -> normal STR connection/control
-- [ ] exact signed final APK confirms saved-endpoint reconnect after relaunch
-- [ ] exact signed final APK confirms permission recovery and native back navigation remain functional
+- [x] exact signed final APK passes focused Pixel smoke: no-Wi-Fi -> Retry -> normal STR connection/control
+- [x] exact signed final APK confirms saved-endpoint reconnect after relaunch
+- [x] exact signed final APK confirms permission recovery and native back navigation remain functional
 
 ### Signing/publication
 
-- [ ] release build starts from a clean committed working tree
-- [ ] `apksigner verify --verbose --print-certs` succeeds
-- [ ] post-sign `zipalign -c -P 16 -v 4` succeeds
-- [ ] final `STR-Remote-0.1.1.apk` SHA-256 recorded
-- [ ] exact signed `STR-Remote-0.1.1.apk` installed and smoke-tested
-- [ ] annotated tag `v0.1.1` points to the source commit used for the signed artifact
-- [ ] GitHub Release `v0.1.1` publishes that exact APK and matching SHA-256 file
+- [x] release build starts from clean committed source `d01b47dd348f0a52d7b81917c60c74c5229e17c4`
+- [x] `apksigner verify --verbose --print-certs` succeeds
+- [x] signing identity remains `C=DE, CN=STR Remote`
+- [x] signer certificate SHA-256 is `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
+- [x] APK Signature Scheme v2 and v3 verify successfully
+- [x] post-sign `zipalign -c -P 16 -v 4` succeeds
+- [x] final `STR-Remote-0.1.1.apk` SHA-256 recorded: `ecc8f8a78c0b65be5a74a44546275aa9d5688b54b2eacf577f3bbfd20b87a1e8`
+- [x] exact signed `STR-Remote-0.1.1.apk` installed and smoke-tested
+- [x] annotated tag `v0.1.1` points to source commit `d01b47dd348f0a52d7b81917c60c74c5229e17c4`
+- [x] GitHub Release `v0.1.1` publishes that exact APK and matching SHA-256 file
+- [x] GitHub public APK asset digest equals `sha256:ecc8f8a78c0b65be5a74a44546275aa9d5688b54b2eacf577f3bbfd20b87a1e8`
 
-`0.1.1` remains a release candidate until the signed-artifact and publication gates are complete.
+The `0.1.1` release is **ACCEPTED**.
 
 ---
 

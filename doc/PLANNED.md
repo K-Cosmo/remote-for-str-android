@@ -1,25 +1,22 @@
 # Planned
 
-## Current step - 0.1.1 release finalization / BUILD-0007
+## Current step - 0.1.2 maintenance / BUILD-0008
 
-The feature implementation, local build/lint/release assembly and committed-source GitHub CI are green. Current work is release finalization only.
+Evaluate the Gradle 9.8.x line as an isolated maintenance change after the accepted 0.1.1 release.
 
-1. Commit the release-preparation documentation/tooling snapshot.
-2. Confirm GitHub Actions is green for that exact commit.
-3. Run the signing tool from the clean committed tree.
-4. Record signature verification, post-sign alignment and SHA-256.
-5. Install exactly the signed APK and run the focused final Pixel smoke test.
-6. Create annotated tag `v0.1.1` on the exact source commit used to build the APK.
-7. Publish the APK and matching SHA-256 file in GitHub Releases.
-8. Close BUILD-0007 and publication evidence in a post-release documentation commit.
+1. Confirm the current stable Gradle/AGP compatibility matrix.
+2. Change only the Gradle baseline required for the evaluation.
+3. Run the local documentation consistency gate.
+4. Run clean debug build, lint and release assembly.
+5. Compare warnings/behavior with the accepted 0.1.1 baseline.
+6. Keep the upgrade only if the real build evidence is clean and there is a concrete maintenance benefit.
 
-Do not add further application behavior to 0.1.1 unless a release-blocking defect is found.
+Do not combine BUILD-0008 with application features.
 
-## After 0.1.1
+## Later
 
-- evaluate Gradle 9.8.x as a separate maintenance change;
-- consider speaker-picker/favorites polish as a separate feature line;
-- evaluate Play/F-Droid/distribution improvements separately from app behavior;
+- BUILD-0009 / 0.2.0: speaker picker, multi-speaker and favorites polish based on device evidence;
+- BUILD-0010: distribution improvements such as Play/F-Droid evaluation;
 - add compatibility evidence from additional STR-supported SoundTouch models;
 - evaluate upstream STR authentication changes only when they become available;
 - track the non-blocking WebView destruction/lifecycle warning separately;

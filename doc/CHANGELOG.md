@@ -2,7 +2,7 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## Unreleased — 0.1.1
+## 0.1.1 — 2026-09-27
 
 Discovery and network resilience:
 
@@ -16,7 +16,7 @@ Discovery and network resilience:
 - distinguish per-speaker endpoint checking from a completed unreachable probe;
 - allow retry after Wi-Fi becomes available without requiring an app restart;
 - keep WebView recovery on the same Wi-Fi-aware connection path;
-- bump application version to `0.1.1` / versionCode 8.
+- bump application version to `0.1.1` / versionCode 8;
 - release tooling now derives signed artifact names from `versionName` and refuses dirty-tree release builds.
 
 ## 0.1.0 — 2026-09-26

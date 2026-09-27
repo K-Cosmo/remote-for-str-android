@@ -17,7 +17,7 @@
 - [x] focused Pixel behavior verification for error states / Retry / STR help
 - [x] committed-source GitHub CI
 - [x] BUILD-0007 evidence convergence to release candidate
-- [ ] final release-preparation commit + CI
-- [ ] exact signed APK verification and focused Pixel smoke
-- [ ] tag / GitHub Release
-- [ ] post-release acceptance closeout
+- [x] final release-preparation commit + CI
+- [x] exact signed APK verification and focused Pixel smoke
+- [x] tag / GitHub Release
+- [x] post-release acceptance closeout
