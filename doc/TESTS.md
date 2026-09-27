@@ -16,6 +16,21 @@
 
 Documentation-only changes do not require a new Android APK when they do not change application source/resources/build configuration. They require the local documentation consistency gate. GitHub Actions remains an Android build/lint/release-assembly check only.
 
+## BUILD-0007 Discovery & Network Resilience
+
+Required focused cases:
+
+1. Wi-Fi off while mobile data remains available -> do not probe/discover; show no-Wi-Fi state and no indefinite spinner.
+2. No usable Wi-Fi/network -> same stable no-Wi-Fi state.
+3. Wi-Fi present but no STR speaker -> discovery ends after 10 seconds and shows STR prerequisite/help plus Retry/manual-host paths.
+4. Known STR speaker present -> discovery/probe/WebView/control path remains normal.
+5. Saved endpoint plus Wi-Fi unavailable -> no saved-endpoint probe before the no-Wi-Fi state.
+6. Speaker discovered but ports 8888/17008 unreachable -> explicit STR-unreachable state, distinct from no-device discovery.
+7. Enable Wi-Fi after the no-Wi-Fi state and press Retry -> recover without an app restart.
+8. Wi-Fi present without Internet validation -> local STR operation remains eligible.
+9. Manual host entry while Wi-Fi is absent -> same no-Wi-Fi state rather than a pointless probe.
+10. Permission denial/recovery, native back navigation and constrained WebView navigation remain regression checks.
+
 ## Documentation consistency regression checks
 
 - `app/build.gradle.kts` versionName equals `doc/STATUS.md` Development version;
@@ -37,6 +52,10 @@ Documentation-only changes do not require a new Android APK when they do not cha
 ## Regression focus
 
 - speaker discovery
+- Wi-Fi/no-network state
+- finite discovery timeout
+- no-device versus STR-unreachable distinction
+- retry/recovery
 - permission handling
 - endpoint fallback
 - saved endpoint reconnect

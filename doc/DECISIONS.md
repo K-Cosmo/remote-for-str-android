@@ -59,3 +59,7 @@
 ## D-015 — Launcher artwork source is not an Android adaptive-icon layer
 
 **Decision:** retain the approved square AI-generated artwork only as project source material under `/artwork`. Android packaging uses a solid background plus a transparent foreground motif sized within the adaptive-icon safe area, with a separate monochrome layer. Do not package the complete pre-masked square artwork as an adaptive-icon background.
+
+## D-016 — Wi-Fi transport, not Internet validation, gates local STR discovery
+
+**Decision:** before automatic saved-endpoint probing or mDNS discovery, STR Remote requires an available Android Wi-Fi transport. It must not require `NET_CAPABILITY_VALIDATED` or other proof of Internet reachability because STR is local-LAN functionality. Missing Wi-Fi is a stable user-visible state with Retry, not an endless discovery attempt.

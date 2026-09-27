@@ -7,9 +7,15 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Typeface
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
 import android.view.Gravity
@@ -37,16 +43,23 @@ import java.util.LinkedHashMap
 class MainActivity : Activity() {
     private companion object {
         const val PERMISSION_REQUEST = 401
+        const val DISCOVERY_TIMEOUT_MS = 10_000L
+        const val WIFI_CALLBACK_INITIALIZATION_MS = 500L
+        const val STR_WEBSITE = "https://st-reborn.de"
     }
 
     private lateinit var prefs: PreferencesStore
     private lateinit var discovery: StrDiscovery
+    private lateinit var connectivityManager: ConnectivityManager
     private val probe = EndpointProbe()
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private lateinit var statusText: TextView
     private lateinit var discoveryPanel: LinearLayout
     private lateinit var discoveryProgress: ProgressBar
     private lateinit var discoveryMessage: TextView
+    private lateinit var retryButton: Button
+    private lateinit var strHelpButton: Button
     private lateinit var webView: WebView
     private lateinit var adapter: SpeakerAdapter
 
@@ -54,6 +67,46 @@ class MainActivity : Activity() {
     private var currentEndpoint: SpeakerEndpoint? = null
     private var pageVisible = false
     private var initialConnectionAttempted = false
+    private val wifiNetworks = LinkedHashSet<Network>()
+    private var wifiCallbackRegistered = false
+    private var wifiStateInitialized = false
+    private var discoveryActive = false
+    private var discoveryTimedOut = false
+    private var discoveryGeneration = 0
+
+    private val discoveryTimeout = Runnable { handleDiscoveryTimeout() }
+
+    private val wifiInitializationTimeout = Runnable {
+        settleInitialWifiState()
+    }
+
+    private val wifiCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            runOnUiThread {
+                val wasAvailable = hasWifiTransport()
+                wifiNetworks.add(network)
+                settleInitialWifiState()
+
+                if (!wasAvailable && !pageVisible && initialConnectionAttempted) {
+                    setDiscoveryState(
+                        message = getString(R.string.wifi_available_retry),
+                        showProgress = false,
+                        showRetry = true,
+                        showStrHelp = false
+                    )
+                }
+            }
+        }
+
+        override fun onLost(network: Network) {
+            runOnUiThread {
+                wifiNetworks.remove(network)
+                if (wifiStateInitialized && wifiNetworks.isEmpty() && !pageVisible) {
+                    showWifiRequired()
+                }
+            }
+        }
+    }
 
     private val discoveryCallback = object : StrDiscovery.Callback {
         override fun onDiscoveryStarted() = handleDiscoveryStarted()
@@ -69,21 +122,28 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = PreferencesStore(this)
         discovery = StrDiscovery(this, discoveryCallback)
+        connectivityManager = getSystemService(ConnectivityManager::class.java)
         buildUi()
         registerBackCallback()
         configureWebView()
-        ensurePermissionAndStart()
+        registerWifiMonitor()
     }
 
     override fun onResume() {
         super.onResume()
-        if (!initialConnectionAttempted && hasLocalNetworkPermission()) {
+        if (wifiStateInitialized && !initialConnectionAttempted && hasLocalNetworkPermission()) {
             startInitialConnection()
         }
     }
 
     override fun onDestroy() {
-        discovery.stop()
+        mainHandler.removeCallbacks(wifiInitializationTimeout)
+        if (wifiCallbackRegistered) {
+            connectivityManager.unregisterNetworkCallback(wifiCallback)
+            wifiCallbackRegistered = false
+        }
+        stopDiscoverySession()
+        discoveryGeneration++
         probe.shutdown()
         webView.stopLoading()
         webView.destroy()
@@ -125,7 +185,8 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != PERMISSION_REQUEST) return
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-            startInitialConnection()
+            initialConnectionAttempted = false
+            if (wifiStateInitialized) startInitialConnection()
         } else {
             showPermissionRequired()
         }
@@ -220,11 +281,35 @@ class MainActivity : Activity() {
         speakerList.adapter = adapter
         speakerList.setOnItemClickListener { _, _, position, _ ->
             val row = adapter.getItem(position) ?: return@setOnItemClickListener
-            row.endpoint?.let { loadEndpoint(it) } ?: probeCandidate(row.candidate)
+            row.endpoint?.let { loadEndpoint(it) } ?: probeCandidate(row.candidate, discoveryGeneration)
         }
         discoveryPanel.addView(
             speakerList,
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+        )
+
+        retryButton = Button(this).apply {
+            text = getString(R.string.retry)
+            visibility = View.GONE
+            setOnClickListener { retryConnection() }
+        }
+        discoveryPanel.addView(
+            retryButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
+        )
+
+        strHelpButton = Button(this).apply {
+            text = getString(R.string.str_help)
+            visibility = View.GONE
+            setOnClickListener { openStrWebsite() }
+        }
+        discoveryPanel.addView(
+            strHelpButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
         )
 
         val manualButton = Button(this).apply {
@@ -295,12 +380,7 @@ class MainActivity : Activity() {
                 }
 
                 if (scheme == "http" || scheme == "https") {
-                    return try {
-                        startActivity(Intent(Intent.ACTION_VIEW, uri))
-                        true
-                    } catch (_: Exception) {
-                        true
-                    }
+                    return openExternalUri(uri)
                 }
                 return true
             }
@@ -319,12 +399,15 @@ class MainActivity : Activity() {
                 if (request.isForMainFrame) {
                     Toast.makeText(this@MainActivity, R.string.page_failed, Toast.LENGTH_LONG).show()
                     showDiscoveryPanel()
-                    startDiscovery()
+                    if (hasWifiTransport()) {
+                        startDiscovery()
+                    } else {
+                        showWifiRequired()
+                    }
                 }
             }
         }
     }
-
 
     private fun isAllowedSpeakerNavigation(uri: Uri): Boolean {
         if (uri.scheme?.lowercase() != "http") return false
@@ -351,10 +434,14 @@ class MainActivity : Activity() {
     }
 
     private fun showPermissionRequired() {
-        discovery.stop()
+        stopDiscoverySession()
         showDiscoveryPanel()
-        discoveryProgress.visibility = View.GONE
-        discoveryMessage.text = getString(R.string.permission_body)
+        setDiscoveryState(
+            message = getString(R.string.permission_body),
+            showProgress = false,
+            showRetry = false,
+            showStrHelp = false
+        )
 
         AlertDialog.Builder(this)
             .setTitle(R.string.permission_title)
@@ -377,6 +464,12 @@ class MainActivity : Activity() {
     private fun startInitialConnection() {
         if (initialConnectionAttempted) return
         initialConnectionAttempted = true
+
+        if (!hasWifiTransport()) {
+            showWifiRequired()
+            return
+        }
+
         val saved = prefs.loadLastEndpoint()
         if (saved == null) {
             showDiscoveryPanel()
@@ -385,8 +478,12 @@ class MainActivity : Activity() {
         }
 
         showDiscoveryPanel()
-        discoveryProgress.visibility = View.VISIBLE
-        discoveryMessage.text = getString(R.string.connecting_last)
+        setDiscoveryState(
+            message = getString(R.string.connecting_last),
+            showProgress = true,
+            showRetry = false,
+            showStrHelp = false
+        )
         probe.probeHost(
             host = saved.host,
             preferredPort = saved.port,
@@ -397,12 +494,19 @@ class MainActivity : Activity() {
             runOnUiThread {
                 if (endpoint != null) {
                     loadEndpoint(endpoint)
-                } else {
+                } else if (hasWifiTransport()) {
                     showDiscoveryPanel()
                     startDiscovery()
+                } else {
+                    showWifiRequired()
                 }
             }
         }
+    }
+
+    private fun retryConnection() {
+        initialConnectionAttempted = false
+        ensurePermissionAndStart()
     }
 
     private fun startDiscovery() {
@@ -410,11 +514,33 @@ class MainActivity : Activity() {
             showPermissionRequired()
             return
         }
+        if (!hasWifiTransport()) {
+            showWifiRequired()
+            return
+        }
+
+        stopDiscoverySession()
+        discoveryGeneration++
+        discoveryActive = true
+        discoveryTimedOut = false
+
         speakers.clear()
         adapter.replace(emptyList())
-        discoveryMessage.text = getString(R.string.searching)
-        discoveryProgress.visibility = View.VISIBLE
+        setDiscoveryState(
+            message = getString(R.string.searching),
+            showProgress = true,
+            showRetry = false,
+            showStrHelp = false
+        )
+
         discovery.start()
+        mainHandler.postDelayed(discoveryTimeout, DISCOVERY_TIMEOUT_MS)
+    }
+
+    private fun stopDiscoverySession() {
+        mainHandler.removeCallbacks(discoveryTimeout)
+        discoveryActive = false
+        discovery.stop()
     }
 
     private fun hasLocalNetworkPermission(): Boolean {
@@ -422,19 +548,55 @@ class MainActivity : Activity() {
         return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
 
+    private fun registerWifiMonitor() {
+        val request = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .build()
+
+        connectivityManager.registerNetworkCallback(request, wifiCallback)
+        wifiCallbackRegistered = true
+        mainHandler.postDelayed(wifiInitializationTimeout, WIFI_CALLBACK_INITIALIZATION_MS)
+    }
+
+    private fun settleInitialWifiState() {
+        if (wifiStateInitialized) return
+        wifiStateInitialized = true
+        mainHandler.removeCallbacks(wifiInitializationTimeout)
+        ensurePermissionAndStart()
+    }
+
+    private fun hasWifiTransport(): Boolean = wifiNetworks.isNotEmpty()
+
     private fun handleDiscoveryStarted() {
         runOnUiThread {
-            discoveryProgress.visibility = View.VISIBLE
-            discoveryMessage.text = getString(R.string.searching)
+            if (!discoveryActive) return@runOnUiThread
+            setDiscoveryState(
+                message = getString(R.string.searching),
+                showProgress = true,
+                showRetry = false,
+                showStrHelp = false
+            )
         }
     }
 
     private fun handleSpeakerFound(candidate: SpeakerCandidate) {
         runOnUiThread {
+            if (!discoveryActive) return@runOnUiThread
+
             val existing = speakers[candidate.key]
-            speakers[candidate.key] = SpeakerRow(candidate, existing?.endpoint)
+            if (existing?.endpoint != null) {
+                speakers[candidate.key] = existing.copy(candidate = candidate)
+                updateList()
+                return@runOnUiThread
+            }
+
+            speakers[candidate.key] = SpeakerRow(
+                candidate = candidate,
+                endpoint = null,
+                probeFinished = false
+            )
             updateList()
-            probeCandidate(candidate)
+            probeCandidate(candidate, discoveryGeneration)
         }
     }
 
@@ -445,22 +607,80 @@ class MainActivity : Activity() {
 
     private fun handleDiscoveryError(errorCode: Int) {
         runOnUiThread {
-            discoveryProgress.visibility = View.GONE
-            discoveryMessage.text = getString(R.string.discovery_failed, errorCode)
+            mainHandler.removeCallbacks(discoveryTimeout)
+            discoveryActive = false
+            setDiscoveryState(
+                message = getString(R.string.discovery_failed, errorCode),
+                showProgress = false,
+                showRetry = true,
+                showStrHelp = false
+            )
         }
     }
 
-    private fun probeCandidate(candidate: SpeakerCandidate) {
+    private fun handleDiscoveryTimeout() {
+        if (!discoveryActive) return
+
+        discoveryActive = false
+        discoveryTimedOut = true
+        discovery.stop()
+
+        if (!hasWifiTransport()) {
+            showWifiRequired()
+            return
+        }
+
+        when {
+            speakers.isEmpty() -> showNoDevicesFound()
+            speakers.values.any { it.endpoint != null } -> {
+                setDiscoveryState(
+                    message = getString(R.string.found_devices),
+                    showProgress = false,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+            speakers.values.all { it.probeFinished } -> showStrUnreachable()
+            else -> {
+                setDiscoveryState(
+                    message = getString(R.string.checking_discovered),
+                    showProgress = true,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+        }
+    }
+
+    private fun probeCandidate(candidate: SpeakerCandidate, generation: Int) {
+        if (!hasWifiTransport()) {
+            showWifiRequired()
+            return
+        }
+
+        val existing = speakers[candidate.key] ?: SpeakerRow(candidate, null, false)
+        speakers[candidate.key] = existing.copy(candidate = candidate, probeFinished = false)
+        updateList()
+
         probe.probe(candidate) { endpoint ->
             runOnUiThread {
-                val current = speakers[candidate.key] ?: SpeakerRow(candidate, null)
-                speakers[candidate.key] = current.copy(endpoint = endpoint)
+                if (generation != discoveryGeneration) return@runOnUiThread
+
+                val current = speakers[candidate.key] ?: return@runOnUiThread
+                speakers[candidate.key] = current.copy(endpoint = endpoint, probeFinished = true)
                 updateList()
+
                 if (endpoint != null) {
-                    discoveryProgress.visibility = View.GONE
                     if (currentEndpoint == null && prefs.loadLastEndpoint()?.key == candidate.key) {
                         loadEndpoint(endpoint)
                     }
+                } else if (
+                    discoveryTimedOut &&
+                    speakers.values.isNotEmpty() &&
+                    speakers.values.all { it.probeFinished } &&
+                    speakers.values.none { it.endpoint != null }
+                ) {
+                    showStrUnreachable()
                 }
             }
         }
@@ -468,13 +688,100 @@ class MainActivity : Activity() {
 
     private fun updateList() {
         adapter.replace(speakers.values.toList())
-        if (speakers.isNotEmpty()) {
-            discoveryProgress.visibility = View.GONE
-            discoveryMessage.text = getString(R.string.found_devices)
+        if (speakers.isEmpty()) return
+
+        when {
+            speakers.values.any { it.endpoint != null } -> {
+                setDiscoveryState(
+                    message = getString(R.string.found_devices),
+                    showProgress = false,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+            speakers.values.any { !it.probeFinished } -> {
+                setDiscoveryState(
+                    message = getString(R.string.checking_discovered),
+                    showProgress = true,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+            discoveryTimedOut -> showStrUnreachable()
+            else -> {
+                setDiscoveryState(
+                    message = getString(R.string.found_devices),
+                    showProgress = false,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+        }
+    }
+
+    private fun showWifiRequired() {
+        stopDiscoverySession()
+        discoveryGeneration++
+        discoveryTimedOut = false
+        speakers.clear()
+        adapter.replace(emptyList())
+        showDiscoveryPanel()
+        setDiscoveryState(
+            message = getString(R.string.wifi_required),
+            showProgress = false,
+            showRetry = true,
+            showStrHelp = false
+        )
+    }
+
+    private fun showNoDevicesFound() {
+        setDiscoveryState(
+            message = getString(R.string.no_devices_found),
+            showProgress = false,
+            showRetry = true,
+            showStrHelp = true
+        )
+    }
+
+    private fun showStrUnreachable() {
+        setDiscoveryState(
+            message = getString(R.string.str_unreachable),
+            showProgress = false,
+            showRetry = true,
+            showStrHelp = true
+        )
+    }
+
+    private fun setDiscoveryState(
+        message: CharSequence,
+        showProgress: Boolean,
+        showRetry: Boolean,
+        showStrHelp: Boolean
+    ) {
+        discoveryMessage.text = message
+        discoveryProgress.visibility = if (showProgress) View.VISIBLE else View.GONE
+        retryButton.visibility = if (showRetry) View.VISIBLE else View.GONE
+        strHelpButton.visibility = if (showStrHelp) View.VISIBLE else View.GONE
+    }
+
+    private fun openStrWebsite() {
+        openExternalUri(Uri.parse(STR_WEBSITE))
+    }
+
+    private fun openExternalUri(uri: Uri): Boolean {
+        return try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+            true
+        } catch (_: Exception) {
+            true
         }
     }
 
     private fun loadEndpoint(endpoint: SpeakerEndpoint) {
+        stopDiscoverySession()
+        discoveryGeneration++
+        discoveryTimedOut = false
+
         currentEndpoint = endpoint
         prefs.save(endpoint)
         statusText.text = getString(
@@ -483,7 +790,6 @@ class MainActivity : Activity() {
             hostForDisplay(endpoint.host),
             endpoint.port
         )
-        discovery.stop()
         webView.loadUrl(endpoint.baseUrl)
         showWebView()
     }
@@ -503,6 +809,15 @@ class MainActivity : Activity() {
     }
 
     private fun showManualDialog() {
+        if (!hasLocalNetworkPermission()) {
+            showPermissionRequired()
+            return
+        }
+        if (!hasWifiTransport()) {
+            showWifiRequired()
+            return
+        }
+
         val input = EditText(this).apply {
             hint = getString(R.string.manual_hint)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
@@ -513,21 +828,36 @@ class MainActivity : Activity() {
             .setTitle(R.string.manual_title)
             .setView(input)
             .setPositiveButton(R.string.connect) { _, _ ->
+                if (!hasWifiTransport()) {
+                    showWifiRequired()
+                    return@setPositiveButton
+                }
+
                 val parsed = parseManualAddress(input.text?.toString().orEmpty())
                 if (parsed == null) {
                     Toast.makeText(this, R.string.manual_invalid, Toast.LENGTH_LONG).show()
                     return@setPositiveButton
                 }
                 val (host, port) = parsed
-                discoveryProgress.visibility = View.VISIBLE
-                discoveryMessage.text = getString(R.string.connecting_to, host)
+                setDiscoveryState(
+                    message = getString(R.string.connecting_to, host),
+                    showProgress = true,
+                    showRetry = false,
+                    showStrHelp = false
+                )
                 probe.probeHost(host, port, host) { endpoint ->
                     runOnUiThread {
                         if (endpoint != null) {
                             loadEndpoint(endpoint)
+                        } else if (!hasWifiTransport()) {
+                            showWifiRequired()
                         } else {
-                            discoveryProgress.visibility = View.GONE
-                            discoveryMessage.text = getString(R.string.manual_failed)
+                            setDiscoveryState(
+                                message = getString(R.string.manual_failed),
+                                showProgress = false,
+                                showRetry = true,
+                                showStrHelp = true
+                            )
                             Toast.makeText(this, R.string.manual_failed, Toast.LENGTH_LONG).show()
                         }
                     }
@@ -554,7 +884,8 @@ class MainActivity : Activity() {
 
     private data class SpeakerRow(
         val candidate: SpeakerCandidate,
-        val endpoint: SpeakerEndpoint?
+        val endpoint: SpeakerEndpoint?,
+        val probeFinished: Boolean
     )
 
     private inner class SpeakerAdapter : ArrayAdapter<SpeakerRow>(this, android.R.layout.simple_list_item_2) {
@@ -583,7 +914,17 @@ class MainActivity : Activity() {
                 row.candidate.model?.let(::add)
                 add(hostForDisplay(row.candidate.host))
                 row.candidate.version?.let { add(getString(R.string.version_format, it)) }
-                if (row.endpoint == null) add(getString(R.string.not_reachable))
+                if (row.endpoint == null) {
+                    add(
+                        getString(
+                            if (row.probeFinished) {
+                                R.string.str_not_reachable_short
+                            } else {
+                                R.string.checking_connection
+                            }
+                        )
+                    )
+                }
             }
             subtitle.text = details.joinToString(" · ")
             return view

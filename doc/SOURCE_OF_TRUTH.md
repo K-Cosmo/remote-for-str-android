@@ -15,6 +15,7 @@ STR Remote is a thin Android integration layer around the web remote already ser
 7. Endpoint probing accepts STR web ports 8888 and 17008; 8888 is preferred when reachable.
 8. The local network is the current trust boundary.
 9. The native shell owns Android system insets; the embedded STR WebView fills the remaining content rectangle and is not wrapped in product padding.
+10. Automatic STR discovery/probing requires a Wi-Fi transport but never requires validated Internet access. A local-only Wi-Fi connection is a valid STR network.
 
 ## Documentation authority
 

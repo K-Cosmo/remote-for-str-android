@@ -137,3 +137,16 @@
 **Action:** keep helper-action maintenance separate from application dependencies.  
 **State:** VERIFIED.
 
+## F-022 — Discovery spins indefinitely without Wi-Fi and has no no-device terminal state
+
+**Evidence:** real-world observation after the public 0.1.0 release, reported 2026-09-27.  
+**Observed:** when the phone has no Wi-Fi connection, STR Remote still starts the discovery path and leaves the indeterminate spinner running. A normal discovery with no matching STR device also has no finite user-facing terminal state.  
+**Action:** BUILD-0007 gates saved-endpoint probing and mDNS discovery on Wi-Fi transport, adds a finite discovery timeout, separates no-device from STR-endpoint-unreachable states, and provides Retry/STR help. Internet validation is explicitly not required.  
+**State:** IMPLEMENTED in 0.1.1; real-device verification pending.
+
+## F-023 — BUILD-0007 initial Wi-Fi query used deprecated network enumeration
+
+**Evidence:** Android Studio / Gradle build supplied 2026-09-27 reports a Kotlin deprecation warning for `ConnectivityManager.allNetworks` in `MainActivity.hasWifiTransport()`.  
+**Observed:** BUILD-0007 functionally passes the first Pixel smoke tests, but the initial implementation polls all networks synchronously.  
+**Action:** replace polling with a regular Wi-Fi `NetworkCallback`, keep the current matching Wi-Fi networks in app state, unregister the callback on destroy, and retain a short initialization fallback for the no-Wi-Fi case. Do not require Internet validation.  
+**State:** IMPLEMENTED; clean build/lint and Pixel regression verification pending.

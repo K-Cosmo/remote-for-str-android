@@ -2,6 +2,22 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
+## Unreleased — 0.1.1
+
+Discovery and network resilience:
+
+- require an available Wi-Fi transport before saved-endpoint probing, mDNS discovery or manual local probing;
+- track matching Wi-Fi networks with `ConnectivityManager.NetworkCallback` instead of deprecated `allNetworks` enumeration;
+- do not use Internet validation as an STR eligibility criterion;
+- replace indefinite no-Wi-Fi discovery with a stable same-Wi-Fi guidance state and Retry action;
+- stop mDNS discovery after a 10-second discovery window;
+- show STR prerequisite guidance and an upstream `st-reborn.de` link when no STR device is found;
+- distinguish no-device discovery from a discovered speaker whose STR web endpoint is unreachable;
+- distinguish per-speaker endpoint checking from a completed unreachable probe;
+- allow retry after Wi-Fi becomes available without requiring an app restart;
+- keep WebView recovery on the same Wi-Fi-aware connection path;
+- bump application version to `0.1.1` / versionCode 8.
+
 ## 0.1.0 — 2026-09-26
 
 Initial public release after MVP convergence and release hardening:
@@ -39,7 +55,7 @@ Release-hardening changes driven by the first full lint/toolchain evidence pass:
 
 - Captured the verified local toolchain: Gradle 9.7.1 on JetBrains Runtime 25.0.3 using the Android Studio JBR.
 - Recorded successful Gradle Wrapper generation and rc1 `assembleRelease` evidence.
-- Added a narrowly scoped `GestureBackNavigation` lint suppression to the legacy Android 12L-and-earlier fallback; modern devices continue to use `OnBackInvokedDispatcher`.
+- Added a narrowly scoped `GestureBackNavigation` lint suppression to the legacy Android 12L-and-earlier `onBackPressed()` fallback; modern devices continue to use `OnBackInvokedDispatcher`.
 - Removed the obsolete `SDK_INT >= 26` Safe Browsing check because minSdk is already 26.
 - Kept required STR JavaScript and cleartext LAN access with explicit local lint documentation instead of a global lint baseline.
 - Hardened top-level WebView navigation so only the selected speaker host on ports 8888/17008 stays inside the app.

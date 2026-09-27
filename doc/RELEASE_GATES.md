@@ -2,6 +2,40 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.1.1 — BUILD-0007 verification
+
+### Build/toolchain
+
+- [ ] local documentation consistency gate passes
+- [ ] clean `assembleDebug + lintDebug` succeeds
+- [ ] lint contains no blocking errors
+- [ ] `assembleRelease` succeeds
+- [ ] GitHub Actions builds debug/lint/release from the committed 0.1.1 source
+
+### Discovery/network resilience
+
+- [ ] Wi-Fi unavailable: no endpoint probe/discovery starts and no indefinite spinner remains
+- [ ] Wi-Fi unavailable: same-Wi-Fi guidance and Retry are visible
+- [ ] local Wi-Fi without Internet is accepted; Internet validation is not required
+- [ ] no STR device: discovery stops after the finite timeout and shows STR prerequisite/help
+- [ ] discovered speaker with unreachable STR endpoint shows a distinct unreachable state
+- [ ] Retry works after Wi-Fi becomes available without an app restart
+- [ ] manual host path respects the same Wi-Fi precondition
+- [ ] normal known-speaker discovery/connection/control path remains functional
+- [ ] saved-endpoint reconnect remains functional when Wi-Fi is available
+
+### Regression/security
+
+- [ ] local-network permission denial/recovery remains functional
+- [ ] WebView top-level navigation restrictions remain unchanged
+- [ ] native back navigation remains functional
+- [ ] no new application dependency or permission added
+- [ ] German and English states render correctly
+
+`0.1.1` remains IMPLEMENTED/verification-pending until all applicable gates pass.
+
+---
+
 ## 0.1.0 — ACCEPTED
 
 ### Build/toolchain
@@ -43,4 +77,4 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] annotated `v0.1.0` tag points to final source commit `4583e27deb734a5ac268af0c16939009f76c0d63`
 - [x] GitHub Release `v0.1.0` publishes the signed APK and SHA-256 file
 
-The `0.1.0` release is **ACCEPTED**. New development starts from a new work item/release line and must establish its own applicable release gates.
+The `0.1.0` release is **ACCEPTED**.

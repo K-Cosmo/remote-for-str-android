@@ -1,37 +1,40 @@
 # Status
 
-**Development version:** 0.1.0  
+**Development version:** 0.1.1  
 **Latest public release:** 0.1.0  
-**Status:** RELEASED / ACCEPTED  
-**Date:** 2026-09-26
+**Status:** IMPLEMENTED — BUILD-0007 real-device verification pending  
+**Date:** 2026-09-27
 
-## Accepted 0.1.0 release
+## Accepted public release
 
-The first public STR Remote release is accepted from the verified final source and publication artifact.
+`0.1.0` remains the latest accepted/public release. Its source, signed artifact, hash and real-device evidence remain unchanged.
 
-- final release source commit: `4583e27deb734a5ac268af0c16939009f76c0d63`;
-- annotated tag `v0.1.0` points to that commit;
-- GitHub Actions is green for the final source commit and the release-tag run;
-- final signed publication artifact: `STR-Remote-0.1.0.apk`;
-- publication APK SHA-256: `5f48f99f604b7d861f305f4fda0b6383188ded6e45dc660d65d66ea68da8a2fe`;
-- GitHub Release publishes the APK and matching SHA-256 file;
-- the exact signed APK installs successfully on the real Android device;
-- Android App Info reports version `0.1.0`;
-- discovery, connection and normal STR control behavior work with the publication APK.
+## BUILD-0007 / 0.1.1 implementation
 
-## Verified product path
+Discovery & Network Resilience is implemented for verification:
 
-- Gradle Wrapper 9.7.1 is committed and independently validated by GitHub Actions;
-- Gradle 9.7.1 runs with Java 25 daemon criteria;
-- debug assembly, lint and release assembly are green locally and in GitHub Actions;
-- lint is free of blocking errors;
-- STR discovery and endpoint probing resolve the real speaker;
-- the embedded STR web UI loads and normal remote controls work;
-- adaptive/themed icon, native back navigation, reconnect and local-network permission recovery are verified;
-- signing material remains outside the repository.
+- local probing/discovery starts only when a Wi-Fi transport is present;
+- Wi-Fi presence is tracked with `ConnectivityManager.NetworkCallback` rather than deprecated network enumeration;
+- Wi-Fi presence is detected independently of Internet validation, so local-only Wi-Fi remains valid;
+- missing Wi-Fi produces a stable explanatory state instead of an endless discovery spinner;
+- discovery is finite and stops after 10 seconds;
+- no-device timeout explains the STR prerequisite and provides retry plus the upstream STR website;
+- a discovered speaker whose STR endpoint cannot be reached is reported separately from no-device discovery;
+- retry can re-enter the saved-endpoint/discovery path without restarting the app;
+- manual host probing and WebView recovery use the same Wi-Fi precondition;
+- per-row endpoint state distinguishes "checking" from "STR web remote not reachable".
 
-## Next development step
+Application version is `0.1.1` / versionCode `8`.
 
-The next planned application build is **BUILD-0007 / 0.1.1 — Discovery & Network Resilience**.
+## Required verification before acceptance
 
-The first scope is error handling around missing Wi-Fi/local-network connectivity, finite discovery, no-device guidance, STR-unreachable guidance and retry without an app restart. No Internet connection is required for STR operation and must not be used as the connectivity criterion.
+- clean debug build + lint;
+- release assembly;
+- real device: Wi-Fi off / mobile data on -> no scan and no spinner;
+- real device: no network / airplane-mode equivalent -> same stable no-Wi-Fi state;
+- Wi-Fi with no STR speaker -> finite timeout and STR guidance;
+- Wi-Fi with the known STR speaker -> normal discovery/connection/control path;
+- saved endpoint with Wi-Fi unavailable -> no pointless endpoint probe;
+- discovered speaker with unreachable STR ports -> explicit STR-unreachable state;
+- enable Wi-Fi and use Retry -> successful recovery without app restart;
+- confirm Wi-Fi without Internet is not rejected solely for lacking Internet validation.

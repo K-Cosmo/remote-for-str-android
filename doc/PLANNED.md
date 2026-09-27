@@ -2,16 +2,17 @@
 
 ## Current step — 0.1.1 Discovery & Network Resilience / BUILD-0007
 
-The 0.1.0 release is complete. The next application change is a focused robustness build for the discovery/connection state machine.
+Implementation is complete. The current step is focused build/lint and real-device verification.
 
-1. Detect whether a usable Wi-Fi/local-network transport is present before probing a saved endpoint or starting mDNS discovery.
-2. When Wi-Fi is unavailable, do not start discovery and do not leave an indeterminate spinner running; show a clear same-Wi-Fi requirement and retry action.
-3. Keep Internet validation out of the decision: STR is local-LAN functionality and must work on Wi-Fi without Internet access.
-4. Give discovery a finite timeout and stop the scan when no STR device is found.
-5. On timeout, explain that SoundTouch Reborn must already be installed/running and provide an upstream STR link plus retry/manual-host paths.
-6. Distinguish "no STR device discovered" from "speaker discovered but STR endpoint not reachable".
-7. Allow retry after Wi-Fi becomes available without requiring an app restart.
-8. Verify the focused real-device matrix and converge `/doc` evidence before acceptance.
+1. Run local documentation consistency check.
+2. Run clean debug build + lint and release assembly.
+3. Verify Wi-Fi-off behavior: no discovery, no indefinite spinner, clear same-Wi-Fi guidance.
+4. Verify no-device timeout after the finite discovery window and the STR prerequisite/help link.
+5. Verify discovered-but-STR-unreachable is distinct from no-device discovery.
+6. Verify normal saved-endpoint/discovery/controls path with the known speaker.
+7. Verify Retry recovers after Wi-Fi is enabled without restarting the app.
+8. Verify local Wi-Fi without Internet is not rejected solely because Internet validation is absent.
+9. Record evidence and converge status/release gates before accepting/publishing 0.1.1.
 
 ## After 0.1.1
 

@@ -11,7 +11,7 @@
 | STR-004 | GitHub release signing/publication pipeline | P0 | ACCEPTED in 0.1.0 |
 | STR-010 | Verify restart reconnect/back/permission/control smoke tests | P0 | ACCEPTED in 0.1.0 |
 | STR-011 | Public GitHub README/repository presentation | P1 | ACCEPTED; simplified post-release |
-| STR-013 | Discovery/network resilience: no-Wi-Fi, timeout, no-device/STR-unreachable guidance, retry | P0 | PLANNED — BUILD-0007 / 0.1.1 |
+| STR-013 | Discovery/network resilience: no-Wi-Fi, timeout, no-device/STR-unreachable guidance, retry | P0 | IMPLEMENTED — BUILD-0007 / 0.1.1 verification pending |
 | STR-005 | Further native speaker-picker/favorites polish based on device evidence | P2 | POST-0.1.1 |
 | STR-012 | Additional SoundTouch model compatibility evidence | P2 | BACKLOG |
 | STR-006 | Evaluate STR authentication changes when upstream provides them | P2 | BACKLOG |
