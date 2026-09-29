@@ -67,3 +67,7 @@
 ## D-017 — Release APKs are built only from a clean committed source tree
 
 **Decision:** the local release-signing tool derives artifact names from the application `versionName`, records Git HEAD, and refuses to build a release artifact from a dirty working tree. The exact source commit used for the signed APK is the commit later tagged for that release.
+
+## D-018 — Keep Gradle 9.7.1 for the 0.2.0 feature line
+
+**Decision:** do not upgrade from the accepted Gradle 9.7.1 baseline to Gradle 9.8.x solely because 9.8 is newer. AGP 9.4.x requires Gradle 9.6.0 or newer, and the project already has green local/CI evidence on 9.7.1. Reassess the Gradle line after 0.2.0 or earlier only when a concrete compatibility, build-fix or feature requirement justifies the change. Build-tool maintenance stays isolated from application feature work.
