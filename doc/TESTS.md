@@ -2,52 +2,93 @@
 
 ## Minimum maintenance gate
 
-1. run `tools/verify-doc-consistency.ps1`
-2. `gradle -version`
-3. `gradle :app:assembleDebug :app:lintDebug --stacktrace`
-4. install resulting debug APK on a real supported Android device when runtime behavior changed
-5. grant/deny local-network permission and verify both flows when permission/discovery behavior changed
-6. verify discovery of a real STR speaker when discovery behavior changed
-7. verify 8888/17008 endpoint resolution against the real speaker when endpoint behavior changed
-8. verify WebView loads and normal STR controls work when wrapper/runtime behavior changed
-9. relaunch app and verify last-speaker reconnect when connection behavior changed
-10. verify native back navigation when navigation behavior changed
-11. collect applicable build output, focused Logcat and screenshots into `doc/evidence/qa/`
+For every change:
 
-Documentation-only changes do not require a new Android APK when they do not change application source/resources/build configuration. They require the local documentation consistency gate. GitHub Actions remains an Android build/lint/release-assembly check only.
+1. run the documentation consistency gate;
+2. run `git diff --check`;
+3. select additional Android/runtime gates according to the changed scope.
 
-## BUILD-0007 Discovery & Network Resilience
+Windows PowerShell:
 
-Required focused cases:
+```powershell
+.\tools\verify-doc-consistency.ps1 -ProjectRoot .
+git diff --check
+```
 
-1. Wi-Fi off while mobile data remains available -> do not probe/discover; show no-Wi-Fi state and no indefinite spinner.
-2. No usable Wi-Fi/network -> same stable no-Wi-Fi state.
-3. Wi-Fi present but no STR speaker -> discovery ends after 10 seconds and shows STR prerequisite/help plus Retry/manual-host paths.
-4. Known STR speaker present -> discovery/probe/WebView/control path remains normal.
-5. Saved endpoint plus Wi-Fi unavailable -> no saved-endpoint probe before the no-Wi-Fi state.
-6. Speaker discovered but ports 8888/17008 unreachable -> explicit STR-unreachable state, distinct from no-device discovery.
-7. Enable Wi-Fi after the no-Wi-Fi state and press Retry -> recover without an app restart.
-8. Wi-Fi present without Internet validation -> local STR operation remains eligible.
-9. Manual host entry while Wi-Fi is absent -> same no-Wi-Fi state rather than a pointless probe.
-10. Permission denial/recovery, native back navigation and constrained WebView navigation remain regression checks.
+When application source/resources/build configuration changed:
 
-## BUILD-0009 Speaker Management / Rooms
+```powershell
+.\gradlew.bat --version
+.\gradlew.bat clean :app:assembleDebug :app:lintDebug :app:assembleRelease --stacktrace
+```
 
-Required focused cases:
+Use `./gradlew` on POSIX systems.
 
-1. Use the inline Room action on a reachable discovered speaker -> it becomes saved and remains visible after app restart.
-2. Assign each built-in room (Wohnzimmer, Schlafzimmer, Küche, Bad, Kinderzimmer, Garten) -> assignment persists and displays correctly.
-3. Assign a custom room label -> custom text persists after restart.
-4. Change the app language -> built-in room displays in the active language while preserving the same stored assignment; custom room text is unchanged.
-5. Saved + currently discovered representation of the same keyed speaker -> exactly one row.
-6. Saved manual endpoint without a discovery key + later discovery at the same host -> one merged row rather than a duplicate.
-7. A keyed speaker must not merge with a different keyed speaker solely because a host address is reused.
-8. Tap the delete icon on a saved speaker -> a confirmation dialog appears; cancel leaves it untouched; confirm removes saved metadata/room and the row disappears from the current list. A fresh device search may rediscover the physical speaker.
-9. Saved speaker offline/unreachable -> it remains visible and reports an actionable unreachable state.
-10. Tap another reachable saved/discovered row -> switches through the existing endpoint/WebView path and updates last-successful reconnect.
-11. Current speaker is visibly marked; room label does not affect connectivity or WebView security.
-12. Successful manual connection can be explicitly saved and assigned a room.
-13. Wi-Fi off/on Retry, 10-second discovery timeout, no-device versus STR-unreachable, permission recovery, back navigation and constrained WebView behavior remain regression checks.
+Real-device verification is required when runtime/user-visible behavior changed. Relevant cases include:
+
+- local-network permission grant/deny/recovery;
+- discovery of a real STR speaker;
+- 8888/17008 endpoint resolution;
+- WebView loading and normal STR control;
+- app relaunch and last-speaker reconnect;
+- native back navigation;
+- changed speaker-management behavior;
+- focused Logcat/screenshots when diagnosing runtime behavior.
+
+Store applicable evidence under `doc/evidence/qa/`.
+
+Documentation-only changes do not require a new Android APK when they do not change application source/resources/build configuration. GitHub Actions remains an Android build/lint/release-assembly check only.
+
+## Accepted regression matrix — Discovery & Network Resilience (BUILD-0007 / 0.1.1)
+
+These cases remain regression coverage:
+
+1. Wi-Fi off while mobile data remains available -> no local probe/discovery; stable no-Wi-Fi state.
+2. No usable Wi-Fi -> same stable state, no indefinite spinner.
+3. Wi-Fi present but no STR speaker -> finite discovery ends and exposes STR help/Retry/manual-host paths.
+4. Known STR speaker present -> normal discovery/probe/WebView/control path.
+5. Saved endpoint plus Wi-Fi unavailable -> no pointless saved-endpoint probe.
+6. Speaker discovered but ports 8888/17008 unreachable -> explicit STR-unreachable state distinct from no-device.
+7. Enable Wi-Fi and Retry -> recovery without app restart.
+8. Wi-Fi without Internet validation -> local STR operation remains eligible.
+9. Manual host while Wi-Fi absent -> no-Wi-Fi state rather than pointless probe.
+10. Permission recovery, native back navigation and constrained WebView navigation remain regression checks.
+
+## Accepted regression matrix — Speaker Management / Rooms (BUILD-0009 / 0.2.0)
+
+These cases remain regression coverage:
+
+1. Room action on a reachable discovered speaker saves it and survives app restart.
+2. Built-in rooms persist and display localized labels.
+3. Custom room text persists unchanged.
+4. Language change localizes built-in room display without changing stored identity; custom text is unchanged.
+5. Saved + discovered representation of the same keyed speaker produces one row.
+6. Unkeyed/manual saved endpoint may merge with later discovery by host fallback.
+7. Two different keyed speakers do not merge solely because a host is reused.
+8. Delete confirmation: cancel preserves; confirm removes saved metadata/current row; later discovery may rediscover the physical speaker.
+9. Offline/unreachable saved speaker remains representable/actionable.
+10. Switching rows uses the existing endpoint/WebView path and updates reconnect state.
+11. Current speaker is clearly indicated; room label does not affect connectivity/security.
+12. Successful manual connection can be saved/room-assigned.
+13. Dismissed device-management hint stays hidden after relaunch.
+14. Device-list spacing remains balanced with the hint visible or hidden.
+15. Wi-Fi, timeout, no-device/unreachable, permission, back and WebView restrictions remain regression coverage.
+
+## Release artifact gate
+
+For a public release:
+
+- build only from a clean committed source tree;
+- record exact source commit;
+- sign with the accepted STR Remote signing identity;
+- verify APK signature schemes and certificate;
+- run post-sign 16 KiB-aware zipalign verification;
+- record final SHA-256;
+- install and smoke-test the exact signed APK;
+- tag the exact source commit;
+- publish exactly the accepted APK + checksum file;
+- verify the public asset digest;
+- close out `/doc` without moving the release tag or rebuilding the released artifact.
 
 ## Documentation consistency regression checks
 
@@ -55,32 +96,7 @@ Required focused cases:
 - README Current release equals `doc/STATUS.md` Latest public release;
 - accepted releases have a matching `doc/CHANGELOG.md` heading and no unchecked release gates;
 - current planning no longer points at an already accepted final-publication step;
-- relative Markdown links resolve inside the repository.
-
-## BUILD-0002 visual regression checks
-
-- app title and Devices action are fully below the status-bar inset;
-- discovery view shows one primary state message, not duplicate mDNS/status text;
-- discovered speaker row remains readable without avoidable status wrapping;
-- connected endpoint status appears only with the WebView;
-- WebView uses the full available native content width;
-- WebView bottom reaches the content boundary immediately above the system navigation inset;
-- upstream STR page retains its own internal padding/navigation behavior unchanged.
-
-## Regression focus
-
-- speaker discovery
-- Wi-Fi/no-network state
-- finite discovery timeout
-- no-device versus STR-unreachable distinction
-- retry/recovery
-- permission handling
-- endpoint fallback
-- saved endpoint reconnect
-- navigation/security restrictions
-- manual host fallback
-- system-bar geometry on modern edge-to-edge Android
-- WebView content rectangle
-- documentation/release-state consistency
+- relative Markdown links resolve inside the repository;
+- root helper Markdown does not duplicate normative `/doc` policy.
 
 A successful compile alone is not functional evidence.

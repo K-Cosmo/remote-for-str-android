@@ -24,18 +24,44 @@ Release identity:
 
 - local documentation consistency: PASS;
 - clean debug build + lint + release assembly: PASS;
-- GitHub Android CI is green for the exact release source commit (main run `36610855156`);
-- GitHub Android CI is also green for the pushed release tag (run `36611841390`);
-- the signed APK was built from clean committed source `b5ff103e318f4342ba3a748b786084108d4093af`;
-- `apksigner` verification succeeds with APK Signature Scheme v2 and v3;
-- post-sign 16 KiB-aware `zipalign` verification succeeds;
-- the annotated `v0.2.0` tag resolves to `b5ff103e318f4342ba3a748b786084108d4093af`;
-- the public GitHub release is non-draft/non-prerelease and publishes the APK plus SHA-256 file;
-- GitHub reports the public APK asset digest as `sha256:5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`, matching the accepted local artifact;
-- final signed-APK device smoke was explicitly confirmed during post-release closeout.
+- GitHub Android CI green for the exact release source commit and release tag;
+- signed APK built from clean committed source;
+- APK Signature Scheme v2/v3 verification: PASS;
+- post-sign 16 KiB-aware zipalign verification: PASS;
+- annotated `v0.2.0` tag resolves to the exact release source;
+- public GitHub APK digest matches the accepted local artifact;
+- exact signed-APK device smoke: PASS.
 
-## BUILD-0009 outcome
+## Accepted product baseline
 
-0.2.0 adds persistent saved speakers, quick switching, optional room assignment, explicit room/delete actions, improved device-list presentation, a direct Remote return path and dismissible local guidance while retaining the thin-wrapper architecture and existing local-network/WebView security boundaries.
+0.2.0 includes:
+
+- finite Wi-Fi-aware STR discovery/recovery;
+- persistent saved speakers and quick switching;
+- built-in/custom room assignment;
+- explicit room/delete device actions;
+- manual-host fallback;
+- current-device/room presentation and direct Remote return path;
+- dismissible local device-management guidance;
+- constrained STR WebView wrapper with no cloud/account/analytics backend.
+
+Accepted build baseline:
+
+- minSdk 26;
+- compile/target API 37;
+- AGP 9.4.1;
+- Gradle 9.7.1;
+- Java 25 Gradle runtime criteria;
+- Java source/target 17.
+
+## Documentation baseline
+
+Post-0.2.0 documentation drift has been converged:
+
+- `/doc` remains the only normative documentation;
+- root duplicate changelog is removed;
+- root privacy/contribution files are pointers rather than duplicate policy;
+- current architecture, compatibility, blocker, privacy, security and test documents describe the accepted 0.2.0 baseline;
+- historical build/spec/evidence records remain unchanged as dated snapshots.
 
 `0.2.0` is the current accepted public release.

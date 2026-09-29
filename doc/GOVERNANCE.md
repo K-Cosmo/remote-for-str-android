@@ -6,9 +6,9 @@ Normal feature work follows:
 
 `Specification → Plan → Tasks → Analyze → Implement → Converge → Tests → Real run → Evidence → Acceptance`
 
-Small maintenance/correctness changes may use:
+Small maintenance/correctness/documentation changes may use:
 
-`Specification → smallest implementation → Tests/Evidence → Acceptance`
+`Smallest scoped change → Consistency/Tests → Evidence → Acceptance`
 
 ## Status model
 
@@ -17,20 +17,39 @@ Small maintenance/correctness changes may use:
 - **PLANNED:** agreed work, no code claim.
 - **IMPLEMENTED:** code/document change exists.
 - **VERIFIED:** required builds/tests/evidence passed.
-- **ACCEPTED:** release gates satisfied and `/doc` converged.
+- **ACCEPTED:** release/change gates satisfied and `/doc` converged.
 
 A compiling change is not automatically verified. A plausible AI explanation is not evidence.
 
-## Spec Kit boundary
+## Documentation authority
 
 - `/doc` contains normative product, architecture, security, compatibility and quality truth.
-- `.specify/` and `specs/<feature>/` contain development-process artifacts only.
-- A spec may propose a normative change, but the change is not accepted until the relevant `/doc` file and decision record are updated.
-- Never create a second policy/specification world beside `/doc`.
+- the public root `README.md` is a product overview, not a second normative specification;
+- root helper files may point into `/doc` but must not duplicate normative content;
+- `.specify/` and `specs/<feature>/` are development-process artifacts only;
+- `doc/work/` and `doc/evidence/qa/` are dated/historical records.
+
+Historical records preserve the state that existed when evidence/work was captured. Superseded wording inside such a historical record is not current-state drift. Current truth must be read from the normative `/doc` authorities.
 
 ## Convergence rule
 
-If code/runtime evidence contradicts documentation, record the discrepancy in `FINDINGS.md`; verify the actual behavior; update the appropriate `/doc` authority; then rerun the relevant gates.
+If code/runtime evidence contradicts current normative documentation:
+
+1. record the discrepancy in `FINDINGS.md`;
+2. verify actual behavior;
+3. update the relevant `/doc` authority and decision record;
+4. rerun the applicable documentation/build/runtime gates;
+5. only then mark the change VERIFIED/ACCEPTED.
+
+## Duplication rule
+
+There must be one canonical copy of each normative subject.
+
+- changelog: `doc/CHANGELOG.md` only;
+- privacy: `doc/PRIVACY.md` (root `PRIVACY.md` is only a pointer);
+- contribution rules: `doc/CONTRIBUTING.md` (root `CONTRIBUTING.md` is only a pointer).
+
+When a convenient public entry point is useful, prefer a short link/pointer over copied text.
 
 ## Automated documentation consistency gate
 
@@ -43,9 +62,9 @@ It verifies at minimum:
 - the latest public release has a corresponding `/doc/CHANGELOG.md` heading;
 - an ACCEPTED release has no unchecked entries in `RELEASE_GATES.md`;
 - an ACCEPTED release is no longer described as the current final-publication step in `PLANNED.md`;
-- relative Markdown links resolve to files/directories that exist in the repository.
+- relative Markdown links resolve inside the repository.
 
-The script is a local documentation/release-maintenance gate and is not part of GitHub Actions. GitHub CI remains focused on proving that the Android application can be built. The documentation gate is intentionally narrow: it catches objective drift but does not replace human review of wording, architecture, security or product meaning.
+The script remains a local documentation/release-maintenance gate. GitHub CI stays focused on proving the Android build. Human review is still required for semantic drift that cannot be checked mechanically.
 
 ## Public AI transparency
 

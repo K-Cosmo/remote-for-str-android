@@ -11,7 +11,7 @@
 
 **Evidence:** project owner reported that the project only built after moving to Gradle 9.7.1; subsequent builds complete successfully.  
 **Action:** baseline and CI use Gradle 9.7.1.  
-**State:** VERIFIED for build compatibility. Exact local Gradle JVM is still not captured.
+**State:** VERIFIED. Gradle 9.7.1 is the accepted baseline; local JBR 25.0.3 and Java-25 daemon criteria were later captured and accepted.
 
 ## F-003 — deprecated AndroidX project option
 
@@ -42,7 +42,7 @@
 
 **Evidence:** 0.1.1-dev build warned about deprecated `onBackPressed()` handling; the supplied 0.1.2-dev build output compiles Kotlin and completes successfully without those warnings.  
 **Action:** Android 13+ uses `OnBackInvokedDispatcher`; the annotated legacy override remains only for older supported Android versions.  
-**State:** BUILD WARNING VERIFIED FIXED. Functional back-navigation behavior remains an explicit release gate.
+**State:** VERIFIED FIXED. Functional native back navigation was verified on real devices and remains regression coverage.
 
 ## F-008 — WebView emits hidden-API and Bluetooth permission messages
 
@@ -82,21 +82,21 @@
 **Evidence:** `lintDebug` report supplied 2026-09-26.  
 **Observed:** one `GestureBackNavigation` error points at the Android 12L-and-earlier `onBackPressed()` fallback even though Android 13+ is already handled through `OnBackInvokedDispatcher`. Lint explicitly notes that per-activity migration can require a focused suppression.  
 **Action:** add a local `GestureBackNavigation` suppression to the documented legacy fallback only. Do not add AndroidX solely to silence this detector and do not create a global lint baseline.  
-**State:** IMPLEMENTED in rc2; requires lint re-run.
+**State:** VERIFIED. Subsequent lint/build gates passed; the focused legacy fallback suppression remains the accepted implementation.
 
 ## F-014 — Intentional WebView JavaScript and cleartext LAN warnings
 
 **Evidence:** rc1 lint report.  
 **Observed:** lint warns about JavaScript and cleartext HTTP. Both are required by the upstream STR phone remote, which is served over HTTP on a dynamic LAN address.  
 **Action:** retain JavaScript and cleartext only with explicit local suppressions/documentation, no native JavaScript bridge, file/content access disabled, and top-level WebView navigation pinned to the selected speaker host on ports 8888/17008.  
-**State:** IMPLEMENTED in rc2; requires lint/runtime re-verification.
+**State:** VERIFIED. Subsequent lint/runtime/release gates passed with the documented JavaScript/cleartext constraints.
 
 ## F-015 — Launcher resources need release-quality adaptive/themed icon
 
 **Evidence:** rc1 lint report and approved icon review.  
 **Observed:** the previous `mipmap-anydpi-v26` folder is redundant at minSdk 26 and adaptive icons lacked a monochrome themed layer.  
 **Action:** use the approved independent STR Remote artwork as the adaptive icon, move the baseline adaptive resource to `mipmap-anydpi`, add a v33 monochrome layer, and retain the AI-generated source artwork under `/artwork`.  
-**State:** IMPLEMENTED in rc2; requires device/launcher visual verification.
+**State:** VERIFIED. Adaptive/themed launcher presentation was subsequently verified on the real device.
 
 ## F-016 — RC2 release-hardening build is green
 
@@ -115,7 +115,7 @@
 
 **Evidence:** the wrapper failed in a fresh PowerShell session until `JAVA_HOME`/`PATH` exposed Android Studio JBR; once Java was available, Gradle 9.7.1 reported Launcher JVM 25.0.3 and daemon JBR 25.0.3.  
 **Action:** pin daemon criterion to Java 25 for consistency, but document that CLI wrapper startup still requires a Java executable available through `JAVA_HOME` or `PATH`.  
-**State:** IMPLEMENTED/documented in rc3; daemon selection requires local re-verification.
+**State:** VERIFIED. Gradle 9.7.1 runs with Java-25 daemon criteria locally and in CI.
 
 ## F-019 — RC3 packaging and interaction gates converged
 
@@ -142,11 +142,31 @@
 **Evidence:** real-world observation after the public 0.1.0 release, reported 2026-09-27.  
 **Observed:** when the phone has no Wi-Fi connection, STR Remote still starts the discovery path and leaves the indeterminate spinner running. A normal discovery with no matching STR device also has no finite user-facing terminal state.  
 **Action:** BUILD-0007 gates saved-endpoint probing and mDNS discovery on Wi-Fi transport, adds a finite discovery timeout, separates no-device from STR-endpoint-unreachable states, and provides Retry/STR help. Internet validation is explicitly not required.  
-**State:** IMPLEMENTED in 0.1.1; real-device verification pending.
+**State:** VERIFIED / ACCEPTED in 0.1.1; Wi-Fi/no-device/unreachable/Retry behavior remains regression coverage.
 
 ## F-023 — BUILD-0007 initial Wi-Fi query used deprecated network enumeration
 
 **Evidence:** Android Studio / Gradle build supplied 2026-09-27 reports a Kotlin deprecation warning for `ConnectivityManager.allNetworks` in `MainActivity.hasWifiTransport()`.  
 **Observed:** BUILD-0007 functionally passes the first Pixel smoke tests, but the initial implementation polls all networks synchronously.  
 **Action:** replace polling with a regular Wi-Fi `NetworkCallback`, keep the current matching Wi-Fi networks in app state, unregister the callback on destroy, and retain a short initialization fallback for the no-Wi-Fi case. Do not require Internet validation.  
-**State:** IMPLEMENTED; clean build/lint and Pixel regression verification pending.
+**State:** VERIFIED / ACCEPTED in 0.1.1; the NetworkCallback implementation passed clean build/lint and Pixel regression verification.
+## F-024 — BUILD-0009 speaker-management UX required explicit actions
+
+**Evidence:** 0.2.0 BUILD-0009 Pixel screenshot/build iteration on 2026-09-29.
+**Observed:** inline Room/Delete controls initially interfered with row selection, room state was not prominent, deletion behavior was visually confusing and hidden long-press guidance was unsuitable for a non-technical user experience.
+**Action:** make the row body explicitly tappable, keep Room/Delete as visible inline actions, show device · room prominently, provide a direct Fernbedienung return action, make guidance dismissible and preserve balanced spacing.
+**State:** VERIFIED / ACCEPTED in 0.2.0.
+
+## F-025 — 0.2.0 WebView/log noise remains non-blocking
+
+**Evidence:** focused 0.2.0 Pixel Logcat supplied 2026-09-29.
+**Observed:** Chromium/WebView still emits hidden-API and Bluetooth-permission messages; the STR page also logged transient Failed to fetch messages for selected upstream API paths while the wrapper/main remote remained operational.
+**Action:** retain the established no-speculative-permission policy. Treat these as upstream/WebView observations unless they correlate with a reproducible STR Remote failure.
+**State:** OBSERVED / NON-BLOCKING.
+
+## F-026 — Post-0.2.0 Markdown drift exposed duplicate/current-state documentation
+
+**Evidence:** repository-wide Markdown audit after the accepted 0.2.0 release.
+**Observed:** root duplicate changelog/privacy/contribution content and several /doc authorities still described 0.1.0-era build, blocker or persistence state; DECISIONS.md also contained two different D-019 headings.
+**Action:** remove the duplicate root changelog, convert root privacy/contribution files to pointers, converge current normative /doc files on the accepted 0.2.0 baseline, normalize the duplicate decision ID and explicitly classify historical records as snapshots.
+**State:** VERIFIED by documentation consistency, whitespace and duplicate-ID checks in the convergence change.

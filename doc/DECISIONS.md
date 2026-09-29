@@ -76,10 +76,6 @@
 
 **Decision:** room assignment is optional metadata owned by STR Remote for explicitly saved speakers. Built-in rooms use stable storage IDs (`living_room`, `bedroom`, `kitchen`, `bathroom`, `kids_room`, `garden`) and are localized only at display time. A custom room is stored as the user's local text. Room metadata does not participate in speaker identity, endpoint probing, playback behavior or WebView security decisions, and it is never cloud-synced.
 
-## D-019 — Make common speaker actions explicit and one-tap
-
-**Decision:** the device list remains tap-to-connect. Row taps are handled explicitly so inline action controls cannot block connection/switching. Each row exposes an inline room action; assigning/changing a room implicitly saves the speaker. Saved speakers expose a visible delete icon with a confirmation dialog. Common actions must not depend on hidden long-press gestures.
-
 ## D-020 — Important guidance must be visually highlighted
 
 **Decision:** explanatory/discovery guidance for the device screen should not hide as tiny footer text. Important hints and state messages use highlighted panels with clearer typography so non-technical users notice them quickly.
@@ -95,3 +91,8 @@
 ## D-023 — Dismiss help text explicitly, not by hidden gesture
 
 **Decision:** the highlighted device-management hint uses a visible `Hinweis ausblenden` / `Hide this hint` text link. Do not use swipe-to-dismiss or a trash icon for help text because those interactions are hidden or semantically ambiguous. Dismissal is remembered in app-private preferences.
+## D-024 — Make common speaker actions explicit and one-tap
+
+**Decision:** the device list remains tap-to-connect. Row taps are handled explicitly so inline action controls cannot block connection/switching. Each row exposes an inline room action; assigning/changing a room implicitly saves the speaker. Saved speakers expose a visible delete icon with a confirmation dialog. Common actions must not depend on hidden long-press gestures.
+
+**Maintenance note:** this decision was originally written under a duplicate D-019 heading. The identifier was normalized to D-024 during the post-0.2.0 documentation drift audit; the decision itself is unchanged.

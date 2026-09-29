@@ -6,21 +6,23 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 
 > STR Remote is an independent community project and is not affiliated with Bose Corporation or the SoundTouch Reborn project.
 
-**Current release:** 0.2.0  
+**Current release:** 0.2.0
+
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest)
 
 ## Features
 
 - automatic discovery of STR speakers on the local network;
-- support for current and legacy STR discovery;
+- current and legacy STR discovery support;
 - automatic fallback between STR ports 8888 and 17008;
-- finite discovery with actionable no-Wi-Fi/no-device/unreachable states;
+- finite discovery with actionable no-Wi-Fi, no-device and STR-unreachable states;
 - retry after Wi-Fi becomes available without restarting the app;
-- speaker selection when multiple devices are found;
-- persistent saved-speaker management and quick switching;
+- persistent saved-speaker management;
+- quick switching between discovered and saved speakers;
 - optional room assignment with built-in and custom room names;
-- remembers the last selected speaker;
+- clear current-speaker indication and a direct return path to the active remote;
 - manual host/IP entry as a fallback;
+- last-successful-speaker reconnect;
 - embedded STR phone remote;
 - German and English UI;
 - Android 8.0+;
@@ -33,7 +35,7 @@ STR Remote requires **SoundTouch Reborn to already be installed and running on t
 1. Install STR using the upstream project:
    - [STR website](https://st-reborn.de)
    - [STR on GitHub](https://github.com/JRpersonal/streborn)
-2. Connect the Android device to the same local network as the speaker.
+2. Connect the Android device to the same local Wi-Fi network as the speaker.
 3. Download the latest `STR-Remote-*.apk` from [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest).
 4. Install the APK and grant the local-network permission when Android requests it.
 
@@ -41,13 +43,14 @@ STR Remote does not install STR, modify speaker firmware or bundle the STR agent
 
 ## Compatibility
 
-The initial release has been verified with:
+The accepted 0.2.0 baseline is:
 
-- **SoundTouch 10**
-- STR **v0.9.86**
-- Android app targeting API 37
+- Android 8.0+ (`minSdk 26`);
+- compile/target API 37;
+- real-device verification with a SoundTouch 10;
+- STR local web endpoints on ports 8888/17008.
 
-Other SoundTouch models supported by STR are expected to use the same upstream interface, but have not yet been independently verified by this project.
+Additional STR-supported SoundTouch models are expected to use the same upstream interface, but they have not yet been independently verified by this project. Exact release/build evidence is kept under [`doc/evidence/qa/`](doc/evidence/qa/).
 
 ## Security and privacy
 
@@ -62,9 +65,9 @@ The Android wrapper intentionally keeps its own scope small:
 - external web links open in the system browser;
 - local STR navigation is restricted to the selected speaker and expected STR ports.
 
-The app stores local speaker metadata, explicitly saved speakers, optional room labels and local UI preferences in Android app-private preferences. This data is not cloud-synced.
+The app stores local speaker metadata, saved-speaker entries, optional room labels and local UI preferences in Android app-private preferences. This data is not cloud-synced.
 
-See [SECURITY.md](doc/SECURITY.md) and [PRIVACY.md](doc/PRIVACY.md) for details.
+See [Security](doc/SECURITY.md) and [Privacy](doc/PRIVACY.md) for the normative details.
 
 ## Relationship to SoundTouch Reborn
 
@@ -72,11 +75,17 @@ STR owns the speaker-side agent, playback behavior, presets, services and web re
 
 If STR changes discovery, ports, authentication or its local web/API contract, STR Remote may require a compatibility update.
 
-## Development
+## Project documentation
 
-Bug reports are most useful when they include the SoundTouch model, STR version, Android version/device, observed behavior and whether the STR page works directly in a browser.
+The normative project documentation lives under [`/doc`](doc/README.md). In particular:
 
-See [CONTRIBUTING.md](doc/CONTRIBUTING.md) and the project documentation under [`/doc`](doc/README.md).
+- [Current status](doc/STATUS.md)
+- [Architecture](doc/ARCHITECTURE.md)
+- [Android/build compatibility](doc/ANDROID_COMPATIBILITY.md)
+- [Changelog](doc/CHANGELOG.md)
+- [Contributing](doc/CONTRIBUTING.md)
+
+Root-level helper files do not define a second policy/documentation set.
 
 Development is AI-assisted for implementation, debugging, review and documentation. The Android app itself contains no AI/LLM runtime and does not send user data to an AI service.
 

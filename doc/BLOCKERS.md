@@ -1,23 +1,35 @@
 # Blockers
 
-There is no known functional blocker in the verified MVP core path.
+There are currently **no known release or functional blockers** for the accepted 0.2.0 baseline.
 
-Verified and no longer blocking:
+## Accepted baseline
 
-- working Gradle/JVM baseline captured;
-- trusted Gradle 9.7.1 Wrapper generated and independently validated;
-- rc3 clean debug/lint build succeeds with 0 lint errors;
-- rc3 release assembly succeeds;
-- GitHub CI independently builds debug + lint + release on Ubuntu/JDK 25;
-- launcher icon packaging and normal/themed icon presentation verified;
-- back navigation verified;
-- reconnect-after-restart verified;
-- local-network permission denial/recovery verified;
-- representative STR controls smoke-tested;
-- local release-signing identity created outside the repository.
+The following release-critical areas are closed by real build/runtime evidence:
 
-Remaining release-engineering gate before public `0.1.0`:
+- Gradle 9.7.1 / AGP 9.4.1 / Java 25 build baseline;
+- trusted Gradle Wrapper and GitHub Android CI;
+- debug/lint/release assembly;
+- 16 KiB-aware release APK alignment and signing verification;
+- STR discovery, Wi-Fi/no-device/unreachable handling and Retry;
+- device selection, saved speakers, room assignment and quick switching;
+- reconnect, permission recovery and native back navigation;
+- constrained WebView navigation and normal STR controls;
+- signed 0.2.0 publication artifact and GitHub release.
 
-- build, cryptographically verify, install and smoke-test the exact signed `0.1.0` publication APK from the final source commit.
+## Non-blocking observations
 
-No feature changes are required for release.
+These are monitored findings, not current blockers:
+
+- Chromium/WebView may log hidden-API denials and missing-Bluetooth-permission messages even though STR Remote owns no Bluetooth feature;
+- Android PackageManager may log an alignment-check message despite the final signed APK passing explicit zipalign verification and running normally;
+- the upstream STR web page can occasionally log transient API `Failed to fetch` messages while the wrapper and main remote UI remain operational.
+
+Do not add permissions, dependencies or speculative workarounds merely to silence these logs. Escalate only when a reproducible STR Remote function fails.
+
+## Future compatibility watchpoints
+
+- additional SoundTouch model evidence;
+- upstream STR authentication or local API/discovery changes;
+- intentionally scheduled build-tool maintenance.
+
+Those items belong in `BACKLOG.md` / `PLANNED.md`, not in the active blocker list.
