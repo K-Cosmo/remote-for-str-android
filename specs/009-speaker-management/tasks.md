@@ -26,7 +26,7 @@
 - [x] clean debug build + lint
 - [x] release assembly
 - [x] focused real-device room/delete/switching/navigation/hint/layout smoke test
-- [ ] exact signed APK persistence/offline/manual-host/regression smoke
-- [ ] committed-source GitHub CI
-- [ ] signing / tag / publication
-- [ ] evidence convergence / release acceptance
+- [x] exact signed APK persistence/offline/manual-host/regression smoke
+- [x] committed-source GitHub CI
+- [x] signing / tag / publication
+- [x] evidence convergence / release acceptance

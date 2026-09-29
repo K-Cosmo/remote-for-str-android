@@ -38,14 +38,19 @@ When both endpoints have a real discovery key, equality is based on that key. If
 
 ## Verification state
 
-**RELEASE CANDIDATE — committed-source CI and signed-artifact verification pending.**
+**RELEASED — ACCEPTED in 0.2.0.**
 
-Verified before the release-candidate commit:
+Release evidence:
 
-- local documentation consistency: PASS;
-- clean debug build + lint: PASS;
-- release assembly: PASS;
-- Pixel confirms the final room/device-management UI, row switching, delete confirmation/removal, explicit Remote return path, selected-device presentation, dismissible hint persistence and final hidden-hint spacing;
-- normal STR WebView/control behavior remains operational.
+- exact source commit: `b5ff103e318f4342ba3a748b786084108d4093af`;
+- local clean debug/lint/release gate: PASS;
+- GitHub Android CI: main run `36610855156` PASS; tag run `36611841390` PASS;
+- signed APK verification: PASS (v2/v3, signer `C=DE, CN=STR Remote`, certificate `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`);
+- post-sign 16 KiB-aware zipalign: PASS;
+- final APK SHA-256: `5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`;
+- annotated `v0.2.0` tag resolves to `b5ff103e318f4342ba3a748b786084108d4093af`;
+- public GitHub release publishes the exact APK and checksum file;
+- public APK asset digest matches the accepted local artifact;
+- final signed-APK device smoke confirmed during post-release closeout.
 
-The remaining gates are committed-source GitHub CI, the exact signed APK smoke matrix, tagging/publication and final evidence closeout.
+BUILD-0009 is closed. Future changes require a new build/version line.

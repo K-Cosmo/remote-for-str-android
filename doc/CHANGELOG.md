@@ -2,7 +2,7 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## Unreleased — 0.2.0
+## 0.2.0 — 2026-09-29
 
 Speaker management:
 
@@ -19,9 +19,9 @@ Speaker management:
 - keep the connected-speaker status on the remote screen compact instead of rendering it as a highlighted banner, but make the selected device/room label larger and bold enough to be noticed;
 - make speaker rows directly tappable even with inline action controls, and provide an explicit Remote toolbar action to leave the device view;
 - present device name and room together as the primary row title, with model/version and IP below in smaller text;
-- remove the extra leading bullet before the selected device title in the device list; the active device stays indicated by card highlighting alone.
+- remove the extra leading bullet before the selected device title in the device list; the active device stays indicated by card highlighting alone;
 - make the highlighted device-management hint dismissible through an explicit text link and remember the dismissal locally;
-- preserve comfortable spacing between `Gefundene Geräte` and the first speaker card when the hint is hidden.
+- preserve comfortable spacing between `Gefundene Geräte` and the first speaker card when the hint is hidden;
 - keep Gradle 9.7.1 + AGP 9.4.1 for the 0.2.0 feature line;
 - bump application version to `0.2.0` / versionCode 9.
 

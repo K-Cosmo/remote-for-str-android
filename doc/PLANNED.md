@@ -1,23 +1,14 @@
 # Planned
 
-## Current step - 0.2.0 speaker management verification / BUILD-0009
+## Current state — 0.2.0 released and accepted
 
-The BUILD-0009 implementation now includes persistent saved speakers, quick switching and optional room assignment. No further feature scope should be added before verification.
+BUILD-0009 Speaker Management / Rooms is complete. The public `v0.2.0` release is published from source commit `b5ff103e318f4342ba3a748b786084108d4093af`.
 
-1. Run the local documentation consistency gate.
-2. Run clean debug build, lint and release assembly.
-3. Install the debug APK on the Pixel.
-4. Verify saved-speaker persistence and restart behavior.
-5. Verify all six standard rooms plus a custom room label.
-6. Verify saved/discovered de-duplication, current-speaker marking and remove behavior.
-7. Verify an offline saved speaker remains visible/actionable.
-8. Verify manual-host and 0.1.1 Wi-Fi/discovery/WebView regressions.
-9. Commit only after the local build/device gate is green, then verify GitHub Android CI.
-10. Converge evidence before release preparation.
+Do not add follow-up changes to the 0.2.0 release artifact or move the `v0.2.0` tag. New work starts in a new build/version line.
 
-## Deferred maintenance - BUILD-0008
+## Deferred maintenance — BUILD-0008
 
-Gradle 9.8.x evaluation remains deferred. The accepted Gradle 9.7.1 + AGP 9.4.1 baseline stays in use for 0.2.0 unless a concrete compatibility/build requirement appears.
+Gradle 9.8.x evaluation is now eligible for reconsideration because 0.2.0 is complete, but it remains deferred until explicitly scheduled or a concrete compatibility/build requirement appears. The accepted baseline remains Gradle 9.7.1 + AGP 9.4.1.
 
 ## Later
 

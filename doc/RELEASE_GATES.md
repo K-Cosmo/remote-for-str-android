@@ -2,7 +2,7 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## 0.2.0 — RELEASE CANDIDATE
+## 0.2.0 — ACCEPTED
 
 ### Implementation/scope
 
@@ -22,7 +22,7 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] Gradle 9.7.1 + AGP 9.4.1 remains unchanged
 - [x] application version is `0.2.0` / versionCode 9
 
-### Local build/device evidence
+### Local/final device evidence
 
 - [x] local documentation consistency gate passes
 - [x] clean `assembleDebug + lintDebug` succeeds
@@ -34,27 +34,29 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] Pixel confirms dismissible help text remains hidden after relaunch
 - [x] Pixel confirms final device-list spacing and selected-device presentation
 - [x] normal STR WebView/control path remains operational
-- [ ] exact signed final APK confirms custom-room persistence after relaunch
-- [ ] exact signed final APK confirms saved/offline speaker handling and recovery
-- [ ] exact signed final APK confirms manual-host connection can be assigned/saved
-- [ ] exact signed final APK confirms inherited Wi-Fi/permission/back-navigation regression checks
+- [x] exact signed final APK confirms custom-room persistence after relaunch
+- [x] exact signed final APK confirms saved/offline speaker handling and recovery
+- [x] exact signed final APK confirms manual-host connection can be assigned/saved
+- [x] exact signed final APK confirms inherited Wi-Fi/permission/back-navigation regression checks
 
 ### Committed-source/signing/publication
 
-- [ ] committed-source GitHub Android CI passes for the exact release source commit
-- [ ] release build starts from clean committed source
-- [ ] `apksigner verify --verbose --print-certs` succeeds
-- [ ] signing identity remains `C=DE, CN=STR Remote`
-- [ ] signer certificate SHA-256 remains the accepted release certificate
-- [ ] APK Signature Scheme v2 and v3 verify successfully
-- [ ] post-sign `zipalign -c -P 16 -v 4` succeeds
-- [ ] final `STR-Remote-0.2.0.apk` SHA-256 is recorded
-- [ ] exact signed `STR-Remote-0.2.0.apk` installs and passes the final smoke test
-- [ ] annotated tag `v0.2.0` points to the exact signed-artifact source commit
-- [ ] GitHub Release `v0.2.0` publishes that exact APK and matching SHA-256 file
-- [ ] GitHub public APK asset digest matches the accepted local artifact
+- [x] GitHub Android CI passes for exact release source `b5ff103e318f4342ba3a748b786084108d4093af` (main run `36610855156`)
+- [x] GitHub Android CI passes for pushed `v0.2.0` (run `36611841390`)
+- [x] release build starts from clean committed source `b5ff103e318f4342ba3a748b786084108d4093af`
+- [x] `apksigner verify --verbose --print-certs` succeeds
+- [x] signing identity is `C=DE, CN=STR Remote`
+- [x] signer certificate SHA-256 is `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
+- [x] APK Signature Scheme v2 and v3 verify successfully
+- [x] post-sign `zipalign -c -P 16 -v 4` succeeds
+- [x] final `STR-Remote-0.2.0.apk` SHA-256 is `5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`
+- [x] exact signed `STR-Remote-0.2.0.apk` installs and passes the final smoke test
+- [x] annotated tag `v0.2.0` resolves to exact signed-artifact source commit `b5ff103e318f4342ba3a748b786084108d4093af`
+- [x] GitHub Release `v0.2.0` is published, non-draft and non-prerelease
+- [x] GitHub Release `v0.2.0` publishes `STR-Remote-0.2.0.apk` and `STR-Remote-0.2.0.apk.sha256.txt`
+- [x] GitHub public APK asset digest is `sha256:5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`, matching the accepted local artifact
 
-0.2.0 remains **RELEASE CANDIDATE** until the remaining gates pass.
+The `0.2.0` release is **ACCEPTED**.
 
 ---
 

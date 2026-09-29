@@ -6,7 +6,7 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 
 > STR Remote is an independent community project and is not affiliated with Bose Corporation or the SoundTouch Reborn project.
 
-**Current release:** 0.1.1  
+**Current release:** 0.2.0  
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest)
 
 ## Features
@@ -17,6 +17,8 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 - finite discovery with actionable no-Wi-Fi/no-device/unreachable states;
 - retry after Wi-Fi becomes available without restarting the app;
 - speaker selection when multiple devices are found;
+- persistent saved-speaker management and quick switching;
+- optional room assignment with built-in and custom room names;
 - remembers the last selected speaker;
 - manual host/IP entry as a fallback;
 - embedded STR phone remote;
@@ -60,7 +62,7 @@ The Android wrapper intentionally keeps its own scope small:
 - external web links open in the system browser;
 - local STR navigation is restricted to the selected speaker and expected STR ports.
 
-The app stores local speaker metadata in Android app-private preferences. Development versions may also store explicitly saved speakers and optional room labels; this data is not cloud-synced.
+The app stores local speaker metadata, explicitly saved speakers, optional room labels and local UI preferences in Android app-private preferences. This data is not cloud-synced.
 
 See [SECURITY.md](doc/SECURITY.md) and [PRIVACY.md](doc/PRIVACY.md) for details.
 
