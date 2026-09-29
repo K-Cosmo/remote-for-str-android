@@ -16,6 +16,7 @@ STR Remote is a thin Android integration layer around the web remote already ser
 8. The local network is the current trust boundary.
 9. The native shell owns Android system insets; the embedded STR WebView fills the remaining content rectangle and is not wrapped in product padding.
 10. Automatic STR discovery/probing requires a Wi-Fi transport but never requires validated Internet access. A local-only Wi-Fi connection is a valid STR network.
+11. Explicitly saved speakers and optional room assignments are local app-private UI metadata. Room metadata never changes speaker identity, endpoint probing, playback/business behavior or WebView security.
 
 ## Documentation authority
 

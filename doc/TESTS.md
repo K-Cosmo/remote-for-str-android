@@ -31,6 +31,24 @@ Required focused cases:
 9. Manual host entry while Wi-Fi is absent -> same no-Wi-Fi state rather than a pointless probe.
 10. Permission denial/recovery, native back navigation and constrained WebView navigation remain regression checks.
 
+## BUILD-0009 Speaker Management / Rooms
+
+Required focused cases:
+
+1. Use the inline Room action on a reachable discovered speaker -> it becomes saved and remains visible after app restart.
+2. Assign each built-in room (Wohnzimmer, Schlafzimmer, Küche, Bad, Kinderzimmer, Garten) -> assignment persists and displays correctly.
+3. Assign a custom room label -> custom text persists after restart.
+4. Change the app language -> built-in room displays in the active language while preserving the same stored assignment; custom room text is unchanged.
+5. Saved + currently discovered representation of the same keyed speaker -> exactly one row.
+6. Saved manual endpoint without a discovery key + later discovery at the same host -> one merged row rather than a duplicate.
+7. A keyed speaker must not merge with a different keyed speaker solely because a host address is reused.
+8. Tap the delete icon on a saved speaker -> a confirmation dialog appears; cancel leaves it untouched; confirm removes saved metadata/room and the row disappears from the current list. A fresh device search may rediscover the physical speaker.
+9. Saved speaker offline/unreachable -> it remains visible and reports an actionable unreachable state.
+10. Tap another reachable saved/discovered row -> switches through the existing endpoint/WebView path and updates last-successful reconnect.
+11. Current speaker is visibly marked; room label does not affect connectivity or WebView security.
+12. Successful manual connection can be explicitly saved and assigned a room.
+13. Wi-Fi off/on Retry, 10-second discovery timeout, no-device versus STR-unreachable, permission recovery, back navigation and constrained WebView behavior remain regression checks.
+
 ## Documentation consistency regression checks
 
 - `app/build.gradle.kts` versionName equals `doc/STATUS.md` Development version;

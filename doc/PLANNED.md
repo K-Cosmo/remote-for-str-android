@@ -1,26 +1,23 @@
 # Planned
 
-## Current step - 0.2.0 speaker management / BUILD-0009
+## Current step - 0.2.0 speaker management verification / BUILD-0009
 
-Implement a small, persistent speaker-management layer on top of the existing discovery list.
+The BUILD-0009 implementation now includes persistent saved speakers, quick switching and optional room assignment. No further feature scope should be added before verification.
 
-1. Preserve the current fast startup path: probe the last successful endpoint first.
-2. Extend the device view so explicitly saved speakers remain visible even when they are not currently discovered.
-3. Add explicit favorite/save and remove actions without creating a separate database layer.
-4. Merge saved and currently discovered speakers without duplicate rows.
-5. Keep the current speaker clearly identifiable and allow quick switching.
-6. Let a successfully probed manual host be saved explicitly.
-7. Preserve the existing no-Wi-Fi, timeout, unreachable, WebView and security behavior.
-8. Bump to 0.2.0 / next versionCode only when implementation starts.
-9. Verify with the real speaker plus saved/offline entries, build/lint/release assembly and a focused device smoke test.
-
-BUILD-0009 must stay inside Android wrapper concerns. It must not add playback/business logic, background discovery or a new persistence framework.
+1. Run the local documentation consistency gate.
+2. Run clean debug build, lint and release assembly.
+3. Install the debug APK on the Pixel.
+4. Verify saved-speaker persistence and restart behavior.
+5. Verify all six standard rooms plus a custom room label.
+6. Verify saved/discovered de-duplication, current-speaker marking and remove behavior.
+7. Verify an offline saved speaker remains visible/actionable.
+8. Verify manual-host and 0.1.1 Wi-Fi/discovery/WebView regressions.
+9. Commit only after the local build/device gate is green, then verify GitHub Android CI.
+10. Converge evidence before release preparation.
 
 ## Deferred maintenance - BUILD-0008
 
-Gradle 9.8.x evaluation is deferred. The accepted Gradle 9.7.1 + AGP 9.4.1 baseline remains in use for the 0.2.0 feature line.
-
-Revisit build-tool maintenance after 0.2.0, or earlier only when a concrete trigger exists: AGP/Android Studio compatibility, a relevant Gradle fix, a reproducible build issue or a feature that actually requires the newer Gradle line.
+Gradle 9.8.x evaluation remains deferred. The accepted Gradle 9.7.1 + AGP 9.4.1 baseline stays in use for 0.2.0 unless a concrete compatibility/build requirement appears.
 
 ## Later
 

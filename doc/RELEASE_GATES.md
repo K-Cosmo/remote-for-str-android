@@ -2,6 +2,62 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.2.0 — RELEASE CANDIDATE
+
+### Implementation/scope
+
+- [x] saved speakers use app-private platform persistence without a new dependency
+- [x] last-successful-endpoint startup path is preserved
+- [x] saved/discovered rows use one de-duplicated device list
+- [x] current speaker and quick switching use the existing endpoint/WebView path
+- [x] unreachable saved speakers remain visible/actionable by design
+- [x] optional room assignment includes six built-in presets plus custom text
+- [x] built-in room storage is language-neutral and room metadata is excluded from connectivity/security identity
+- [x] room assignment is an explicit inline action and implicitly saves the speaker
+- [x] saved speakers expose a visible delete action with confirmation
+- [x] common device-management actions do not rely on hidden long-press gestures
+- [x] active-speaker device card, room/device hierarchy and Remote return path are implemented
+- [x] usage guidance can be dismissed and the preference persists locally
+- [x] no new permission, background service, cloud feature or playback/business logic is introduced
+- [x] Gradle 9.7.1 + AGP 9.4.1 remains unchanged
+- [x] application version is `0.2.0` / versionCode 9
+
+### Local build/device evidence
+
+- [x] local documentation consistency gate passes
+- [x] clean `assembleDebug + lintDebug` succeeds
+- [x] lint contains no blocking errors
+- [x] `assembleRelease` succeeds
+- [x] Pixel confirms room assignment and room visibility
+- [x] Pixel confirms row tap connect/switch and explicit `Fernbedienung` return path
+- [x] Pixel confirms delete confirmation/current-list removal behavior
+- [x] Pixel confirms dismissible help text remains hidden after relaunch
+- [x] Pixel confirms final device-list spacing and selected-device presentation
+- [x] normal STR WebView/control path remains operational
+- [ ] exact signed final APK confirms custom-room persistence after relaunch
+- [ ] exact signed final APK confirms saved/offline speaker handling and recovery
+- [ ] exact signed final APK confirms manual-host connection can be assigned/saved
+- [ ] exact signed final APK confirms inherited Wi-Fi/permission/back-navigation regression checks
+
+### Committed-source/signing/publication
+
+- [ ] committed-source GitHub Android CI passes for the exact release source commit
+- [ ] release build starts from clean committed source
+- [ ] `apksigner verify --verbose --print-certs` succeeds
+- [ ] signing identity remains `C=DE, CN=STR Remote`
+- [ ] signer certificate SHA-256 remains the accepted release certificate
+- [ ] APK Signature Scheme v2 and v3 verify successfully
+- [ ] post-sign `zipalign -c -P 16 -v 4` succeeds
+- [ ] final `STR-Remote-0.2.0.apk` SHA-256 is recorded
+- [ ] exact signed `STR-Remote-0.2.0.apk` installs and passes the final smoke test
+- [ ] annotated tag `v0.2.0` points to the exact signed-artifact source commit
+- [ ] GitHub Release `v0.2.0` publishes that exact APK and matching SHA-256 file
+- [ ] GitHub public APK asset digest matches the accepted local artifact
+
+0.2.0 remains **RELEASE CANDIDATE** until the remaining gates pass.
+
+---
+
 ## 0.1.1 - ACCEPTED
 
 ### Build/toolchain
@@ -38,7 +94,7 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] final `STR-Remote-0.1.1.apk` SHA-256 recorded: `ecc8f8a78c0b65be5a74a44546275aa9d5688b54b2eacf577f3bbfd20b87a1e8`
 - [x] exact signed `STR-Remote-0.1.1.apk` installed and smoke-tested
 - [x] annotated tag `v0.1.1` points to source commit `d01b47dd348f0a52d7b81917c60c74c5229e17c4`
-- [x] GitHub Release `v0.1.1` publishes that exact APK and matching SHA-256 file
+- [x] GitHub Release `v0.1.1` publishes the signed APK and SHA-256 file
 - [x] GitHub public APK asset digest equals `sha256:ecc8f8a78c0b65be5a74a44546275aa9d5688b54b2eacf577f3bbfd20b87a1e8`
 
 The `0.1.1` release is **ACCEPTED**.
@@ -78,7 +134,7 @@ The `0.1.1` release is **ACCEPTED**.
 - [x] README identifies upstream STR as a prerequisite and separates upstream from wrapper responsibilities
 - [x] public AI transparency distinguishes development assistance from runtime behavior
 - [x] top-level WebView navigation is pinned to the selected speaker host/STR ports
-- [x] intentional JavaScript/cleartext LAN requirements are documented
+- [x] intentional JavaScript/cleartext LAN requirements are documented explicitly
 - [x] independent app branding is used
 - [x] security/privacy docs match the accepted runtime behavior
 - [x] final signed publication APK installed and smoke-tested

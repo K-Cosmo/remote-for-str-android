@@ -60,7 +60,7 @@ The Android wrapper intentionally keeps its own scope small:
 - external web links open in the system browser;
 - local STR navigation is restricted to the selected speaker and expected STR ports.
 
-The app stores only metadata for the last selected local speaker in Android app-private preferences.
+The app stores local speaker metadata in Android app-private preferences. Development versions may also store explicitly saved speakers and optional room labels; this data is not cloud-synced.
 
 See [SECURITY.md](doc/SECURITY.md) and [PRIVACY.md](doc/PRIVACY.md) for details.
 

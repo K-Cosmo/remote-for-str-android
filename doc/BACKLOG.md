@@ -12,7 +12,7 @@
 | STR-010 | Verify restart reconnect/back/permission/control smoke tests | P0 | ACCEPTED in 0.1.0 |
 | STR-011 | Public GitHub README/repository presentation | P1 | ACCEPTED; simplified post-release |
 | STR-013 | Discovery/network resilience: no-Wi-Fi, timeout, no-device/STR-unreachable guidance, retry | P0 | ACCEPTED in 0.1.1 |
-| STR-005 | Persistent speaker picker / saved speakers / favorites / quick switching | P1 | PLANNED - BUILD-0009 / 0.2.0 |
+| STR-005 | Persistent speaker picker / saved speakers / favorites / quick switching / room assignment | P1 | IMPLEMENTED - BUILD-0009 / 0.2.0 verification pending |
 | STR-014 | Evaluate Gradle 9.8.x maintenance upgrade | P2 | DEFERRED - after 0.2.0 or trigger-based |
 | STR-012 | Additional SoundTouch model compatibility evidence | P2 | BACKLOG |
 | STR-006 | Evaluate STR authentication changes when upstream provides them | P2 | BACKLOG |

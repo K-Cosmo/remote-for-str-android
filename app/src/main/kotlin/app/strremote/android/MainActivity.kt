@@ -6,7 +6,9 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -18,6 +20,11 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.text.InputType
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +38,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ProgressBar
@@ -55,15 +63,18 @@ class MainActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private lateinit var statusText: TextView
+    private lateinit var deviceButton: Button
     private lateinit var discoveryPanel: LinearLayout
     private lateinit var discoveryProgress: ProgressBar
     private lateinit var discoveryMessage: TextView
+    private lateinit var managementHint: TextView
     private lateinit var retryButton: Button
     private lateinit var strHelpButton: Button
     private lateinit var webView: WebView
     private lateinit var adapter: SpeakerAdapter
 
     private val speakers = LinkedHashMap<String, SpeakerRow>()
+    private val hiddenSpeakerKeys = mutableSetOf<String>()
     private var currentEndpoint: SpeakerEndpoint? = null
     private var pageVisible = false
     private var initialConnectionAttempted = false
@@ -210,11 +221,18 @@ class MainActivity : Activity() {
         }
         toolbar.addView(title, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
 
-        val deviceButton = Button(this).apply {
+        deviceButton = Button(this).apply {
             text = getString(R.string.devices)
+            isAllCaps = false
             setOnClickListener {
-                showDiscoveryPanel()
-                startDiscovery()
+                if (pageVisible) {
+                    showDiscoveryPanel()
+                    startDiscovery()
+                } else if (currentEndpoint != null) {
+                    showWebView()
+                } else {
+                    startDiscovery()
+                }
             }
         }
         toolbar.addView(deviceButton)
@@ -224,8 +242,9 @@ class MainActivity : Activity() {
         )
 
         statusText = TextView(this).apply {
-            textSize = 13f
-            setPadding(dp(16), dp(2), dp(16), dp(8))
+            textSize = 17f
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(16), dp(2), dp(16), dp(12))
             visibility = View.GONE
         }
         root.addView(
@@ -238,7 +257,7 @@ class MainActivity : Activity() {
 
         discoveryPanel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(8), dp(16), dp(4))
+            setPadding(dp(16), dp(10), dp(16), dp(8))
         }
         content.addView(
             discoveryPanel,
@@ -248,6 +267,11 @@ class MainActivity : Activity() {
         val discoveryHeader = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = createPanelBackground(
+                fillColor = "#EDF5FF",
+                strokeColor = "#BFD9FF"
+            )
         }
 
         discoveryProgress = ProgressBar(this, null, android.R.attr.progressBarStyleSmall).apply {
@@ -264,6 +288,8 @@ class MainActivity : Activity() {
             text = getString(R.string.searching)
             gravity = Gravity.CENTER_VERTICAL
             textSize = 16f
+            setTypeface(typeface, Typeface.BOLD)
+            setTextColor(Color.parseColor("#163A63"))
         }
         discoveryHeader.addView(
             discoveryMessage,
@@ -274,22 +300,47 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         )
 
+        managementHint = TextView(this).apply {
+            textSize = 14f
+            setLineSpacing(0f, 1.1f)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = createPanelBackground(
+                fillColor = "#FFF7E6",
+                strokeColor = "#FFD58A"
+            )
+            setTextColor(Color.parseColor("#5D4300"))
+        }
+        configureManagementHint()
+        discoveryPanel.addView(
+            managementHint,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(10)
+            }
+        )
+
         val speakerList = ListView(this).apply {
-            dividerHeight = 1
+            dividerHeight = 0
         }
         adapter = SpeakerAdapter()
         speakerList.adapter = adapter
         speakerList.setOnItemClickListener { _, _, position, _ ->
             val row = adapter.getItem(position) ?: return@setOnItemClickListener
-            row.endpoint?.let { loadEndpoint(it) } ?: probeCandidate(row.candidate, discoveryGeneration)
+            when {
+                row.endpoint != null -> loadEndpoint(row.endpoint)
+                row.saved != null -> probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
+                else -> probeCandidate(row.candidate, discoveryGeneration)
+            }
         }
         discoveryPanel.addView(
             speakerList,
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply {
+                topMargin = dp(10)
+            }
         )
 
         retryButton = Button(this).apply {
             text = getString(R.string.retry)
+            isAllCaps = false
             visibility = View.GONE
             setOnClickListener { retryConnection() }
         }
@@ -302,6 +353,7 @@ class MainActivity : Activity() {
 
         strHelpButton = Button(this).apply {
             text = getString(R.string.str_help)
+            isAllCaps = false
             visibility = View.GONE
             setOnClickListener { openStrWebsite() }
         }
@@ -314,6 +366,7 @@ class MainActivity : Activity() {
 
         val manualButton = Button(this).apply {
             text = getString(R.string.manual_ip)
+            isAllCaps = false
             setOnClickListener { showManualDialog() }
         }
         discoveryPanel.addView(
@@ -523,15 +576,21 @@ class MainActivity : Activity() {
         discoveryGeneration++
         discoveryActive = true
         discoveryTimedOut = false
+        hiddenSpeakerKeys.clear()
 
-        speakers.clear()
-        adapter.replace(emptyList())
+        rebuildPersistentRows()
         setDiscoveryState(
             message = getString(R.string.searching),
             showProgress = true,
             showRetry = false,
             showStrHelp = false
         )
+
+        val generation = discoveryGeneration
+        speakers.values
+            .mapNotNull { it.saved }
+            .distinctBy { speakerIdentity(it.endpoint) }
+            .forEach { probeSavedSpeaker(it, generation, connectOnSuccess = false) }
 
         discovery.start()
         mainHandler.postDelayed(discoveryTimeout, DISCOVERY_TIMEOUT_MS)
@@ -582,21 +641,27 @@ class MainActivity : Activity() {
     private fun handleSpeakerFound(candidate: SpeakerCandidate) {
         runOnUiThread {
             if (!discoveryActive) return@runOnUiThread
+            if (speakerVisibilityKeys(candidate).any(hiddenSpeakerKeys::contains)) return@runOnUiThread
 
-            val existing = speakers[candidate.key]
-            if (existing?.endpoint != null) {
-                speakers[candidate.key] = existing.copy(candidate = candidate)
-                updateList()
-                return@runOnUiThread
+            val existingKey = findRowKey(candidate)
+            val existing = existingKey?.let(speakers::get)
+            val saved = existing?.saved ?: prefs.findSavedSpeaker(candidate.key, candidate.host)
+
+            if (existingKey != null && existingKey != candidate.key) {
+                speakers.remove(existingKey)
             }
 
             speakers[candidate.key] = SpeakerRow(
                 candidate = candidate,
-                endpoint = null,
-                probeFinished = false
+                endpoint = existing?.endpoint,
+                probeFinished = existing?.probeFinished ?: false,
+                saved = saved,
+                discovered = true
             )
             updateList()
-            probeCandidate(candidate, discoveryGeneration)
+            if (existing == null || existing.probeFinished) {
+                probeCandidate(candidate, discoveryGeneration)
+            }
         }
     }
 
@@ -630,8 +695,8 @@ class MainActivity : Activity() {
             return
         }
 
+        val discoveredRows = speakers.values.filter { it.discovered }
         when {
-            speakers.isEmpty() -> showNoDevicesFound()
             speakers.values.any { it.endpoint != null } -> {
                 setDiscoveryState(
                     message = getString(R.string.found_devices),
@@ -640,7 +705,8 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            speakers.values.all { it.probeFinished } -> showStrUnreachable()
+            discoveredRows.isEmpty() -> showNoDevicesFound()
+            discoveredRows.all { it.probeFinished } -> showStrUnreachable()
             else -> {
                 setDiscoveryState(
                     message = getString(R.string.checking_discovered),
@@ -658,27 +724,40 @@ class MainActivity : Activity() {
             return
         }
 
-        val existing = speakers[candidate.key] ?: SpeakerRow(candidate, null, false)
-        speakers[candidate.key] = existing.copy(candidate = candidate, probeFinished = false)
+        val existingKey = findRowKey(candidate)
+        val rowKey = existingKey ?: candidate.key
+        val existing = existingKey?.let(speakers::get)
+        val saved = existing?.saved ?: prefs.findSavedSpeaker(candidate.key, candidate.host)
+        speakers[rowKey] = (existing ?: SpeakerRow(candidate, null, false, saved, true)).copy(
+            candidate = candidate,
+            probeFinished = false,
+            saved = saved,
+            discovered = true
+        )
         updateList()
 
         probe.probe(candidate) { endpoint ->
             runOnUiThread {
                 if (generation != discoveryGeneration) return@runOnUiThread
 
-                val current = speakers[candidate.key] ?: return@runOnUiThread
-                speakers[candidate.key] = current.copy(endpoint = endpoint, probeFinished = true)
+                val currentKey = findRowKey(candidate) ?: return@runOnUiThread
+                val current = speakers[currentKey] ?: return@runOnUiThread
+                speakers[currentKey] = current.copy(endpoint = endpoint, probeFinished = true)
+                if (endpoint != null && current.saved != null) {
+                    prefs.updateSavedEndpoint(endpoint)
+                }
                 updateList()
 
                 if (endpoint != null) {
-                    if (currentEndpoint == null && prefs.loadLastEndpoint()?.key == candidate.key) {
+                    val last = prefs.loadLastEndpoint()
+                    if (currentEndpoint == null && last != null && speakerMatches(last, endpoint)) {
                         loadEndpoint(endpoint)
                     }
                 } else if (
                     discoveryTimedOut &&
-                    speakers.values.isNotEmpty() &&
-                    speakers.values.all { it.probeFinished } &&
-                    speakers.values.none { it.endpoint != null }
+                    speakers.values.any { it.discovered } &&
+                    speakers.values.filter { it.discovered }.all { it.probeFinished } &&
+                    speakers.values.filter { it.discovered }.none { it.endpoint != null }
                 ) {
                     showStrUnreachable()
                 }
@@ -690,6 +769,7 @@ class MainActivity : Activity() {
         adapter.replace(speakers.values.toList())
         if (speakers.isEmpty()) return
 
+        val discoveredRows = speakers.values.filter { it.discovered }
         when {
             speakers.values.any { it.endpoint != null } -> {
                 setDiscoveryState(
@@ -699,7 +779,7 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            speakers.values.any { !it.probeFinished } -> {
+            discoveredRows.any { !it.probeFinished } -> {
                 setDiscoveryState(
                     message = getString(R.string.checking_discovered),
                     showProgress = true,
@@ -707,6 +787,15 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
+            discoveryActive -> {
+                setDiscoveryState(
+                    message = getString(R.string.searching),
+                    showProgress = true,
+                    showRetry = false,
+                    showStrHelp = false
+                )
+            }
+            discoveryTimedOut && discoveredRows.isEmpty() -> showNoDevicesFound()
             discoveryTimedOut -> showStrUnreachable()
             else -> {
                 setDiscoveryState(
@@ -723,8 +812,7 @@ class MainActivity : Activity() {
         stopDiscoverySession()
         discoveryGeneration++
         discoveryTimedOut = false
-        speakers.clear()
-        adapter.replace(emptyList())
+        rebuildPersistentRows()
         showDiscoveryPanel()
         setDiscoveryState(
             message = getString(R.string.wifi_required),
@@ -736,7 +824,13 @@ class MainActivity : Activity() {
 
     private fun showNoDevicesFound() {
         setDiscoveryState(
-            message = getString(R.string.no_devices_found),
+            message = getString(
+                if (prefs.loadSavedSpeakers().isEmpty()) {
+                    R.string.no_devices_found
+                } else {
+                    R.string.no_devices_found_saved
+                }
+            ),
             showProgress = false,
             showRetry = true,
             showStrHelp = true
@@ -784,18 +878,25 @@ class MainActivity : Activity() {
 
         currentEndpoint = endpoint
         prefs.save(endpoint)
-        statusText.text = getString(
-            R.string.status_connected,
-            endpoint.name,
-            hostForDisplay(endpoint.host),
-            endpoint.port
-        )
+        prefs.updateSavedEndpoint(endpoint)
+        refreshConnectedStatus(endpoint)
         webView.loadUrl(endpoint.baseUrl)
         showWebView()
     }
 
+    private fun refreshConnectedStatus(endpoint: SpeakerEndpoint) {
+        val room = roomLabel(prefs.findSavedSpeaker(endpoint.key, endpoint.host)?.room)
+        statusText.text = if (room == null) {
+            endpoint.name
+        } else {
+            getString(R.string.selected_speaker_room, endpoint.name, room)
+        }
+    }
+
     private fun showWebView() {
         pageVisible = true
+        deviceButton.text = getString(R.string.devices)
+        deviceButton.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
         discoveryPanel.visibility = View.GONE
         webView.visibility = View.VISIBLE
@@ -803,9 +904,12 @@ class MainActivity : Activity() {
 
     private fun showDiscoveryPanel() {
         pageVisible = false
+        deviceButton.text = getString(R.string.remote)
+        deviceButton.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
         statusText.visibility = View.GONE
         webView.visibility = View.GONE
         discoveryPanel.visibility = View.VISIBLE
+        adapter.notifyDataSetChanged()
     }
 
     private fun showManualDialog() {
@@ -867,6 +971,352 @@ class MainActivity : Activity() {
             .show()
     }
 
+    private fun rebuildPersistentRows() {
+        speakers.clear()
+
+        prefs.loadSavedSpeakers().forEach { saved ->
+            val candidate = candidateFromEndpoint(saved.endpoint)
+            speakers[speakerIdentity(saved.endpoint)] = SpeakerRow(
+                candidate = candidate,
+                endpoint = null,
+                probeFinished = false,
+                saved = saved,
+                discovered = false
+            )
+        }
+
+        currentEndpoint?.let { endpoint ->
+            val existingKey = findRowKey(endpoint)
+            if (existingKey != null) {
+                val existing = speakers[existingKey] ?: return@let
+                speakers[existingKey] = existing.copy(endpoint = endpoint, probeFinished = true)
+            } else {
+                speakers[speakerIdentity(endpoint)] = SpeakerRow(
+                    candidate = candidateFromEndpoint(endpoint),
+                    endpoint = endpoint,
+                    probeFinished = true,
+                    saved = prefs.findSavedSpeaker(endpoint.key, endpoint.host),
+                    discovered = false
+                )
+            }
+        }
+
+        adapter.replace(speakers.values.toList())
+    }
+
+    private fun candidateFromEndpoint(endpoint: SpeakerEndpoint): SpeakerCandidate = SpeakerCandidate(
+        key = endpoint.key ?: speakerIdentity(endpoint),
+        serviceName = endpoint.name,
+        friendlyName = endpoint.name,
+        host = endpoint.host,
+        advertisedPort = endpoint.port,
+        model = endpoint.model,
+        version = null
+    )
+
+    private fun findRowKey(candidate: SpeakerCandidate): String? {
+        val candidateEndpoint = SpeakerEndpoint(
+            host = candidate.host,
+            port = candidate.advertisedPort,
+            name = candidate.friendlyName,
+            model = candidate.model,
+            key = candidate.key
+        )
+        return speakers.entries.firstOrNull { (_, row) ->
+            val rowEndpoint = row.endpoint ?: row.saved?.endpoint
+            if (rowEndpoint != null) {
+                speakerMatches(rowEndpoint, candidateEndpoint)
+            } else {
+                row.candidate.key == candidate.key ||
+                    row.candidate.host.equals(candidate.host, ignoreCase = true)
+            }
+        }?.key
+    }
+
+    private fun findRowKey(endpoint: SpeakerEndpoint): String? =
+        speakers.entries.firstOrNull { (_, row) ->
+            val rowEndpoint = row.endpoint ?: row.saved?.endpoint ?: SpeakerEndpoint(
+                host = row.candidate.host,
+                port = row.candidate.advertisedPort,
+                name = row.candidate.friendlyName,
+                model = row.candidate.model,
+                key = row.candidate.key
+            )
+            speakerMatches(rowEndpoint, endpoint)
+        }?.key
+
+    private fun probeSavedSpeaker(
+        saved: SavedSpeaker,
+        generation: Int,
+        connectOnSuccess: Boolean
+    ) {
+        if (!hasWifiTransport()) {
+            if (connectOnSuccess) showWifiRequired()
+            return
+        }
+
+        val existingKey = findRowKey(saved.endpoint) ?: speakerIdentity(saved.endpoint)
+        val current = speakers[existingKey] ?: SpeakerRow(
+            candidate = candidateFromEndpoint(saved.endpoint),
+            endpoint = null,
+            probeFinished = false,
+            saved = saved,
+            discovered = false
+        )
+        speakers[existingKey] = current.copy(probeFinished = false, saved = saved)
+        adapter.replace(speakers.values.toList())
+
+        probe.probeHost(
+            host = saved.endpoint.host,
+            preferredPort = saved.endpoint.port,
+            name = saved.endpoint.name,
+            model = saved.endpoint.model,
+            key = saved.endpoint.key
+        ) { endpoint ->
+            runOnUiThread {
+                if (generation != discoveryGeneration) return@runOnUiThread
+
+                val key = findRowKey(saved.endpoint) ?: return@runOnUiThread
+                val row = speakers[key] ?: return@runOnUiThread
+                speakers[key] = row.copy(endpoint = endpoint, probeFinished = true)
+                if (endpoint != null) {
+                    prefs.updateSavedEndpoint(endpoint)
+                }
+                updateList()
+
+                if (connectOnSuccess) {
+                    if (endpoint != null) {
+                        loadEndpoint(endpoint)
+                    } else {
+                        setDiscoveryState(
+                            message = getString(R.string.saved_unreachable),
+                            showProgress = false,
+                            showRetry = true,
+                            showStrHelp = true
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun connectSpeakerRow(row: SpeakerRow) {
+        when {
+            row.endpoint != null -> loadEndpoint(row.endpoint)
+            row.saved != null -> probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
+            else -> probeCandidate(row.candidate, discoveryGeneration)
+        }
+    }
+
+    private fun resolveRoomEndpoint(row: SpeakerRow): SpeakerEndpoint? =
+        row.endpoint ?: row.saved?.endpoint ?: currentEndpoint?.takeIf {
+            it.host.equals(row.candidate.host, ignoreCase = true)
+        }
+
+    private fun assignRoomForRow(row: SpeakerRow) {
+        val endpoint = resolveRoomEndpoint(row)
+        if (endpoint == null) {
+            Toast.makeText(this, R.string.save_requires_reachable, Toast.LENGTH_LONG).show()
+            return
+        }
+        showRoomPicker(endpoint)
+    }
+
+    private fun confirmRemoveSavedSpeaker(row: SpeakerRow) {
+        val saved = row.saved ?: return
+
+        AlertDialog.Builder(this)
+            .setTitle(row.candidate.friendlyName)
+            .setMessage(R.string.remove_saved_speaker_confirm)
+            .setPositiveButton(R.string.remove) { _, _ ->
+                removeSavedSpeaker(saved)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showRoomPicker(endpoint: SpeakerEndpoint) {
+        val labels = arrayOf(
+            getString(R.string.room_none),
+            getString(R.string.room_living),
+            getString(R.string.room_bedroom),
+            getString(R.string.room_kitchen),
+            getString(R.string.room_bathroom),
+            getString(R.string.room_kids),
+            getString(R.string.room_garden),
+            getString(R.string.room_custom)
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.room_title)
+            .setItems(labels) { _, which ->
+                when (which) {
+                    0 -> saveSpeakerWithRoom(endpoint, null)
+                    1 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.LIVING_ROOM))
+                    2 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BEDROOM))
+                    3 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KITCHEN))
+                    4 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BATHROOM))
+                    5 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KIDS_ROOM))
+                    6 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.GARDEN))
+                    else -> showCustomRoomDialog(endpoint)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun showCustomRoomDialog(endpoint: SpeakerEndpoint) {
+        val input = EditText(this).apply {
+            hint = getString(R.string.room_custom_hint)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setSingleLine(true)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.room_custom_title)
+            .setView(input)
+            .setPositiveButton(R.string.save) { _, _ ->
+                val room = input.text?.toString()?.trim().orEmpty()
+                if (room.isBlank()) {
+                    Toast.makeText(this, R.string.room_custom_invalid, Toast.LENGTH_LONG).show()
+                } else {
+                    saveSpeakerWithRoom(endpoint, RoomAssignment(customName = room))
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun saveSpeakerWithRoom(endpoint: SpeakerEndpoint, room: RoomAssignment?) {
+        val saved = SavedSpeaker(endpoint, room)
+        prefs.saveSpeaker(saved)
+
+        val key = findRowKey(endpoint) ?: speakerIdentity(endpoint)
+        val existing = speakers[key]
+        speakers[key] = if (existing == null) {
+            SpeakerRow(
+                candidate = candidateFromEndpoint(endpoint),
+                endpoint = endpoint,
+                probeFinished = true,
+                saved = saved,
+                discovered = false
+            )
+        } else {
+            existing.copy(saved = saved, endpoint = existing.endpoint ?: endpoint)
+        }
+
+        updateList()
+        currentEndpoint?.takeIf { speakerMatches(it, endpoint) }?.let(::refreshConnectedStatus)
+        Toast.makeText(this, R.string.speaker_saved, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun removeSavedSpeaker(saved: SavedSpeaker) {
+        prefs.removeSavedSpeaker(saved.endpoint)
+        hiddenSpeakerKeys.addAll(speakerVisibilityKeys(saved.endpoint))
+
+        val keysToRemove = speakers
+            .filterValues { row ->
+                val endpoint = row.endpoint ?: row.saved?.endpoint ?: SpeakerEndpoint(
+                    host = row.candidate.host,
+                    port = row.candidate.advertisedPort,
+                    name = row.candidate.friendlyName,
+                    model = row.candidate.model,
+                    key = row.candidate.key
+                )
+                speakerMatches(endpoint, saved.endpoint)
+            }
+            .keys
+            .toList()
+
+        keysToRemove.forEach(speakers::remove)
+
+        updateList()
+        currentEndpoint?.takeIf { speakerMatches(it, saved.endpoint) }?.let(::refreshConnectedStatus)
+        Toast.makeText(this, R.string.speaker_removed, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun speakerVisibilityKeys(endpoint: SpeakerEndpoint): Set<String> = buildSet {
+        endpoint.key?.takeIf { it.isNotBlank() }?.let { add("key:${it.lowercase()}") }
+        add("host:${endpoint.host.lowercase()}")
+    }
+
+    private fun speakerVisibilityKeys(candidate: SpeakerCandidate): Set<String> = buildSet {
+        candidate.key.takeIf { it.isNotBlank() }?.let { add("key:${it.lowercase()}") }
+        add("host:${candidate.host.lowercase()}")
+    }
+
+    private fun roomLabel(room: RoomAssignment?): String? {
+        if (room == null) return null
+        room.customName?.takeIf { it.isNotBlank() }?.let { return it }
+        return when (room.preset) {
+            RoomPreset.LIVING_ROOM -> getString(R.string.room_living)
+            RoomPreset.BEDROOM -> getString(R.string.room_bedroom)
+            RoomPreset.KITCHEN -> getString(R.string.room_kitchen)
+            RoomPreset.BATHROOM -> getString(R.string.room_bathroom)
+            RoomPreset.KIDS_ROOM -> getString(R.string.room_kids)
+            RoomPreset.GARDEN -> getString(R.string.room_garden)
+            null -> null
+        }
+    }
+
+    private fun isCurrent(row: SpeakerRow): Boolean {
+        val current = currentEndpoint ?: return false
+        val rowEndpoint = row.endpoint ?: row.saved?.endpoint ?: SpeakerEndpoint(
+            host = row.candidate.host,
+            port = row.candidate.advertisedPort,
+            name = row.candidate.friendlyName,
+            model = row.candidate.model,
+            key = row.candidate.key
+        )
+        return speakerMatches(current, rowEndpoint)
+    }
+
+    private fun configureManagementHint() {
+        if (!prefs.shouldShowManagementHint()) {
+            managementHint.visibility = View.GONE
+            return
+        }
+
+        val message = getString(R.string.speaker_management_hint)
+        val hideLabel = getString(R.string.speaker_management_hide)
+        val text = SpannableStringBuilder()
+            .append(message)
+            .append("  ")
+            .append(hideLabel)
+        val linkStart = text.length - hideLabel.length
+
+        text.setSpan(
+            object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    prefs.hideManagementHint()
+                    managementHint.visibility = View.GONE
+                }
+
+                override fun updateDrawState(ds: TextPaint) {
+                    ds.color = Color.parseColor("#8A5A00")
+                    ds.isUnderlineText = true
+                }
+            },
+            linkStart,
+            text.length,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        managementHint.text = text
+        managementHint.movementMethod = LinkMovementMethod.getInstance()
+        managementHint.highlightColor = Color.TRANSPARENT
+        managementHint.visibility = View.VISIBLE
+    }
+
+    private fun createPanelBackground(
+        fillColor: String,
+        strokeColor: String
+    ): GradientDrawable = GradientDrawable().apply {
+        cornerRadius = dp(14).toFloat()
+        setColor(Color.parseColor(fillColor))
+        setStroke(dp(1), Color.parseColor(strokeColor))
+    }
+
     private fun parseManualAddress(rawInput: String): Pair<String, Int?>? {
         val raw = rawInput.trim()
         if (raw.isEmpty()) return null
@@ -885,15 +1335,33 @@ class MainActivity : Activity() {
     private data class SpeakerRow(
         val candidate: SpeakerCandidate,
         val endpoint: SpeakerEndpoint?,
-        val probeFinished: Boolean
+        val probeFinished: Boolean,
+        val saved: SavedSpeaker? = null,
+        val discovered: Boolean = true
     )
 
-    private inner class SpeakerAdapter : ArrayAdapter<SpeakerRow>(this, android.R.layout.simple_list_item_2) {
+    private data class SpeakerRowViewHolder(
+        val container: LinearLayout,
+        val title: TextView,
+        val details: TextView,
+        val address: TextView,
+        val roomButton: Button,
+        val deleteButton: ImageButton
+    )
+
+    private inner class SpeakerAdapter : ArrayAdapter<SpeakerRow>(this, 0) {
         private val rows = mutableListOf<SpeakerRow>()
 
         fun replace(newRows: List<SpeakerRow>) {
             rows.clear()
-            rows.addAll(newRows.sortedBy { it.candidate.friendlyName.lowercase() })
+            rows.addAll(
+                newRows.sortedWith(
+                    compareBy<SpeakerRow>(
+                        { roomLabel(it.saved?.room)?.lowercase().orEmpty() },
+                        { it.candidate.friendlyName.lowercase() }
+                    )
+                )
+            )
             notifyDataSetChanged()
         }
 
@@ -904,17 +1372,122 @@ class MainActivity : Activity() {
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = convertView ?: layoutInflater.inflate(android.R.layout.simple_list_item_2, parent, false)
-            val row = rows[position]
-            val title = view.findViewById<TextView>(android.R.id.text1)
-            val subtitle = view.findViewById<TextView>(android.R.id.text2)
-            title.text = row.candidate.friendlyName
+            val holder: SpeakerRowViewHolder
+            val view: View
 
-            val details = buildList {
+            if (convertView == null) {
+                val container = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(14), dp(12), dp(10), dp(12))
+                    minimumHeight = dp(88)
+                }
+
+                val textColumn = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                }
+
+                val title = TextView(this@MainActivity).apply {
+                    textSize = 18f
+                    setTypeface(typeface, Typeface.BOLD)
+                    setTextColor(Color.parseColor("#17324A"))
+                }
+
+                val details = TextView(this@MainActivity).apply {
+                    textSize = 13f
+                    setTextColor(Color.parseColor("#566173"))
+                }
+
+                val address = TextView(this@MainActivity).apply {
+                    textSize = 12f
+                    setTextColor(Color.parseColor("#748091"))
+                }
+
+                textColumn.addView(
+                    title,
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                )
+                textColumn.addView(
+                    details,
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = dp(4)
+                    }
+                )
+                textColumn.addView(
+                    address,
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                        topMargin = dp(2)
+                    }
+                )
+
+                val roomButton = Button(this@MainActivity).apply {
+                    text = getString(R.string.room_action_label)
+                    isAllCaps = false
+                    isFocusable = false
+                    isFocusableInTouchMode = false
+                    textSize = 13f
+                    minimumHeight = dp(40)
+                    minWidth = 0
+                    setPadding(dp(12), dp(8), dp(12), dp(8))
+                }
+
+                val deleteButton = ImageButton(this@MainActivity).apply {
+                    setImageResource(android.R.drawable.ic_menu_delete)
+                    contentDescription = getString(R.string.remove_saved_speaker)
+                    setBackgroundColor(Color.TRANSPARENT)
+                    isFocusable = false
+                    isFocusableInTouchMode = false
+                    setPadding(dp(10), dp(10), dp(10), dp(10))
+                    minimumWidth = dp(44)
+                    minimumHeight = dp(44)
+                }
+
+                container.addView(
+                    textColumn,
+                    LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                        marginEnd = dp(10)
+                    }
+                )
+                container.addView(
+                    roomButton,
+                    LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                )
+                container.addView(
+                    deleteButton,
+                    LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+                        marginStart = dp(4)
+                    }
+                )
+
+                holder = SpeakerRowViewHolder(
+                    container = container,
+                    title = title,
+                    details = details,
+                    address = address,
+                    roomButton = roomButton,
+                    deleteButton = deleteButton
+                )
+                container.tag = holder
+                view = container
+            } else {
+                view = convertView
+                holder = view.tag as SpeakerRowViewHolder
+            }
+
+            val row = rows[position]
+            val room = roomLabel(row.saved?.room)
+            val speakerTitle = if (room == null) {
+                row.candidate.friendlyName
+            } else {
+                getString(R.string.speaker_room_title, row.candidate.friendlyName, room)
+            }
+
+            holder.title.text = speakerTitle
+
+            holder.details.text = buildList {
                 row.candidate.model?.let(::add)
-                add(hostForDisplay(row.candidate.host))
                 row.candidate.version?.let { add(getString(R.string.version_format, it)) }
-                if (row.endpoint == null) {
+                if (row.endpoint == null && hasWifiTransport()) {
                     add(
                         getString(
                             if (row.probeFinished) {
@@ -925,9 +1498,36 @@ class MainActivity : Activity() {
                         )
                     )
                 }
+            }.joinToString(" · ")
+
+            holder.address.text = hostForDisplay(row.candidate.host)
+
+            val roomEndpoint = resolveRoomEndpoint(row)
+            holder.roomButton.text = getString(R.string.room_action_label)
+            holder.roomButton.contentDescription = getString(R.string.room_action_description)
+            holder.roomButton.isEnabled = roomEndpoint != null
+            holder.roomButton.alpha = if (roomEndpoint != null) 1f else 0.45f
+            holder.roomButton.setOnClickListener {
+                assignRoomForRow(row)
             }
-            subtitle.text = details.joinToString(" · ")
+
+            holder.deleteButton.visibility = if (row.saved != null) View.VISIBLE else View.GONE
+            holder.deleteButton.contentDescription = getString(R.string.remove_saved_speaker)
+            holder.deleteButton.setOnClickListener {
+                confirmRemoveSavedSpeaker(row)
+            }
+
+            holder.container.setOnClickListener {
+                connectSpeakerRow(row)
+            }
+
+            holder.container.background = createPanelBackground(
+                fillColor = if (isCurrent(row)) "#F0FDF4" else "#FFFFFF",
+                strokeColor = if (isCurrent(row)) "#3BCB78" else "#D7E1EC"
+            )
+
             return view
         }
     }
+
 }

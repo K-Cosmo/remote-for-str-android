@@ -2,6 +2,29 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
+## Unreleased — 0.2.0
+
+Speaker management:
+
+- persist explicitly saved speakers independently of the current mDNS scan;
+- merge saved and discovered representations using discovery identity with host fallback for unkeyed/manual endpoints;
+- show the current speaker and allow quick switching through the existing endpoint path;
+- keep unreachable saved speakers visible and actionable;
+- make room assignment the obvious inline row action; assigning a room implicitly saves reachable speakers and successful manual endpoints;
+- add optional room assignment with Wohnzimmer, Schlafzimmer, Küche, Bad, Kinderzimmer and Garten presets;
+- persist built-in rooms with language-neutral IDs and localize only their display labels;
+- allow arbitrary custom room labels;
+- add an explicit delete icon for saved speakers with confirmation; removal hides the row immediately until the next fresh device search;
+- move speaker guidance into highlighted hint/state panels instead of tiny footer-only text;
+- keep the connected-speaker status on the remote screen compact instead of rendering it as a highlighted banner, but make the selected device/room label larger and bold enough to be noticed;
+- make speaker rows directly tappable even with inline action controls, and provide an explicit Remote toolbar action to leave the device view;
+- present device name and room together as the primary row title, with model/version and IP below in smaller text;
+- remove the extra leading bullet before the selected device title in the device list; the active device stays indicated by card highlighting alone.
+- make the highlighted device-management hint dismissible through an explicit text link and remember the dismissal locally;
+- preserve comfortable spacing between `Gefundene Geräte` and the first speaker card when the hint is hidden.
+- keep Gradle 9.7.1 + AGP 9.4.1 for the 0.2.0 feature line;
+- bump application version to `0.2.0` / versionCode 9.
+
 ## 0.1.1 — 2026-09-27
 
 Discovery and network resilience:

@@ -71,3 +71,27 @@
 ## D-018 — Keep Gradle 9.7.1 for the 0.2.0 feature line
 
 **Decision:** do not upgrade from the accepted Gradle 9.7.1 baseline to Gradle 9.8.x solely because 9.8 is newer. AGP 9.4.x requires Gradle 9.6.0 or newer, and the project already has green local/CI evidence on 9.7.1. Reassess the Gradle line after 0.2.0 or earlier only when a concrete compatibility, build-fix or feature requirement justifies the change. Build-tool maintenance stays isolated from application feature work.
+
+## D-019 — Room assignment is local saved-speaker metadata
+
+**Decision:** room assignment is optional metadata owned by STR Remote for explicitly saved speakers. Built-in rooms use stable storage IDs (`living_room`, `bedroom`, `kitchen`, `bathroom`, `kids_room`, `garden`) and are localized only at display time. A custom room is stored as the user's local text. Room metadata does not participate in speaker identity, endpoint probing, playback behavior or WebView security decisions, and it is never cloud-synced.
+
+## D-019 — Make common speaker actions explicit and one-tap
+
+**Decision:** the device list remains tap-to-connect. Row taps are handled explicitly so inline action controls cannot block connection/switching. Each row exposes an inline room action; assigning/changing a room implicitly saves the speaker. Saved speakers expose a visible delete icon with a confirmation dialog. Common actions must not depend on hidden long-press gestures.
+
+## D-020 — Important guidance must be visually highlighted
+
+**Decision:** explanatory/discovery guidance for the device screen should not hide as tiny footer text. Important hints and state messages use highlighted panels with clearer typography so non-technical users notice them quickly.
+
+## D-021 — Device management must always offer an obvious way back to the remote
+
+**Decision:** when a speaker is already active, entering the device view changes the toolbar action from `Geräte` to `Fernbedienung`. The user must not need to re-select the active speaker or rely on Android back navigation merely to return to the remote.
+
+## D-022 — Deleting a saved discovered speaker hides it only for the current device view
+
+**Decision:** deletion removes saved metadata and immediately removes the row from the current list. Because discovery is automatic, a fresh device search may legitimately find the physical speaker again; the confirmation text must say so.
+
+## D-023 — Dismiss help text explicitly, not by hidden gesture
+
+**Decision:** the highlighted device-management hint uses a visible `Hinweis ausblenden` / `Hide this hint` text link. Do not use swipe-to-dismiss or a trash icon for help text because those interactions are hidden or semantically ambiguous. Dismissal is remembered in app-private preferences.

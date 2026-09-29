@@ -10,8 +10,8 @@ android {
         applicationId = "app.strremote.android"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "0.1.1"
+        versionCode = 9
+        versionName = "0.2.0"
     }
 
     buildTypes {
