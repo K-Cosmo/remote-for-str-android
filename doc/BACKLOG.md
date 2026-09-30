@@ -13,7 +13,7 @@
 | STR-011 | Public GitHub README/repository presentation | P1 | ACCEPTED; simplified post-release |
 | STR-013 | Discovery/network resilience: no-Wi-Fi, timeout, no-device/STR-unreachable guidance, retry | P0 | ACCEPTED in 0.1.1 |
 | STR-005 | Persistent speaker picker / saved speakers / favorites / quick switching / room assignment | P1 | ACCEPTED in 0.2.0 |
-| STR-015 | Compact remote banner + saved-speaker online/offline highlighting | P1 | IMPLEMENTED in 0.2.1 — verification pending |
+| STR-015 | Compact remote banner + saved-speaker online/offline highlighting | P1 | ACCEPTED in 0.2.1 |
 | STR-014 | Evaluate Gradle 9.8.x maintenance upgrade | P2 | DEFERRED — eligible post-0.2.0; schedule separately |
 | STR-012 | Additional SoundTouch model compatibility evidence | P2 | BACKLOG |
 | STR-006 | Evaluate STR authentication changes when upstream provides them | P2 | BACKLOG |

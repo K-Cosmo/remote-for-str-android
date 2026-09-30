@@ -2,7 +2,7 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## 0.2.1 — Unreleased
+## 0.2.1 — 2026-09-30
 
 UX refinement:
 

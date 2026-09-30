@@ -53,20 +53,47 @@ Improve vertical space on the remote screen and make saved-speaker reachability 
 
 ## Implementation state
 
-**IMPLEMENTED — VERIFICATION PENDING**
+**ACCEPTED in 0.2.1 — 2026-09-30**
 
-Implementation targets `0.2.1` / versionCode 10.
+## Verification and release evidence
 
-## Required verification
+Local/source evidence:
 
-- `tools/verify-doc-consistency.ps1`;
-- clean `assembleDebug`, `lintDebug` and `assembleRelease`;
-- GitHub Android CI;
-- real-device Pixel smoke of compact header;
-- real-device saved-speaker states:
-  - reachable -> green + Online;
-  - unreachable after completed probe -> red + Offline;
-  - checking/unknown -> neutral;
-- regression smoke that the embedded STR remote still loads and controls normally.
+- documentation consistency: PASS;
+- clean `assembleDebug`, `lintDebug` and `assembleRelease`: PASS;
+- exact release source: `6a3352928dc177419f2f5d7f5bc49868e9ab0589`;
+- application version: `0.2.1` / versionCode 10;
+- GitHub CI on `main`: run `36721458188`, PASS;
+- GitHub CI on `v0.2.1`: run `36722290992`, PASS.
 
-Acceptance and release evidence must be appended only after those checks exist.
+Real-device evidence:
+
+- compact Remote header accepted;
+- Online/Offline saved-speaker presentation accepted;
+- device-card geometry remains stable while background validation runs;
+- no-Wi-Fi guidance accepted on Remote and Devices views;
+- Android Wi-Fi settings action accepted;
+- Wi-Fi return / Retry / endpoint-probe recovery accepted;
+- saved-device selection no longer normally exposes Chromium's generic connection-error page;
+- normal embedded STR control path remains operational.
+
+Signing/publication evidence:
+
+- final APK: `STR-Remote-0.2.1.apk`;
+- SHA-256: `bf019801b4a47226ab1af616f4f74f1dd7abfb71731205253e1d9709af76de67`;
+- signer DN: `C=DE, CN=STR Remote`;
+- signer certificate SHA-256: `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`;
+- APK Signature Scheme v2/v3: PASS;
+- post-sign 16 KiB-aware zipalign check: PASS;
+- annotated tag: `v0.2.1`;
+- tag object: `7347fad1f8693746ec5e806df25cd43d326e42b2`;
+- tag target: exact release source commit;
+- GitHub Release ID: `400078904`;
+- publication time: `2026-09-30T13:33:15Z`;
+- public APK digest matches the local accepted artifact.
+
+## Result
+
+BUILD-0011 is complete. 0.2.1 is released and accepted.
+
+The documentation-finalization commit occurs after the release tag and must not trigger a rebuild/replacement of the already published 0.2.1 APK.

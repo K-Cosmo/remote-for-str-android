@@ -2,45 +2,57 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## 0.2.1 — IMPLEMENTED / VERIFICATION PENDING
+## 0.2.1 — ACCEPTED
 
 ### Implementation/scope
 
 - [x] application version is `0.2.1` / versionCode 10
-- [x] native remote-screen banner is compacted into a two-line text block with the comfortable Devices/Remote button size restored and slightly more vertical spacing, without changing the STR remote itself
-- [x] Remote navigation with no Wi-Fi is intercepted before the Chromium error page and replaced by native same-Wi-Fi guidance
-- [x] Remote no-Wi-Fi guidance exposes Retry and a direct Android Wi-Fi settings action
-- [x] Devices no-Wi-Fi guidance exposes the same direct Android Wi-Fi settings action
+- [x] native remote-screen banner is compact and retains comfortable Devices/Remote action sizing
+- [x] saved reachable speakers use strong green highlighting plus explicit Online text
+- [x] saved unreachable speakers use strong red highlighting plus explicit Offline text
+- [x] saved-speaker last-known reachability persists locally and remains visually stable during background revalidation
+- [x] device-card geometry/status stays stable while probes run and color changes only after a changed result
+- [x] device metadata hierarchy is model/status followed by STR version/IP with decreasing text size
+- [x] Remote no-Wi-Fi state uses native guidance instead of Chromium's generic error page
+- [x] Remote and Devices no-Wi-Fi states expose direct Android Wi-Fi settings access
 - [x] recovery/device-selection paths probe the STR endpoint before starting a WebView load
-- [x] WebView remains hidden behind native connection state until a successful main-page finish
-- [x] saved-speaker last-known reachability persists locally and remains visually stable while background revalidation runs
-- [x] device-card geometry/status remains stable during revalidation and only changes color after a changed result
-- [x] saved reachable speakers receive stronger green fill plus a 2 dp green border
-- [x] saved speakers that are currently unreachable from the app receive stronger red fill plus a 2 dp red border
-- [x] saved-speaker state also displays explicit Online/Offline text
-- [x] active checking/probe state remains neutral until reachability is known
-- [x] device-card metadata hierarchy is model/status followed by STR version/IP with decreasing text size
-- [x] existing current-speaker highlight remains available for unsaved/current rows
-- [x] no discovery, persistence, permission, WebView security, playback or toolchain behavior is intentionally changed
+- [x] WebView remains hidden behind native connection state until the main STR page finishes successfully
+- [x] no new permission, cloud service, analytics backend or native playback/business logic is introduced
+- [x] existing app-private preferences are extended only for last-known reachability; no new persistence dependency/model is introduced
 - [x] Gradle 9.7.1 + AGP 9.4.1 remains unchanged
 
-### Verification / release
+### Local/final device evidence
 
-- [ ] local documentation consistency gate passes
-- [ ] clean `assembleDebug + lintDebug + assembleRelease` succeeds
-- [ ] GitHub Android CI passes for committed 0.2.1 source
-- [ ] Pixel confirms the remote header remains compact but no longer feels cramped, and STR controls remain usable
-- [ ] Pixel confirms Remote with Wi-Fi disabled shows native Wi-Fi guidance rather than the Chromium connection-error page
-- [ ] Pixel confirms the Wi-Fi settings button opens the Android Wi-Fi panel/settings from both Remote and Devices no-Wi-Fi states
-- [ ] Pixel confirms Wi-Fi restore -> Retry waits for endpoint probe and either opens STR cleanly or stays on native unreachable guidance
-- [ ] Pixel confirms selecting a saved device never briefly exposes Chromium's generic error page
-- [ ] Pixel confirms opening Devices keeps the previous green/red state and card geometry stable until the background probe result changes
-- [ ] Pixel confirms saved reachable speaker = green + Online
-- [ ] Pixel confirms saved unreachable speaker = red + Offline after probe completion
-- [ ] Pixel confirms checking/unknown state is neutral
-- [ ] signed final APK verification and publication completed if 0.2.1 is released publicly
+- [x] local documentation consistency gate passes
+- [x] clean `assembleDebug + lintDebug + assembleRelease` succeeds
+- [x] lint contains no blocking errors
+- [x] Pixel confirms the compact Remote header and normal STR controls remain usable
+- [x] Pixel confirms saved reachable speaker = green + Online
+- [x] Pixel confirms saved unreachable speaker = red + Offline
+- [x] Pixel confirms Devices retains the previous green/red state and stable card geometry while background validation runs
+- [x] Pixel confirms Remote with Wi-Fi disabled uses native no-Wi-Fi guidance
+- [x] Pixel confirms direct Wi-Fi settings navigation from both Remote and Devices no-Wi-Fi states
+- [x] Pixel confirms Wi-Fi restore + Retry follows endpoint probing before STR presentation
+- [x] Pixel confirms selecting a saved device no longer normally exposes Chromium's generic connection-error page
 
-0.2.1 must remain **not ACCEPTED** until the applicable unchecked gates are completed.
+### Committed-source/signing/publication
+
+- [x] exact release source is `6a3352928dc177419f2f5d7f5bc49868e9ab0589`
+- [x] GitHub Android CI passes for exact release source on `main` (run `36721458188`)
+- [x] GitHub Android CI passes for pushed `v0.2.1` (run `36722290992`)
+- [x] release build starts from clean committed source
+- [x] `apksigner verify --verbose --print-certs` succeeds
+- [x] signing identity is `C=DE, CN=STR Remote`
+- [x] signer certificate SHA-256 is `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
+- [x] APK Signature Scheme v2 and v3 verify successfully
+- [x] post-sign `zipalign -c -P 16 -v 4` succeeds
+- [x] final `STR-Remote-0.2.1.apk` SHA-256 is `bf019801b4a47226ab1af616f4f74f1dd7abfb71731205253e1d9709af76de67`
+- [x] annotated `v0.2.1` tag object `7347fad1f8693746ec5e806df25cd43d326e42b2` resolves to exact release source
+- [x] GitHub Release `v0.2.1` is published, non-draft and non-prerelease (release ID `400078904`)
+- [x] GitHub Release publishes `STR-Remote-0.2.1.apk` and `STR-Remote-0.2.1.apk.sha256.txt`
+- [x] GitHub public APK asset digest is `sha256:bf019801b4a47226ab1af616f4f74f1dd7abfb71731205253e1d9709af76de67`, matching the accepted local artifact
+
+The `0.2.1` release is **ACCEPTED**.
 
 ---
 
