@@ -53,6 +53,7 @@ class MainActivity : Activity() {
         const val PERMISSION_REQUEST = 401
         const val DISCOVERY_TIMEOUT_MS = 10_000L
         const val WIFI_CALLBACK_INITIALIZATION_MS = 500L
+        const val REMOTE_RETRY_SETTLE_MS = 600L
         const val STR_WEBSITE = "https://st-reborn.de"
     }
 
@@ -68,8 +69,13 @@ class MainActivity : Activity() {
     private lateinit var discoveryProgress: ProgressBar
     private lateinit var discoveryMessage: TextView
     private lateinit var managementHint: TextView
+    private lateinit var discoveryWifiSettingsButton: Button
     private lateinit var retryButton: Button
     private lateinit var strHelpButton: Button
+    private lateinit var remoteOfflinePanel: LinearLayout
+    private lateinit var remoteOfflineMessage: TextView
+    private lateinit var remoteWifiSettingsButton: Button
+    private lateinit var remoteRetryButton: Button
     private lateinit var webView: WebView
     private lateinit var adapter: SpeakerAdapter
 
@@ -84,6 +90,8 @@ class MainActivity : Activity() {
     private var discoveryActive = false
     private var discoveryTimedOut = false
     private var discoveryGeneration = 0
+    private var remoteProbeGeneration = 0
+    private var webViewNeedsReload = false
 
     private val discoveryTimeout = Runnable { handleDiscoveryTimeout() }
 
@@ -112,8 +120,14 @@ class MainActivity : Activity() {
         override fun onLost(network: Network) {
             runOnUiThread {
                 wifiNetworks.remove(network)
-                if (wifiStateInitialized && wifiNetworks.isEmpty() && !pageVisible) {
-                    showWifiRequired()
+                if (wifiStateInitialized && wifiNetworks.isEmpty()) {
+                    markSavedSpeakersUnreachable()
+                    remoteProbeGeneration++
+                    if (pageVisible && currentEndpoint != null) {
+                        showRemoteWifiRequired()
+                    } else if (!pageVisible) {
+                        showWifiRequired()
+                    }
                 }
             }
         }
@@ -212,18 +226,49 @@ class MainActivity : Activity() {
         val toolbar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(8), dp(16), dp(4))
+            setPadding(dp(16), dp(6), dp(16), dp(6))
         }
+
+        val titleColumn = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.START
+        }
+
         val title = TextView(this).apply {
             text = getString(R.string.app_name)
-            textSize = 22f
+            textSize = 19f
+            includeFontPadding = false
             setTypeface(typeface, Typeface.BOLD)
         }
-        toolbar.addView(title, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+        titleColumn.addView(
+            title,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        )
+
+        statusText = TextView(this).apply {
+            textSize = 14f
+            includeFontPadding = false
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(0, dp(2), 0, 0)
+            visibility = View.GONE
+        }
+        titleColumn.addView(
+            statusText,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        )
+
+        toolbar.addView(
+            titleColumn,
+            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        )
 
         deviceButton = Button(this).apply {
             text = getString(R.string.devices)
             isAllCaps = false
+            textSize = 14f
+            minWidth = 0
+            minimumHeight = dp(36)
+            setPadding(dp(12), dp(4), dp(12), dp(4))
             setOnClickListener {
                 if (pageVisible) {
                     showDiscoveryPanel()
@@ -235,20 +280,15 @@ class MainActivity : Activity() {
                 }
             }
         }
-        toolbar.addView(deviceButton)
-        root.addView(
-            toolbar,
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        toolbar.addView(
+            deviceButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                marginStart = dp(10)
+            }
         )
 
-        statusText = TextView(this).apply {
-            textSize = 17f
-            setTypeface(typeface, Typeface.BOLD)
-            setPadding(dp(16), dp(2), dp(16), dp(12))
-            visibility = View.GONE
-        }
         root.addView(
-            statusText,
+            toolbar,
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         )
 
@@ -257,7 +297,7 @@ class MainActivity : Activity() {
 
         discoveryPanel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(10), dp(16), dp(8))
+            setPadding(dp(16), dp(14), dp(16), dp(10))
         }
         content.addView(
             discoveryPanel,
@@ -338,6 +378,19 @@ class MainActivity : Activity() {
             }
         )
 
+        discoveryWifiSettingsButton = Button(this).apply {
+            text = getString(R.string.open_wifi_settings)
+            isAllCaps = false
+            visibility = View.GONE
+            setOnClickListener { openWifiSettings() }
+        }
+        discoveryPanel.addView(
+            discoveryWifiSettingsButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
+        )
+
         retryButton = Button(this).apply {
             text = getString(R.string.retry)
             isAllCaps = false
@@ -374,6 +427,58 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 topMargin = dp(8)
             }
+        )
+
+        remoteOfflinePanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(12))
+            visibility = View.GONE
+        }
+
+        remoteOfflineMessage = TextView(this).apply {
+            text = getString(R.string.wifi_required)
+            textSize = 16f
+            setLineSpacing(0f, 1.12f)
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(dp(14), dp(14), dp(14), dp(14))
+            setTextColor(Color.parseColor("#163A63"))
+            background = createPanelBackground(
+                fillColor = "#EDF5FF",
+                strokeColor = "#BFD9FF"
+            )
+        }
+        remoteOfflinePanel.addView(
+            remoteOfflineMessage,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        )
+
+        remoteWifiSettingsButton = Button(this).apply {
+            text = getString(R.string.open_wifi_settings)
+            isAllCaps = false
+            setOnClickListener { openWifiSettings() }
+        }
+        remoteOfflinePanel.addView(
+            remoteWifiSettingsButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(12)
+            }
+        )
+
+        remoteRetryButton = Button(this).apply {
+            text = getString(R.string.retry)
+            isAllCaps = false
+            setOnClickListener { retryRemoteConnection() }
+        }
+        remoteOfflinePanel.addView(
+            remoteRetryButton,
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(8)
+            }
+        )
+
+        content.addView(
+            remoteOfflinePanel,
+            FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         )
 
         webView = WebView(this).apply {
@@ -440,6 +545,12 @@ class MainActivity : Activity() {
 
             override fun onPageFinished(view: WebView, url: String) {
                 super.onPageFinished(view, url)
+                if (webViewNeedsReload) return
+
+                currentEndpoint?.let { endpoint ->
+                    prefs.saveReachability(endpoint, true)
+                    updateSavedRowReachability(endpoint, reachable = true)
+                }
                 showWebView()
             }
 
@@ -450,12 +561,19 @@ class MainActivity : Activity() {
             ) {
                 super.onReceivedError(view, request, error)
                 if (request.isForMainFrame) {
-                    Toast.makeText(this@MainActivity, R.string.page_failed, Toast.LENGTH_LONG).show()
-                    showDiscoveryPanel()
-                    if (hasWifiTransport()) {
-                        startDiscovery()
+                    webViewNeedsReload = true
+                    currentEndpoint?.let { endpoint ->
+                        prefs.saveReachability(endpoint, false)
+                        updateSavedRowReachability(endpoint, reachable = false)
+                    }
+
+                    if (!hasWifiTransport()) {
+                        showRemoteWifiRequired()
+                    } else if (currentEndpoint != null) {
+                        showRemoteDeviceUnreachable()
                     } else {
-                        showWifiRequired()
+                        Toast.makeText(this@MainActivity, R.string.page_failed, Toast.LENGTH_LONG).show()
+                        showDiscoveryPanel()
                     }
                 }
             }
@@ -656,7 +774,9 @@ class MainActivity : Activity() {
                 endpoint = existing?.endpoint,
                 probeFinished = existing?.probeFinished ?: false,
                 saved = saved,
-                discovered = true
+                discovered = true,
+                lastReachable = existing?.lastReachable
+                    ?: saved?.let { prefs.loadReachability(it.endpoint) }
             )
             updateList()
             if (existing == null || existing.probeFinished) {
@@ -732,9 +852,13 @@ class MainActivity : Activity() {
             candidate = candidate,
             probeFinished = false,
             saved = saved,
-            discovered = true
+            discovered = true,
+            lastReachable = existing?.lastReachable
+                ?: saved?.let { prefs.loadReachability(it.endpoint) }
         )
-        updateList()
+        if (saved == null || speakers[rowKey]?.lastReachable == null) {
+            updateList()
+        }
 
         probe.probe(candidate) { endpoint ->
             runOnUiThread {
@@ -742,7 +866,17 @@ class MainActivity : Activity() {
 
                 val currentKey = findRowKey(candidate) ?: return@runOnUiThread
                 val current = speakers[currentKey] ?: return@runOnUiThread
-                speakers[currentKey] = current.copy(endpoint = endpoint, probeFinished = true)
+                val reachable = endpoint != null
+
+                current.saved?.let { saved ->
+                    prefs.saveReachability(saved.endpoint, reachable)
+                }
+
+                speakers[currentKey] = current.copy(
+                    endpoint = endpoint,
+                    probeFinished = true,
+                    lastReachable = if (current.saved != null) reachable else current.lastReachable
+                )
                 if (endpoint != null && current.saved != null) {
                     prefs.updateSavedEndpoint(endpoint)
                 }
@@ -812,6 +946,7 @@ class MainActivity : Activity() {
         stopDiscoverySession()
         discoveryGeneration++
         discoveryTimedOut = false
+        markSavedSpeakersUnreachable()
         rebuildPersistentRows()
         showDiscoveryPanel()
         setDiscoveryState(
@@ -820,6 +955,7 @@ class MainActivity : Activity() {
             showRetry = true,
             showStrHelp = false
         )
+        discoveryWifiSettingsButton.visibility = View.VISIBLE
     }
 
     private fun showNoDevicesFound() {
@@ -854,6 +990,7 @@ class MainActivity : Activity() {
     ) {
         discoveryMessage.text = message
         discoveryProgress.visibility = if (showProgress) View.VISIBLE else View.GONE
+        discoveryWifiSettingsButton.visibility = View.GONE
         retryButton.visibility = if (showRetry) View.VISIBLE else View.GONE
         strHelpButton.visibility = if (showStrHelp) View.VISIBLE else View.GONE
     }
@@ -880,8 +1017,21 @@ class MainActivity : Activity() {
         prefs.save(endpoint)
         prefs.updateSavedEndpoint(endpoint)
         refreshConnectedStatus(endpoint)
-        webView.loadUrl(endpoint.baseUrl)
-        showWebView()
+
+        if (hasWifiTransport()) {
+            prefs.saveReachability(endpoint, true)
+            updateSavedRowReachability(endpoint, reachable = true)
+            webViewNeedsReload = false
+            showRemoteConnectionState(
+                message = getString(R.string.remote_connecting),
+                showWifiSettings = false,
+                showRetry = false
+            )
+            webView.stopLoading()
+            webView.loadUrl(endpoint.baseUrl)
+        } else {
+            showRemoteWifiRequired()
+        }
     }
 
     private fun refreshConnectedStatus(endpoint: SpeakerEndpoint) {
@@ -894,12 +1044,145 @@ class MainActivity : Activity() {
     }
 
     private fun showWebView() {
+        if (!hasWifiTransport()) {
+            showRemoteWifiRequired()
+            return
+        }
+
+        if (webViewNeedsReload) {
+            currentEndpoint?.let { endpoint ->
+                probeRemoteEndpoint(endpoint, settleBeforeProbe = false)
+            } ?: showDiscoveryPanel()
+            return
+        }
+
         pageVisible = true
         deviceButton.text = getString(R.string.devices)
         deviceButton.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
         discoveryPanel.visibility = View.GONE
+        remoteOfflinePanel.visibility = View.GONE
         webView.visibility = View.VISIBLE
+    }
+
+    private fun showRemoteConnectionState(
+        message: CharSequence,
+        showWifiSettings: Boolean,
+        showRetry: Boolean
+    ) {
+        pageVisible = true
+        deviceButton.text = getString(R.string.devices)
+        deviceButton.visibility = View.VISIBLE
+        statusText.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
+        discoveryPanel.visibility = View.GONE
+        webView.visibility = View.GONE
+
+        remoteOfflineMessage.text = message
+        remoteWifiSettingsButton.visibility = if (showWifiSettings) View.VISIBLE else View.GONE
+        remoteRetryButton.visibility = if (showRetry) View.VISIBLE else View.GONE
+        remoteOfflinePanel.visibility = View.VISIBLE
+    }
+
+    private fun showRemoteWifiRequired() {
+        webViewNeedsReload = true
+        webView.stopLoading()
+        showRemoteConnectionState(
+            message = getString(R.string.wifi_required),
+            showWifiSettings = true,
+            showRetry = true
+        )
+    }
+
+    private fun showRemoteDeviceUnreachable() {
+        webViewNeedsReload = true
+        webView.stopLoading()
+        showRemoteConnectionState(
+            message = getString(R.string.remote_device_unreachable),
+            showWifiSettings = false,
+            showRetry = true
+        )
+    }
+
+    private fun retryRemoteConnection() {
+        if (!hasWifiTransport()) {
+            showRemoteWifiRequired()
+            return
+        }
+
+        val endpoint = currentEndpoint ?: run {
+            showDiscoveryPanel()
+            return
+        }
+
+        probeRemoteEndpoint(endpoint, settleBeforeProbe = true)
+    }
+
+    private fun probeRemoteEndpoint(
+        endpoint: SpeakerEndpoint,
+        settleBeforeProbe: Boolean
+    ) {
+        if (!hasWifiTransport()) {
+            showRemoteWifiRequired()
+            return
+        }
+
+        remoteProbeGeneration++
+        val generation = remoteProbeGeneration
+
+        showRemoteConnectionState(
+            message = getString(R.string.remote_connecting),
+            showWifiSettings = false,
+            showRetry = false
+        )
+
+        val runProbe = {
+            probe.probeHost(
+                host = endpoint.host,
+                preferredPort = endpoint.port,
+                name = endpoint.name,
+                model = endpoint.model,
+                key = endpoint.key
+            ) { verified ->
+                runOnUiThread {
+                    if (generation != remoteProbeGeneration) return@runOnUiThread
+
+                    if (!hasWifiTransport()) {
+                        showRemoteWifiRequired()
+                        return@runOnUiThread
+                    }
+
+                    if (verified == null) {
+                        prefs.saveReachability(endpoint, false)
+                        updateSavedRowReachability(endpoint, reachable = false)
+                        showRemoteDeviceUnreachable()
+                    } else {
+                        prefs.saveReachability(verified, true)
+                        updateSavedRowReachability(verified, reachable = true)
+                        loadEndpoint(verified)
+                    }
+                }
+            }
+        }
+
+        if (settleBeforeProbe) {
+            mainHandler.postDelayed(runProbe, REMOTE_RETRY_SETTLE_MS)
+        } else {
+            runProbe()
+        }
+    }
+
+    private fun openWifiSettings() {
+        val intent = if (Build.VERSION.SDK_INT >= 29) {
+            Intent(Settings.Panel.ACTION_WIFI)
+        } else {
+            Intent(Settings.ACTION_WIFI_SETTINGS)
+        }
+
+        try {
+            startActivity(intent)
+        } catch (_: Exception) {
+            startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+        }
     }
 
     private fun showDiscoveryPanel() {
@@ -907,6 +1190,7 @@ class MainActivity : Activity() {
         deviceButton.text = getString(R.string.remote)
         deviceButton.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
         statusText.visibility = View.GONE
+        remoteOfflinePanel.visibility = View.GONE
         webView.visibility = View.GONE
         discoveryPanel.visibility = View.VISIBLE
         adapter.notifyDataSetChanged()
@@ -981,22 +1265,31 @@ class MainActivity : Activity() {
                 endpoint = null,
                 probeFinished = false,
                 saved = saved,
-                discovered = false
+                discovered = false,
+                lastReachable = prefs.loadReachability(saved.endpoint)
             )
         }
 
         currentEndpoint?.let { endpoint ->
+            val saved = prefs.findSavedSpeaker(endpoint.key, endpoint.host)
+            val lastReachable = saved?.let { prefs.loadReachability(it.endpoint) }
             val existingKey = findRowKey(endpoint)
+
             if (existingKey != null) {
                 val existing = speakers[existingKey] ?: return@let
-                speakers[existingKey] = existing.copy(endpoint = endpoint, probeFinished = true)
+                speakers[existingKey] = existing.copy(
+                    endpoint = null,
+                    probeFinished = false,
+                    lastReachable = lastReachable ?: existing.lastReachable
+                )
             } else {
                 speakers[speakerIdentity(endpoint)] = SpeakerRow(
                     candidate = candidateFromEndpoint(endpoint),
-                    endpoint = endpoint,
-                    probeFinished = true,
-                    saved = prefs.findSavedSpeaker(endpoint.key, endpoint.host),
-                    discovered = false
+                    endpoint = null,
+                    probeFinished = false,
+                    saved = saved,
+                    discovered = false,
+                    lastReachable = lastReachable
                 )
             }
         }
@@ -1063,8 +1356,11 @@ class MainActivity : Activity() {
             saved = saved,
             discovered = false
         )
-        speakers[existingKey] = current.copy(probeFinished = false, saved = saved)
-        adapter.replace(speakers.values.toList())
+        speakers[existingKey] = current.copy(
+            probeFinished = false,
+            saved = saved,
+            lastReachable = current.lastReachable ?: prefs.loadReachability(saved.endpoint)
+        )
 
         probe.probeHost(
             host = saved.endpoint.host,
@@ -1078,7 +1374,14 @@ class MainActivity : Activity() {
 
                 val key = findRowKey(saved.endpoint) ?: return@runOnUiThread
                 val row = speakers[key] ?: return@runOnUiThread
-                speakers[key] = row.copy(endpoint = endpoint, probeFinished = true)
+                val reachable = endpoint != null
+
+                prefs.saveReachability(saved.endpoint, reachable)
+                speakers[key] = row.copy(
+                    endpoint = endpoint,
+                    probeFinished = true,
+                    lastReachable = reachable
+                )
                 if (endpoint != null) {
                     prefs.updateSavedEndpoint(endpoint)
                 }
@@ -1102,9 +1405,12 @@ class MainActivity : Activity() {
 
     private fun connectSpeakerRow(row: SpeakerRow) {
         when {
-            row.endpoint != null -> loadEndpoint(row.endpoint)
-            row.saved != null -> probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
-            else -> probeCandidate(row.candidate, discoveryGeneration)
+            row.saved != null ->
+                probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
+            row.endpoint != null ->
+                probeRemoteEndpoint(row.endpoint, settleBeforeProbe = false)
+            else ->
+                probeCandidate(row.candidate, discoveryGeneration)
         }
     }
 
@@ -1271,6 +1577,40 @@ class MainActivity : Activity() {
         return speakerMatches(current, rowEndpoint)
     }
 
+    private fun reachabilityForDisplay(row: SpeakerRow): Boolean? {
+        if (row.saved == null) {
+            return if (row.endpoint != null) true else null
+        }
+        if (!hasWifiTransport()) return false
+        return if (row.probeFinished) {
+            row.endpoint != null
+        } else {
+            row.lastReachable
+        }
+    }
+
+    private fun markSavedSpeakersUnreachable() {
+        prefs.loadSavedSpeakers().forEach { saved ->
+            prefs.saveReachability(saved.endpoint, false)
+        }
+    }
+
+    private fun updateSavedRowReachability(endpoint: SpeakerEndpoint, reachable: Boolean) {
+        val key = findRowKey(endpoint) ?: return
+        val row = speakers[key] ?: return
+        if (row.saved == null) return
+
+        speakers[key] = row.copy(
+            endpoint = if (reachable) endpoint else null,
+            probeFinished = true,
+            lastReachable = reachable
+        )
+
+        if (!pageVisible) {
+            adapter.replace(speakers.values.toList())
+        }
+    }
+
     private fun configureManagementHint() {
         if (!prefs.shouldShowManagementHint()) {
             managementHint.visibility = View.GONE
@@ -1310,11 +1650,12 @@ class MainActivity : Activity() {
 
     private fun createPanelBackground(
         fillColor: String,
-        strokeColor: String
+        strokeColor: String,
+        strokeWidthDp: Int = 1
     ): GradientDrawable = GradientDrawable().apply {
         cornerRadius = dp(14).toFloat()
         setColor(Color.parseColor(fillColor))
-        setStroke(dp(1), Color.parseColor(strokeColor))
+        setStroke(dp(strokeWidthDp), Color.parseColor(strokeColor))
     }
 
     private fun parseManualAddress(rawInput: String): Pair<String, Int?>? {
@@ -1337,7 +1678,8 @@ class MainActivity : Activity() {
         val endpoint: SpeakerEndpoint?,
         val probeFinished: Boolean,
         val saved: SavedSpeaker? = null,
-        val discovered: Boolean = true
+        val discovered: Boolean = true,
+        val lastReachable: Boolean? = null
     )
 
     private data class SpeakerRowViewHolder(
@@ -1486,8 +1828,18 @@ class MainActivity : Activity() {
 
             holder.details.text = buildList {
                 row.candidate.model?.let(::add)
-                row.candidate.version?.let { add(getString(R.string.version_format, it)) }
-                if (row.endpoint == null && hasWifiTransport()) {
+
+                if (row.saved != null) {
+                    add(
+                        getString(
+                            when (reachabilityForDisplay(row)) {
+                                true -> R.string.speaker_online
+                                false -> R.string.speaker_offline
+                                null -> R.string.speaker_status_unknown
+                            }
+                        )
+                    )
+                } else if (row.endpoint == null && hasWifiTransport()) {
                     add(
                         getString(
                             if (row.probeFinished) {
@@ -1500,7 +1852,10 @@ class MainActivity : Activity() {
                 }
             }.joinToString(" · ")
 
-            holder.address.text = hostForDisplay(row.candidate.host)
+            holder.address.text = buildList {
+                row.candidate.version?.let { add(getString(R.string.version_format, it)) }
+                add(hostForDisplay(row.candidate.host))
+            }.joinToString(" · ")
 
             val roomEndpoint = resolveRoomEndpoint(row)
             holder.roomButton.text = getString(R.string.room_action_label)
@@ -1521,9 +1876,23 @@ class MainActivity : Activity() {
                 connectSpeakerRow(row)
             }
 
+            val savedReachability = reachabilityForDisplay(row)
+            val cardColors = when {
+                row.saved != null && savedReachability == true ->
+                    "#D8F8E4" to "#159447"
+                row.saved != null && savedReachability == false ->
+                    "#FFE0E4" to "#D92D3A"
+                row.saved != null ->
+                    "#FFFFFF" to "#D7E1EC"
+                isCurrent(row) ->
+                    "#D8F8E4" to "#159447"
+                else ->
+                    "#FFFFFF" to "#D7E1EC"
+            }
             holder.container.background = createPanelBackground(
-                fillColor = if (isCurrent(row)) "#F0FDF4" else "#FFFFFF",
-                strokeColor = if (isCurrent(row)) "#3BCB78" else "#D7E1EC"
+                fillColor = cardColors.first,
+                strokeColor = cardColors.second,
+                strokeWidthDp = if (row.saved != null || isCurrent(row)) 2 else 1
             )
 
             return view

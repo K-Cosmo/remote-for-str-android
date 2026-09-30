@@ -8,6 +8,7 @@ internal class PreferencesStore(context: Context) {
     private companion object {
         const val SAVED_SPEAKERS = "saved_speakers_v1"
         const val SHOW_MANAGEMENT_HINT = "show_management_hint"
+        const val REACHABILITY_PREFIX = "speaker_reachability:"
     }
 
     private val prefs = context.getSharedPreferences("str_remote", Context.MODE_PRIVATE)
@@ -97,13 +98,42 @@ internal class PreferencesStore(context: Context) {
     }
 
     fun removeSavedSpeaker(endpoint: SpeakerEndpoint) {
+        removeReachability(endpoint)
         writeSavedSpeakers(loadSavedSpeakers().filterNot { speakerMatches(it.endpoint, endpoint) })
     }
 
     fun updateSavedEndpoint(endpoint: SpeakerEndpoint) {
         val saved = findSavedSpeaker(endpoint.key, endpoint.host) ?: return
+        val previousReachability = loadReachability(saved.endpoint)
+        val previousKey = reachabilityKey(saved.endpoint)
+        val updatedKey = reachabilityKey(endpoint)
+
         saveSpeaker(saved.copy(endpoint = endpoint))
+
+        if (previousKey != updatedKey) {
+            prefs.edit().remove(previousKey).apply()
+            if (previousReachability != null) {
+                saveReachability(endpoint, previousReachability)
+            }
+        }
     }
+
+    fun loadReachability(endpoint: SpeakerEndpoint): Boolean? {
+        val key = reachabilityKey(endpoint)
+        if (!prefs.contains(key)) return null
+        return prefs.getBoolean(key, false)
+    }
+
+    fun saveReachability(endpoint: SpeakerEndpoint, reachable: Boolean) {
+        prefs.edit().putBoolean(reachabilityKey(endpoint), reachable).apply()
+    }
+
+    fun removeReachability(endpoint: SpeakerEndpoint) {
+        prefs.edit().remove(reachabilityKey(endpoint)).apply()
+    }
+
+    private fun reachabilityKey(endpoint: SpeakerEndpoint): String =
+        REACHABILITY_PREFIX + speakerIdentity(endpoint)
 
     private fun writeSavedSpeakers(speakers: List<SavedSpeaker>) {
         val array = JSONArray()

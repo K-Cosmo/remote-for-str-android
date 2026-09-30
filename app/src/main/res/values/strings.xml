@@ -19,6 +19,7 @@
     <string name="str_not_reachable_short">STR web remote not reachable</string>
     <string name="wifi_required">No Wi-Fi connection. Connect this Android device to the same Wi-Fi network as your SoundTouch speaker, then try again.</string>
     <string name="wifi_available_retry">Wi-Fi is available. Try again to connect to your SoundTouch speaker.</string>
+    <string name="open_wifi_settings">Open Wi-Fi settings</string>
     <string name="no_devices_found">No SoundTouch Reborn devices were found. Is SoundTouch Reborn installed and running on the speaker?</string>
     <string name="no_devices_found_saved">No additional SoundTouch Reborn devices were found. Your saved speakers remain listed.</string>
     <string name="str_unreachable">A speaker was discovered, but its SoundTouch Reborn web remote is not reachable. Check that STR is installed and running.</string>
@@ -40,6 +41,11 @@
     <string name="speaker_saved">Speaker saved</string>
     <string name="speaker_removed">Saved speaker removed</string>
     <string name="saved_speaker">Saved</string>
+    <string name="speaker_online">Online</string>
+    <string name="speaker_offline">Offline</string>
+    <string name="speaker_status_unknown">Unknown</string>
+    <string name="remote_connecting">Checking connection to the speaker…</string>
+    <string name="remote_device_unreachable">Wi-Fi is connected, but the speaker is not reachable yet. Wait a moment and try again.</string>
     <string name="speaker_management_hint">Tap a speaker to connect. Use Room to assign it; this also saves the speaker. Saved speakers can be removed with the trash icon.</string>
     <string name="current_speaker_format">● %1$s</string>
     <string name="room_speaker_format">%1$s · %2$s</string>

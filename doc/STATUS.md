@@ -1,9 +1,30 @@
 # Status
 
-**Development version:** 0.2.0
+**Development version:** 0.2.1
 **Latest public release:** 0.2.0
-**Status:** RELEASED — ACCEPTED
-**Date:** 2026-09-29
+**Status:** IMPLEMENTED — VERIFICATION PENDING
+**Date:** 2026-09-30
+
+## 0.2.1 development
+
+BUILD-0011 implements focused UX refinements:
+
+- a compact two-line native banner above the embedded STR remote, with the comfortable Devices/Remote button size restored and slightly more vertical spacing;
+- stronger saved-speaker reachability presentation: reachable/online = green, unreachable from the app = red, with text labels so color is not the only cue;
+- a clearer device-card hierarchy: `model · status` on the second line and `STR version · IP address` below in smaller text;
+- native no-Wi-Fi guidance with Retry and direct Wi-Fi settings access on both Remote and Devices views, preventing Chromium's generic connection-error page from becoming the user-facing fallback;
+- endpoint probing before recovery/device-selection WebView loads, with the WebView kept hidden until a successful page finish;
+- persisted last-known saved-speaker reachability so background checks no longer make device cards visually jump through a transient neutral/checking state.
+
+The implementation intentionally does not change STR discovery, endpoint probing, persistence, WebView security boundaries, playback behavior, permissions, Gradle or AGP.
+
+Required before ACCEPTED:
+
+- local documentation consistency;
+- clean debug + lint + release assembly;
+- GitHub CI on committed 0.2.1 source;
+- Pixel smoke for compact header and green/red saved-speaker states;
+- signed final APK verification/publication if 0.2.1 is released publicly.
 
 ## 0.2.0 release
 

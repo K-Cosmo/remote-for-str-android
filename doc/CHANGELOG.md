@@ -2,6 +2,28 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
+## 0.2.1 — Unreleased
+
+UX refinement:
+
+- use a compact two-line title/device block while restoring the more comfortable Devices/Remote button size and slightly increasing vertical breathing room around the native header;
+- keep a narrow native margin above and below the header so it does not visually collide with system icons or STR content;
+- intercept Remote navigation when Wi-Fi is unavailable and show a native same-Wi-Fi guidance page instead of exposing Chromium's connection-error page;
+- offer Retry plus a direct Android Wi-Fi settings action from that Remote guidance page;
+- expose the same direct Android Wi-Fi settings action on the Devices page whenever Wi-Fi is unavailable;
+- probe the selected STR endpoint before every recovery/device-selection WebView load so stale Chromium error content is never intentionally exposed;
+- keep the WebView hidden behind a native connection-check state until the main STR page finishes successfully;
+- persist the last known saved-speaker reachability and keep that visual state while background revalidation runs, changing green/red only after a new result;
+- keep saved-speaker card geometry stable during background checks by using a short persisted Online/Offline/Unknown status instead of a long transient checking label;
+- show saved-speaker reachability with explicit `Online` / `Offline` text;
+- use a stronger green fill and 2 dp green border for saved/reachable devices;
+- use a stronger red fill and 2 dp red border for saved devices that are currently unreachable from the app, including when the phone has no Wi-Fi path;
+- keep the active probe/checking state neutral until reachability is known;
+- present device metadata as `model · status` followed by `STR version · IP address`, with progressively smaller text;
+- preserve current-speaker highlighting for unsaved reachable/current rows;
+- bump application version to `0.2.1` / versionCode 10;
+- keep Gradle 9.7.1 + AGP 9.4.1 unchanged.
+
 ## 0.2.0 — 2026-09-29
 
 Speaker management:
