@@ -116,6 +116,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private var b2NetworkLostDuringPost = false
     private var boseDeviceId: String? = null
     private var pendingWifiSsid: String? = null
+    private var lastBoseSetupNetwork: Network? = null
+    private var profileResponseAcknowledged = false
     private var lanVerification: BoseLanVerification? = null
     private var requestStartedAtMs = 0L
     private val debugSessionId = Integer.toHexString(System.identityHashCode(this))
@@ -884,6 +886,7 @@ internal class BoseSetupProbeActivity : Activity() {
         // This is the single explicit user action. No second confirmation dialog.
         val network = b2Network ?: return
         pendingWifiSsid = ssid
+        lastBoseSetupNetwork = network
         ssidField.text?.clear()
         passwordField.text?.clear()
         submitButton.isEnabled = false
@@ -905,6 +908,7 @@ internal class BoseSetupProbeActivity : Activity() {
             runOnUiThread {
                 if (generation != token || isFinishing || isDestroyed) return@runOnUiThread
                 trace("b2_post_completed token=$token")
+                profileResponseAcknowledged = result.contains("AddWirelessProfileResponse erkannt")
                 val disconnected = b2NetworkLostDuringPost
                 closeSession()
                 resultsView.append("\n\n" + result)
@@ -912,8 +916,13 @@ internal class BoseSetupProbeActivity : Activity() {
                     resultsView.append("\nBose-Setup-WLAN während der Übertragung getrennt.")
                 }
                 resultText.text =
-                    "WLAN-Einstellungen gesendet. Android stellt die normale WLAN-Verbindung " +
-                        "wieder her. Anschließend suchen wir die SoundTouch automatisch."
+                    if (profileResponseAcknowledged) {
+                        "Die SoundTouch hat die WLAN-Einstellungen bestätigt. " +
+                            "Wir prüfen jetzt, ob sie mit dem WLAN verbunden ist."
+                    } else {
+                        "Die Übertragung konnte nicht eindeutig bestätigt werden. " +
+                            "Wir suchen trotzdem nach der SoundTouch im WLAN."
+                    }
                 statusView.text = "Warte auf dein WLAN …"
                 beginLanVerification()
             }
@@ -931,9 +940,9 @@ internal class BoseSetupProbeActivity : Activity() {
             resultSpinner.visibility = View.GONE
             retryVerificationButton.visibility = View.GONE
             resultText.text =
-                "Die WLAN-Daten wurden übertragen. Eine automatische Prüfung ist bei " +
-                    "diesem Gerät noch nicht möglich. Die SoundTouch könnte bereits " +
-                    "mit dem WLAN verbunden sein."
+                "Eine automatische Prüfung ist bei diesem Lautsprecher noch nicht möglich. " +
+                    "Die Übertragung und die Verbindung zum WLAN konnten nicht " +
+                    "unabhängig bestätigt werden."
             statusView.text = "Einrichtung noch nicht automatisch bestätigt."
             return
         }
@@ -942,7 +951,7 @@ internal class BoseSetupProbeActivity : Activity() {
         resultText.text =
             "Wir warten auf die WLAN-Verbindung deines Smartphones und " +
                 "suchen dort deine SoundTouch …"
-        val verifier = BoseLanVerification(this, id, ssid) { outcome ->
+        val verifier = BoseLanVerification(this, id, ssid, lastBoseSetupNetwork) { outcome ->
             if (isFinishing || isDestroyed || currentPage != 4) return@BoseLanVerification
             when (outcome) {
                 BoseLanVerification.Status.WaitingForWifi -> {
@@ -1074,6 +1083,9 @@ internal class BoseSetupProbeActivity : Activity() {
         trace("activity_destroyed")
         lanVerification?.stop()
         lanVerification = null
+        pendingWifiSsid = null
+        lastBoseSetupNetwork = null
+        boseDeviceId = null
         closeSession()
         super.onDestroy()
     }
