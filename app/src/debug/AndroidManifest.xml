@@ -17,7 +17,7 @@
         tools:remove="android:maxSdkVersion" />
 
     <!-- Debug build has ONE launcher (MainActivity), clearly distinct from production. -->
-    <application android:label="STR Remote PoC">
+    <application android:label="STR Remote PoC" tools:replace="android:label">
         <!-- Opened only from Devices -> Add new device on Android 10+. -->
         <activity
             android:name=".BoseSetupProbeActivity"
