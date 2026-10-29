@@ -65,6 +65,33 @@ The tester reports another **failure of "Erneut suchen"** (after a previously su
 - Proposed QA: 3 first-search passes with Bose SoftAP already active, 3 delayed-Bose startup passes that must recover using in-screen retry without manual navigation, check no duplicated system prompts, Cancel/return to home Wi-Fi and both HTTP 200 endpoints. Record whether failure is in the Android network picker or in HTTP. Do not claim Phase B ready before repeated reliability tests.
 - This revision requires fresh CI and user hardware verification; the result is a **hypothesis**, not a confirmed Android framework root cause.
 
+## Android 17 / API 37 debug evidence requested (2026-10-29)
+
+- Tester reports `ro.build.version.release=17`, `ro.build.version.sdk=37`. App build in this branch has `targetSdk=37`, with `ACCESS_LOCAL_NETWORK` declared and a runtime permission check on API 37+. No evidence yet of runtime permission denial: the speaker is reachable on a subsequent request.
+- First uploaded filtered Logcat extract was **only 16 lines (~1.2 KB)**. It included Bluetooth A2DP and a generic `ConnectivityService NetReassign [no changes]` event, but **no identifiable Bose Wi-Fi request, scan/picker decision, `onAvailable` or `onUnavailable` callback**. It does not establish whether the first failure was Android's 20-second request timeout or an earlier abort.
+- Added debug-only structured tag `StrBoseSetup` with an Activity session token; timestamps/elapsedMs for request initiation, permissions (counts and grant booleans only), `requestNetwork` returned/exception, `onAvailable`/`onUnavailable`/`onLost`, HTTP probe start/status, network callback unregister and Activity restart/destroy. **No Wi-Fi SSID, BSSID, MAC, passwords, IP addresses, HTTP bodies or Android Network object string representations** are logged. Logged `index` identifies a compile-time HTTP probe, not network identity.
+- Logging changes intentionally preserve the current 20-second request timeout, fixed `Bose` setup-Wi-Fi prefix, immediate first request and fresh-Activity retry. Do not change these again before collecting a first-failure and second-success trace.
+
+### Collect minimal app-only Logcat
+
+On Windows PowerShell, with the new debug APK installed:
+
+```powershell
+adb logcat -c
+# Reproduce failed first search and then successful retry, without clearing logcat.
+adb logcat -d -v threadtime -s "StrBoseSetup:D" "*:S" > .\\bose-setup-debug.log
+```
+
+Review/redact before sharing, although the new debug logger deliberately contains no network identities. Record whether the Android system consent dialog appeared, whether the Bose AP was listed, and whether it was selected on each attempt.
+
+### Expected diagnostic distinction
+
+- `requestNetwork_call` followed after ~20000 ms by `callback_onUnavailable`: timed out or user rejected/system refused; user observation of picker differentiates
+- `callback_onAvailable` followed by HTTP 200 result: Wi-Fi and HTTP both succeeded
+- `requestNetwork_call` but no `requestNetwork_returned`: synchronous exception or process/lifecycle issue; look for `requestNetwork_error`
+- `retry_new_activity`, `activity_created freshRetry=true`, then new `requestNetwork_call`: fresh-Activity retry executed as expected
+- Early `session_close` / `activity_destroyed`: lifecycle or explicit Cancel rather than 20-second timeout
+
 ## Still open before Phase A acceptance
 
 - [x] Reconfirm previously successful connection when the Bose is **already** in setup mode after reverting deferred request (user-reported successful)
