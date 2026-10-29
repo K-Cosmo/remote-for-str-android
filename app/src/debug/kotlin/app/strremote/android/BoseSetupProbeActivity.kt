@@ -24,7 +24,7 @@ import android.util.Log
 import android.os.PatternMatcher
 import android.text.InputType
 import android.view.View
-import android.view.WindowManager
+import android.view.WindowInsetsController
 import android.widget.EditText
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -74,6 +74,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private var technicalReport = "Noch keine Verbindung geprüft."
 
     private lateinit var startButton: Button
+    private lateinit var connectionSpinner: ProgressBar
+    private lateinit var connectionProgressText: TextView
     private lateinit var cancelButton: Button
     private lateinit var backButton: Button
     private lateinit var nextButton: Button
@@ -286,6 +288,22 @@ internal class BoseSetupProbeActivity : Activity() {
             }
         }
         connectionPage.addView(startButton)
+        val connectionProgress = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(14), dp(12), dp(6))
+        }
+        connectionSpinner = ProgressBar(
+            this, null, android.R.attr.progressBarStyleSmall
+        ).apply { isIndeterminate = true; visibility = View.GONE }
+        connectionProgress.addView(connectionSpinner,
+            LinearLayout.LayoutParams(dp(28), dp(28)))
+        connectionProgressText = text("Bose-WLAN wird gesucht …", 14f).apply {
+            visibility = View.GONE
+            setPadding(dp(12), 0, 0, 0)
+        }
+        connectionProgress.addView(connectionProgressText)
+        connectionPage.addView(connectionProgress)
         connectionPage.addView(text(
             "Wenn die Box nicht angezeigt wird: Prüfe, ob die WLAN-Anzeige gelb leuchtet, " +
                 "und wähle „Erneut versuchen“.",
@@ -512,7 +530,24 @@ internal class BoseSetupProbeActivity : Activity() {
         footer.addView(cancelButton, LinearLayout.LayoutParams(0, dp(54), 2f))
         root.addView(footer)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        // Users can take screenshots; password fields stay masked and
+        // credentials are never persisted/logged. This is not an admin policy.
+        // Light system bars require dark status/navigation icons.
+        val lightBars = Color.rgb(246, 248, 251)
+        @Suppress("DEPRECATION")
+        window.statusBarColor = lightBars
+        @Suppress("DEPRECATION")
+        window.navigationBarColor = lightBars
+        if (Build.VERSION.SDK_INT >= 30) {
+            val appearance = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+            window.insetsController?.setSystemBarsAppearance(appearance, appearance)
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
         root.setOnApplyWindowInsetsListener { view, insets ->
             if (Build.VERSION.SDK_INT >= 30) {
                 val bars = insets.getInsets(WindowInsets.Type.systemBars())
@@ -547,9 +582,22 @@ internal class BoseSetupProbeActivity : Activity() {
         statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
         detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
         backButton.visibility = if (page == 2 || page == 3) View.VISIBLE else View.GONE
-        cancelButton.text = if (page == 4) "Zur Geräteliste" else "Einrichtung abbrechen"
+        cancelButton.text = if (page == 4) "Einrichtung läuft …" else "Einrichtung abbrechen"
+        cancelButton.isEnabled = page != 4
         pageScroll.post { pageScroll.scrollTo(0, 0) }
         trace("wizard_page_" + page)
+    }
+
+    private fun setConnectionBusy(busy: Boolean, message: String = "Bose-WLAN wird gesucht …") {
+        connectionSpinner.visibility = if (busy) View.VISIBLE else View.GONE
+        connectionProgressText.visibility = if (busy) View.VISIBLE else View.GONE
+        connectionProgressText.text = message
+        if (!busy && currentPage == 2) startButton.isEnabled = true
+    }
+
+    private fun finishSetup() {
+        cancelButton.text = "Fertig"
+        cancelButton.isEnabled = true
     }
 
     private fun showWifiPicker() {
@@ -733,8 +781,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun requestSetupNetwork() {
         trace("request_prepare")
         closeSession()
-        if (b2Mode) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         showPage(2)
+        setConnectionBusy(true, "Bose-WLAN wird gesucht. Bitte Android-Auswahl bestätigen …")
 
         // No manual SSID entry: Android finds nearby "Bose..." setup networks.
         // A real user must still approve the local-only Wi-Fi connection.
@@ -756,7 +804,7 @@ internal class BoseSetupProbeActivity : Activity() {
         // Retry opens a fresh Activity and a fresh WifiNetworkSpecifier request.
         // No overlapping Android picker/network callbacks survive the restart.
         startButton.text = "Erneut versuchen"
-        startButton.isEnabled = true
+        startButton.isEnabled = false
         technicalReport = "Die Verbindung wird vorbereitet …"
         refreshDiagnosticView()
         statusView.text =
@@ -774,6 +822,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     trace("ui_onAvailable token=$token")
                     awaitingConsent = false
                     val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
+                    setConnectionBusy(true, "Mit SoundTouch verbunden. Prüfe den Lautsprecher …")
                     statusView.text =
                         "Verbunden! Wir prüfen die SoundTouch und öffnen die WLAN-Auswahl …"
                     probeReadOnly(network, token)
@@ -790,6 +839,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     }
                     trace("ui_onUnavailable token=$token")
                     closeSession()
+                    setConnectionBusy(false)
                     statusView.text =
                         "Die WLAN-Auswahl wurde beendet oder die Verbindung war nicht möglich. " +
                             "Prüfe die gelbe WLAN-Anzeige und tippe auf „Erneut versuchen“."
@@ -813,6 +863,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     } else {
                         closeSession()
                         showPage(2)
+                        setConnectionBusy(false)
                         startButton.text = "Erneut versuchen"
                         statusView.text =
                             "Verbindung zur SoundTouch verloren. Prüfe den Einrichtungsmodus " +
@@ -835,16 +886,19 @@ internal class BoseSetupProbeActivity : Activity() {
         } catch (e: SecurityException) {
             trace("requestNetwork_error SecurityException")
             closeSession()
+            setConnectionBusy(false)
             statusView.text =
                 "Android hat die WLAN-Anforderung verweigert (SecurityException). " +
                     "Bitte WLAN und die erteilten App-Berechtigungen prüfen."
         } catch (e: IllegalArgumentException) {
             trace("requestNetwork_error IllegalArgumentException")
             closeSession()
+            setConnectionBusy(false)
             statusView.text = "Netzwerk-Anforderung abgelehnt: ungültige Android-Konfiguration."
         } catch (e: RuntimeException) {
             trace("requestNetwork_error ${e.javaClass.simpleName}")
             closeSession()
+            setConnectionBusy(false)
             statusView.text = "Netzwerk-Anforderung fehlgeschlagen (${e.javaClass.simpleName})."
         }
     }
@@ -911,12 +965,14 @@ internal class BoseSetupProbeActivity : Activity() {
                     }
                     statusView.text =
                         "SoundTouch verbunden. Wähle jetzt ihr zukünftiges WLAN aus."
+                    setConnectionBusy(false)
                     trace("b2_ready token=$token surveySupported=$surveySupported")
                     showPage(3)
                     if (surveySupported) runBoseSurvey()
                 } else {
                     closeSession()
                     showPage(2)
+                    setConnectionBusy(false)
                     startButton.text = "Erneut versuchen"
                     statusView.text =
                         "Die SoundTouch konnte nicht für die WLAN-Einrichtung " +
@@ -1053,6 +1109,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     "Die Übertragung und die Verbindung zum WLAN konnten nicht " +
                     "unabhängig bestätigt werden."
             statusView.text = "Einrichtung noch nicht automatisch bestätigt."
+            finishSetup()
             return
         }
         resultSpinner.visibility = View.VISIBLE
@@ -1086,6 +1143,7 @@ internal class BoseSetupProbeActivity : Activity() {
                                 "gefunden und anhand ihrer Gerätekennung erkannt."
                         }
                     statusView.text = "SoundTouch erfolgreich im WLAN gefunden."
+                    finishSetup()
                 }
                 is BoseLanVerification.Status.OtherWifi -> {
                     // The exact Bose identity is confirmed, but the selected
@@ -1097,6 +1155,7 @@ internal class BoseSetupProbeActivity : Activity() {
                             "mit dem WLAN „" + outcome.wlanName + "“ verbunden. " +
                             "Bitte prüfe, ob das gewünschte WLAN ausgewählt war."
                     statusView.text = "SoundTouch gefunden, WLAN stimmt nicht überein."
+                    finishSetup()
                 }
                 BoseLanVerification.Status.NotFound -> {
                     resultSpinner.visibility = View.GONE
@@ -1106,6 +1165,7 @@ internal class BoseSetupProbeActivity : Activity() {
                             "Sie könnte noch verbinden oder in einem anderen WLAN sein. " +
                             "Du kannst erneut suchen, ohne das Passwort erneut zu senden."
                     statusView.text = "WLAN-Verbindung der SoundTouch nicht bestätigt."
+                    finishSetup()
                 }
             }
         }
