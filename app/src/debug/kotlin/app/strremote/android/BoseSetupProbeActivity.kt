@@ -29,6 +29,7 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import java.net.HttpURLConnection
@@ -78,6 +79,12 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var resultText: TextView
     private lateinit var detailsButton: Button
     private lateinit var networkChoices: LinearLayout
+    private lateinit var chooseWifiButton: Button
+    private lateinit var manualWifiButton: Button
+    private lateinit var selectedWifiView: TextView
+    private lateinit var ssidLabel: TextView
+    private lateinit var resultSpinner: ProgressBar
+    private lateinit var retryVerificationButton: Button
     private var currentPage = 1
     private lateinit var pageScroll: ScrollView
     private lateinit var b2Panel: LinearLayout
@@ -107,6 +114,9 @@ internal class BoseSetupProbeActivity : Activity() {
     private var postAttempted = false
     private var postInFlight = false
     private var b2NetworkLostDuringPost = false
+    private var boseDeviceId: String? = null
+    private var pendingWifiSsid: String? = null
+    private var lanVerification: BoseLanVerification? = null
     private var requestStartedAtMs = 0L
     private val debugSessionId = Integer.toHexString(System.identityHashCode(this))
 
@@ -263,7 +273,17 @@ internal class BoseSetupProbeActivity : Activity() {
             "Wähle das WLAN aus, in dem du die SoundTouch verwenden möchtest. " +
                 "Die Liste zeigt die Netze, die die Box selbst empfängt."
         ))
-        b2Panel.addView(heading("Verfügbare WLANs"))
+        b2Panel.addView(heading("Dein WLAN"))
+        selectedWifiView = text("Noch kein WLAN ausgewählt.", 16f, ink)
+        b2Panel.addView(selectedWifiView)
+        chooseWifiButton = Button(this).apply {
+            text = "WLAN auswählen"
+            isAllCaps = false
+            minHeight = dp(54)
+            isEnabled = false
+            setOnClickListener { showWifiPicker() }
+        }
+        b2Panel.addView(chooseWifiButton)
         scanButton = Button(this).apply {
             text = "WLANs erneut suchen"
             isAllCaps = false
@@ -277,12 +297,20 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         b2Panel.addView(surveyStatusView)
         networkChoices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        b2Panel.addView(networkChoices)
-        b2Panel.addView(text(
-            "Dein WLAN fehlt? Gib seinen Namen einfach selbst ein.",
-            14f
-        ).apply { setPadding(0, dp(14), 0, dp(8)) })
-        b2Panel.addView(heading("WLAN-Name (SSID)"))
+        // An extra popup owns the network list; do not make users scroll past
+        // dozens of SSIDs to reach the password and submit button.
+        manualWifiButton = Button(this).apply {
+            text = "WLAN-Name manuell eingeben"
+            isAllCaps = false
+            setOnClickListener {
+                ssidLabel.visibility = View.VISIBLE
+                ssidField.visibility = View.VISIBLE
+                ssidField.requestFocus()
+            }
+        }
+        b2Panel.addView(manualWifiButton)
+        ssidLabel = heading("WLAN-Name (SSID)").apply { visibility = View.GONE }
+        b2Panel.addView(ssidLabel)
         ssidField = EditText(this).apply {
             hint = "WLAN wählen oder Namen eingeben"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -295,6 +323,7 @@ internal class BoseSetupProbeActivity : Activity() {
             minHeight = dp(54)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            visibility = View.GONE
         }
         b2Panel.addView(ssidField)
         b2Panel.addView(heading("WLAN-Passwort").apply {
@@ -329,28 +358,33 @@ internal class BoseSetupProbeActivity : Activity() {
         content.addView(b2Panel)
 
         resultPage = panel()
-        resultPage.addView(heading("Verbindung überprüfen"))
+        resultPage.addView(heading("Wir richten deine SoundTouch ein"))
+        resultSpinner = ProgressBar(this, null, android.R.attr.progressBarStyleLarge).apply {
+            isIndeterminate = true
+            visibility = View.GONE
+        }
+        resultPage.addView(resultSpinner, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = dp(18) })
         resultText = text(
-            "Die SoundTouch versucht, sich mit dem ausgewählten WLAN zu verbinden.",
+            "Die WLAN-Einstellungen werden an deine SoundTouch übertragen.",
             16f, ink
         )
         resultPage.addView(resultText)
-        val resultCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = card()
-            setPadding(dp(16), dp(16), dp(16), dp(8))
+        retryVerificationButton = Button(this).apply {
+            text = "SoundTouch erneut suchen"
+            isAllCaps = false
+            visibility = View.GONE
+            setOnClickListener { beginLanVerification() }
         }
-        resultCard.addView(heading("So geht es weiter"))
-        resultCard.addView(text(
-            "1. Verbinde dein Smartphone wieder mit dem Ziel-WLAN.\n" +
-                "2. Prüfe im Router, ob die SoundTouch dort erscheint.\n" +
-                "3. Erst wenn sie erreichbar ist, ist die Einrichtung bestätigt."
-        ))
-        resultPage.addView(resultCard)
+        resultPage.addView(retryVerificationButton)
         resultPage.addView(text(
-            "Bei unklarem Ergebnis bitte zuerst den Router prüfen und nicht blind erneut senden.",
+            "Nach dem Senden kehrt Android normalerweise selbst zu deinem WLAN zurück. " +
+                "Die App sucht die SoundTouch anschließend in diesem Netzwerk. " +
+                "Bei unklarem Ergebnis wird das Passwort nicht erneut übertragen.",
             14f
-        ).apply { setPadding(0, dp(14), 0, 0) })
+        ).apply { setPadding(0, dp(12), 0, 0) })
         content.addView(resultPage)
 
         detailsButton = Button(this).apply {
@@ -470,72 +504,48 @@ internal class BoseSetupProbeActivity : Activity() {
         trace("wizard_page_" + page)
     }
 
-    private fun renderSurveyNetworks() {
-        networkChoices.removeAllViews()
-        val ink = Color.rgb(23, 46, 67)
-        val muted = Color.rgb(66, 84, 101)
-        val accent = Color.rgb(18, 69, 113)
-        val visibleNetworks = if (showAllWifiNetworks) surveyCandidates else surveyCandidates.take(8)
-        for (candidate in visibleNetworks) {
-            val selected = candidate.ssid == ssidField.text.toString()
+    private fun showWifiPicker() {
+        if (surveyInFlight || postAttempted || currentPage != 3) return
+        // List only networks allowed by the conservative WPA2 PoC. Never log SSIDs.
+        val available = surveyCandidates.filter { it.selectable }
+        if (available.isEmpty()) {
+            surveyStatusView.text = "Keine unterstützten WLANs gefunden. Du kannst den Namen selbst eingeben."
+            return
+        }
+        val choices = available.map { candidate ->
             val signal = when {
                 candidate.signalDbm == null -> "Signal unbekannt"
-                candidate.signalDbm >= -55 -> "Stark"
-                candidate.signalDbm >= -70 -> "Mittel"
-                else -> "Schwach"
+                candidate.signalDbm >= -55 -> "Starkes Signal"
+                candidate.signalDbm >= -70 -> "Mittleres Signal"
+                else -> "Schwaches Signal"
             }
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(14), dp(12), dp(14), dp(10))
-                background = GradientDrawable().apply {
-                    setColor(if (selected) Color.rgb(232, 242, 251) else Color.WHITE)
-                    cornerRadius = dp(10).toFloat()
-                    setStroke(dp(if (selected) 2 else 1),
-                        if (selected) accent else Color.rgb(218, 226, 234))
-                }
-                alpha = if (candidate.selectable) 1f else 0.52f
-                isClickable = candidate.selectable
-                isFocusable = candidate.selectable
-                contentDescription = candidate.ssid + ", " + signal +
-                    if (candidate.selectable) ", auswählen" else ", nicht unterstützt"
-                if (candidate.selectable) setOnClickListener {
-                    ssidField.setText(candidate.ssid)
-                    ssidField.setSelection(ssidField.text.length)
-                    surveyStatusView.text = "WLAN ausgewählt. Bitte das Passwort eingeben."
-                    renderSurveyNetworks()
+            candidate.ssid + "   ·   " + signal
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("WLAN auswählen")
+            .setItems(choices) { _, position ->
+                val choice = available[position]
+                ssidField.setText(choice.ssid)
+                ssidField.visibility = View.GONE
+                ssidLabel.visibility = View.GONE
+                selectedWifiView.text = "Ausgewählt: " + choice.ssid
+                passwordField.text?.clear()
+                surveyStatusView.text = "Gib nun das Passwort für dieses WLAN ein."
+                pageScroll.post {
+                    val top = b2Panel.top + passwordField.top
+                    pageScroll.smoothScrollTo(0, top.coerceAtLeast(0))
                 }
             }
-            row.addView(TextView(this).apply {
-                text = (if (selected) "✓  " else "") + candidate.ssid
-                textSize = 16f
-                setTypeface(typeface, Typeface.BOLD)
-                setTextColor(ink)
-                setSingleLine(true)
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-            row.addView(TextView(this).apply {
-                text = if (candidate.selectable) signal + " · WPA2"
-                       else signal + " · Für diesen Test nicht unterstützt"
-                textSize = 13f
-                setTextColor(muted)
-                setPadding(0, dp(4), 0, 0)
-            })
-            networkChoices.addView(row, LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(8) })
-        }
-        if (surveyCandidates.size > 8) {
-            networkChoices.addView(Button(this).apply {
-                isAllCaps = false
-                text = if (showAllWifiNetworks) "Weniger WLANs anzeigen"
-                       else "Alle " + surveyCandidates.size + " WLANs anzeigen"
-                setOnClickListener {
-                    showAllWifiNetworks = !showAllWifiNetworks
-                    renderSurveyNetworks()
-                }
-            })
-        }
+            .setNegativeButton("Abbrechen", null)
+            .show()
+    }
+
+    private fun renderSurveyNetworks() {
+        // The list is shown in a compact popup rather than inline rows.
+        val count = surveyCandidates.count { it.selectable }
+        chooseWifiButton.isEnabled = count > 0 && !surveyInFlight && !postAttempted
+        chooseWifiButton.text = if (count > 0) "WLAN auswählen ($count gefunden)"
+                               else "WLAN auswählen"
     }
 
     private fun dp(value: Int): Int =
@@ -776,6 +786,7 @@ internal class BoseSetupProbeActivity : Activity() {
             // original XML body is discarded and cannot enter logs/UI.
             trace("b1_supported_urls_start token=$token")
             val b1Report = BoseSupportedUrlsProbe.inspectReport(network)
+            val identifiedDeviceId = BoseLanIdentity.getDeviceId(network, "192.0.2.1")
             observations.add(b1Report.summary)
             trace("b1_supported_urls_finished token=$token")
             runOnUiThread {
@@ -784,6 +795,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 resultsView.text = observations.joinToString("\n")
                 if (b2Mode && b1Report.supportsAddWirelessProfile) {
                     b2Network = network
+                    boseDeviceId = identifiedDeviceId
                     b2Verified = true
                     surveySupported = b1Report.supportsWirelessSiteSurvey
                     startButton.text = "Weiter zur WLAN-Auswahl"
@@ -822,7 +834,7 @@ internal class BoseSetupProbeActivity : Activity() {
         showAllWifiNetworks = false
         surveyCandidates = emptyList()
         scanButton.isEnabled = false
-        networkChoices.removeAllViews()
+        chooseWifiButton.isEnabled = false
         submitButton.isEnabled = false
         surveyStatusView.text = "Der Bose-Lautsprecher sucht verfügbare WLANs …"
         val token = generation
@@ -844,6 +856,9 @@ internal class BoseSetupProbeActivity : Activity() {
                 resultsView.append("\n\nWLAN-Suche: " + result.status)
                 trace("b2_site_survey_end token=$token count=${result.candidates.size}")
                 renderSurveyNetworks()
+                if (result.candidates.any { it.selectable } && visible && currentPage == 3) {
+                    showWifiPicker()
+                }
             }
         }, "BoseWirelessSiteSurvey")
         activeWorker = worker
@@ -854,89 +869,118 @@ internal class BoseSetupProbeActivity : Activity() {
         if (!b2Mode || !b2Verified || b2Network == null ||
             activeCallback == null || postAttempted || postInFlight || surveyInFlight
         ) return
-        // Never expose the password, SSID, XML or network identifier in logs.
-        val valid = try {
+        val ssid = ssidField.text.toString()
+        val payload = try {
             BoseWirelessProfileXml.buildCandidate(
-                ssidField.text.toString(), passwordField.text.toString()
-            )
-            true
+                ssid, passwordField.text.toString()
+            ).toByteArray(Charsets.UTF_8)
         } catch (_: IllegalArgumentException) {
-            false
-        }
-        if (!valid) {
             statusView.text =
-                "Bitte WLAN-Name und Passwort überprüfen. Für diesen Test werden " +
-                    "einfache WPA2-Netzwerknamen und Passwörter ab 8 Zeichen unterstützt."
+                "Bitte überprüfe WLAN-Namen und Passwort. Das Passwort muss für " +
+                    "diesen WPA2-Test 8–63 Zeichen enthalten."
             return
         }
 
-        AlertDialog.Builder(this)
-            .setTitle("SoundTouch mit diesem WLAN verbinden?")
-            .setMessage(
-                "Die SoundTouch erhält jetzt WLAN-Name und Passwort. " +
-                    "Ihr Bose-Setup-WLAN wird möglicherweise sofort verschwinden. " +
-                    "Da die Übertragung unverschlüsselt ist, bitte nur ein separates " +
-                    "Test-WLAN mit eigenem Passwort verwenden. " +
-                    "Bei einem Fehler zuerst den Router prüfen und nicht blind erneut senden."
-            )
-            .setNegativeButton("Nicht senden", null)
-            .setPositiveButton("WLAN übertragen") { _, _ ->
-                val network = b2Network
-                if (network != null && b2Verified && !postAttempted && !postInFlight) {
-                    val payload = try {
-                        BoseWirelessProfileXml.buildCandidate(
-                            ssidField.text.toString(), passwordField.text.toString()
-                        ).toByteArray(Charsets.UTF_8)
-                    } catch (_: IllegalArgumentException) {
-                        statusView.text = "Testdaten ungültig; nichts gesendet."
-                        return@setPositiveButton
-                    }
-                    // Remove text as soon as the request is scheduled.
-                    ssidField.text?.clear()
-                    passwordField.text?.clear()
-                    submitButton.isEnabled = false
-                    postAttempted = true
-                    postInFlight = true
-                    val token = generation
-                    statusView.text =
-                        "WLAN-Einstellungen werden an die SoundTouch übertragen …"
-                    trace("b2_post_started token=$token")
-                    val worker = Thread({
-                        val result = try {
-                            BoseWirelessProfilePost.submitOnce(network, payload)
-                        } finally {
-                            payload.fill(0)
+        // This is the single explicit user action. No second confirmation dialog.
+        val network = b2Network ?: return
+        pendingWifiSsid = ssid
+        ssidField.text?.clear()
+        passwordField.text?.clear()
+        submitButton.isEnabled = false
+        postAttempted = true
+        postInFlight = true
+        val token = generation
+        resultSpinner.visibility = View.VISIBLE
+        retryVerificationButton.visibility = View.GONE
+        resultText.text = "WLAN-Einstellungen werden übertragen …"
+        statusView.text = "Bitte warten. Die SoundTouch stellt ihre WLAN-Verbindung um."
+        showPage(4)
+        trace("b2_post_started token=$token")
+        val worker = Thread({
+            val result = try {
+                BoseWirelessProfilePost.submitOnce(network, payload)
+            } finally {
+                payload.fill(0)
+            }
+            runOnUiThread {
+                if (generation != token || isFinishing || isDestroyed) return@runOnUiThread
+                trace("b2_post_completed token=$token")
+                val disconnected = b2NetworkLostDuringPost
+                closeSession()
+                resultsView.append("\n\n" + result)
+                if (disconnected) {
+                    resultsView.append("\nBose-Setup-WLAN während der Übertragung getrennt.")
+                }
+                resultText.text =
+                    "WLAN-Einstellungen gesendet. Android stellt die normale WLAN-Verbindung " +
+                        "wieder her. Anschließend suchen wir die SoundTouch automatisch."
+                statusView.text = "Warte auf dein WLAN …"
+                beginLanVerification()
+            }
+        }, "BoseSetupSingleProfilePost")
+        activeWorker = worker
+        worker.start()
+    }
+
+    private fun beginLanVerification() {
+        lanVerification?.stop()
+        lanVerification = null
+        val id = boseDeviceId
+        val ssid = pendingWifiSsid
+        if (id.isNullOrEmpty() || ssid.isNullOrEmpty()) {
+            resultSpinner.visibility = View.GONE
+            retryVerificationButton.visibility = View.GONE
+            resultText.text =
+                "Die WLAN-Daten wurden übertragen. Eine automatische Prüfung ist bei " +
+                    "diesem Gerät noch nicht möglich. Die SoundTouch könnte bereits " +
+                    "mit dem WLAN verbunden sein."
+            statusView.text = "Einrichtung noch nicht automatisch bestätigt."
+            return
+        }
+        resultSpinner.visibility = View.VISIBLE
+        retryVerificationButton.visibility = View.GONE
+        resultText.text =
+            "Wir warten auf die WLAN-Verbindung deines Smartphones und " +
+                "suchen dort deine SoundTouch …"
+        val verifier = BoseLanVerification(this, id, ssid) { outcome ->
+            if (isFinishing || isDestroyed || currentPage != 4) return@BoseLanVerification
+            when (outcome) {
+                BoseLanVerification.Status.WaitingForWifi -> {
+                    resultSpinner.visibility = View.VISIBLE
+                    resultText.text = "Android verbindet sich wieder mit deinem WLAN …"
+                    statusView.text = "Warte auf WLAN …"
+                }
+                BoseLanVerification.Status.Searching -> {
+                    resultSpinner.visibility = View.VISIBLE
+                    resultText.text = "Mit WLAN verbunden. Die SoundTouch wird gesucht …"
+                    statusView.text = "Suche im WLAN des Smartphones …"
+                }
+                is BoseLanVerification.Status.Found -> {
+                    resultSpinner.visibility = View.GONE
+                    retryVerificationButton.visibility = View.GONE
+                    resultText.text =
+                        if (outcome.wlanName != null) {
+                            "Fertig! Die SoundTouch wurde in deinem WLAN gefunden. " +
+                                "Sie meldet als aktives WLAN: " + outcome.wlanName + "."
+                        } else {
+                            "Fertig! Deine SoundTouch wurde im WLAN des Smartphones " +
+                                "gefunden und anhand ihrer Gerätekennung erkannt."
                         }
-                        runOnUiThread {
-                            if (generation != token) return@runOnUiThread
-                            trace("b2_post_completed token=$token")
-                            val disconnected = b2NetworkLostDuringPost
-                            closeSession()
-                            resultsView.append("\n\n$result")
-                            if (disconnected) {
-                                resultsView.append("\nSetup-WLAN wurde während des POST getrennt.")
-                            }
-                            val acknowledged = result.contains("AddWirelessProfileResponse erkannt")
-                            resultText.text = if (acknowledged) {
-                                "Die SoundTouch hat die WLAN-Daten angenommen. " +
-                                    "Ob sie bereits mit dem neuen WLAN verbunden ist, " +
-                                    "musst du noch überprüfen."
-                            } else {
-                                "Die Übertragung konnte nicht sicher bestätigt werden. " +
-                                    "Möglicherweise ist die SoundTouch bereits ins neue " +
-                                    "WLAN gewechselt. Bitte zuerst den Router prüfen."
-                            }
-                            statusView.text =
-                                "Bose-Setup-Verbindung beendet. Prüfe die SoundTouch im Ziel-WLAN."
-                            startButton.isEnabled = false
-                            showPage(4)
-                        }
-                    }, "BoseSetupSingleProfilePost")
-                    activeWorker = worker
-                    worker.start()
+                    statusView.text = "SoundTouch erfolgreich im WLAN gefunden."
+                }
+                BoseLanVerification.Status.NotFound -> {
+                    resultSpinner.visibility = View.GONE
+                    retryVerificationButton.visibility = View.VISIBLE
+                    resultText.text =
+                        "Die SoundTouch wurde noch nicht im WLAN des Smartphones gefunden. " +
+                            "Sie könnte noch verbinden oder in einem anderen WLAN sein. " +
+                            "Du kannst erneut suchen, ohne das Passwort erneut zu senden."
+                    statusView.text = "WLAN-Verbindung der SoundTouch nicht bestätigt."
                 }
             }
-            .show()
+        }
+        lanVerification = verifier
+        verifier.start()
     }
 
     private fun scheduleBackgroundCleanup() {
@@ -988,6 +1032,7 @@ internal class BoseSetupProbeActivity : Activity() {
         surveyCandidates = emptyList()
         if (::scanButton.isInitialized) scanButton.isEnabled = false
         if (::networkChoices.isInitialized) networkChoices.removeAllViews()
+        if (::chooseWifiButton.isInitialized) chooseWifiButton.isEnabled = false
         postInFlight = false
         b2NetworkLostDuringPost = false
         if (::ssidField.isInitialized) ssidField.text?.clear()
@@ -1027,6 +1072,8 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onDestroy() {
         trace("activity_destroyed")
+        lanVerification?.stop()
+        lanVerification = null
         closeSession()
         super.onDestroy()
     }
