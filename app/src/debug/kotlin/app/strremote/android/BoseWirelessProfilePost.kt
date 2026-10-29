@@ -4,12 +4,14 @@ import android.net.Network
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 import org.xml.sax.InputSource
+import org.xml.sax.SAXException
+import java.io.StringReader
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
-import java.io.ByteArrayInputStream
 
 /**
  * Debug-only controlled B2 hardware attempt; never called by the production app.
@@ -84,24 +86,30 @@ internal object BoseWirelessProfilePost {
     internal fun isExpectedAcknowledgement(response: ByteArray): Boolean {
         if (response.isEmpty() || response.size > MAX_RESPONSE_BYTES) return false
         return try {
-            val factory = DocumentBuilderFactory.newInstance()
-            factory.isNamespaceAware = false
-            factory.isXIncludeAware = false
-            factory.isExpandEntityReferences = false
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+            // Android's JAXP does not support FEATURE_SECURE_PROCESSING.
+            // Reject DTD/entities before parsing, disallow external resolution
+            // and use only platform-compatible factory configuration.
+            val text = Charsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(response)).toString()
+            if (text.contains("<!DOCTYPE", ignoreCase = true) ||
+                text.contains("<!ENTITY", ignoreCase = true) ||
+                text.any { it == '\u0000' }
+            ) return false
+            val factory = DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = false
+                isValidating = false
+                isExpandEntityReferences = false
+            }
             val builder = factory.newDocumentBuilder()
-            // Do not allow the default parser error reporter to print any
-            // malformed response contents into system logs.
+            builder.setEntityResolver { _, _ -> throw SAXException("External entities forbidden") }
             builder.setErrorHandler(object : DefaultHandler() {
                 override fun warning(e: SAXParseException) { throw e }
                 override fun error(e: SAXParseException) { throw e }
                 override fun fatalError(e: SAXParseException) { throw e }
             })
-            val document = builder.parse(InputSource(ByteArrayInputStream(response)))
+            val document = builder.parse(InputSource(StringReader(text)))
             document.documentElement?.tagName == "AddWirelessProfileResponse"
         } catch (_: Exception) {
             false
