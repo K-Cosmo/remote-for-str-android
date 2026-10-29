@@ -170,8 +170,11 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private fun requiredPermissions(): List<String> = buildList {
         when {
-            Build.VERSION.SDK_INT in 29..32 ->
+            Build.VERSION.SDK_INT in 29..32 -> {
+                // Android 12+ requires COARSE and FINE to be requested together.
+                add(Manifest.permission.ACCESS_COARSE_LOCATION)
                 add(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
             Build.VERSION.SDK_INT >= 33 ->
                 add(Manifest.permission.NEARBY_WIFI_DEVICES)
         }
