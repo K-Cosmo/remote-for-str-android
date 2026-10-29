@@ -945,7 +945,11 @@ internal class BoseSetupProbeActivity : Activity() {
         val action = Runnable {
             if (!visible && !awaitingConsent && !postInFlight && activeCallback != null) {
                 closeSession()
-                statusView.text = "Test im Hintergrund beendet; Setup-Netzwerk freigegeben."
+                showPage(2)
+                startButton.text = "Erneut versuchen"
+                statusView.text =
+                    "Die Verbindung zur SoundTouch wurde im Hintergrund getrennt. " +
+                        "Bitte stelle die Verbindung erneut her."
             }
         }
         backgroundCleanup = action
