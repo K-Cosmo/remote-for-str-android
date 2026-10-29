@@ -7,6 +7,8 @@ import java.net.URL
 import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 import org.xml.sax.InputSource
+import org.xml.sax.SAXParseException
+import org.xml.sax.helpers.DefaultHandler
 import java.io.ByteArrayInputStream
 
 /**
@@ -91,9 +93,15 @@ internal object BoseWirelessProfilePost {
             factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
-            val document = factory.newDocumentBuilder().parse(
-                InputSource(ByteArrayInputStream(response))
-            )
+            val builder = factory.newDocumentBuilder()
+            // Do not allow the default parser error reporter to print any
+            // malformed response contents into system logs.
+            builder.setErrorHandler(object : DefaultHandler() {
+                override fun warning(e: SAXParseException) { throw e }
+                override fun error(e: SAXParseException) { throw e }
+                override fun fatalError(e: SAXParseException) { throw e }
+            })
+            val document = builder.parse(InputSource(ByteArrayInputStream(response)))
             document.documentElement?.tagName == "AddWirelessProfileResponse"
         } catch (_: Exception) {
             false

@@ -159,14 +159,14 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
 3. `GET /supportedURLs` returns a firmware-specific XML list of available API paths; only a test on our reference hardware can establish if the original ST20 III lists the two Wi-Fi endpoints:
    https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/reference/API-ENDPOINTS.md
 
-**What the debug PoC does now:**
+**Historical B1 read-only behavior (now the default path; B2 is separately opt-in):**
 
 - After the already verified read-only `GET http://192.0.2.1:80/` and `GET http://192.0.2.1:8090/info`, invoke `GET http://192.0.2.1:8090/supportedURLs` through the **exact Android `Network` object** authorized for the Bose SoftAP. No default-route binding.
 - Accept only HTTP 200 XML, enforce 2.5 s connect/read timeouts, disable redirects and caching, and bound the XML body to 64 KiB.
 - Parse XML strictly enough to reject an unexpected root and DOCTYPE, and **only show literal whitelisted path membership**: `/addWirelessProfile`, `/performWirelessSiteSurvey`, `/getActiveWirelessProfile`.
 - Do **not** display/store/log full XML, device IDs, SSIDs, MACs, serials, credentials or arbitrary endpoints. A route listed in `/supportedURLs` is a **capability hint**, not proof of a supported POST schema or working write on this firmware.
-- Release the temporary setup-Wi-Fi connection after all read-only probes as before. Keep retry/Cancel, app version and production implementation unchanged.
-- Code: `app/src/debug/kotlin/app/strremote/android/BoseSupportedUrlsProbe.kt` and the B1 call site in `BoseSetupProbeActivity.kt`. There is no `POST` implementation, credential form, provisioning wizard or automatic Bose firmware modification.
+- In the **default B1 mode**, release the temporary setup-Wi-Fi connection after read-only probes. The explicitly selected B2 mode instead retains it through a single consented POST.
+- Code: `BoseSupportedUrlsProbe.kt` and the B1 call site in `BoseSetupProbeActivity.kt`. The original B1 milestone did not include any POST; the later **debug-only B2 experiment** is documented below. No automatic firmware modification.
 
 **B1 evidence to capture on SoundTouch 20 Series III:**
 
@@ -177,7 +177,7 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
 - [ ] Only then prepare a separately approved **debug-only, explicit-consent write** to a throwaway test Wi-Fi with local network verification. Do not silently repeat an ambiguous write: an HTTP timeout might mean the speaker already accepted the profile and is switching networks.
 - [ ] Run build/lint/CI and test on original-firmware hardware
 
-**B1 endpoint-advertisement gate passed on reference device. Phase B2 write remains BLOCKED** pending repeatable Android retry reliability, firmware/version evidence where available, and separately confirmed protocol test conditions. Do not interpret this as Android 17-wide compatibility.
+**Historical gate at B1 completion:** B2 was blocked. Following the user's subsequent 3+3 confirmation, only the narrowly scoped debug-only experiment below is authorized; production provisioning is still blocked. Do not infer Android-wide compatibility.
 
 ## B1 device result and B2 contract review (2026-10-29)
 
@@ -203,22 +203,22 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
   https://github.com/gesellix/Bose-SoundTouch/blob/main/pkg/service/setup/wifi_provision.go
 - The community implementation automatically retries a POST after timeout. **Do not copy this behavior**: after an ambiguous timeout the speaker might already be applying the profile and dropping SoftAP. Our first real-device attempt must be single-shot and followed by independent state/LAN verification.
 
-**Next-step gate (contract investigation and safe B2 preparation):**
+**Original B1-to-B2 gating checklist (status updated after 3+3 confirmation):**
 
-1. First close the open **3 first-start + 3 late-SoftAP retry** reliability gate on Android 17/API 37 with app-only `StrBoseSetup` diagnostics, cancellation and Wi-Fi restoration. Record firmware version if it can be read safely.
+1. **User reports passed:** 3 first-start + 3 late-SoftAP retries on the test setup; no per-run Logcat, exact Android build or Bose firmware version has been supplied. Do not generalize this result.
 2. Define a debug-only, user-confirmed single-POST test against an **isolated test SSID** chosen by the tester (never a background auto-submit). Do not treat `wpa_or_wpa2` as proved for WPA3/open networks; initially limit the test to a compatible WPA2-Personal test AP. No factory reset.
 3. Keep the Bose `Network` callback active through the single POST; send the community candidate with correct XML escaping, bounded request/response handling, redirects disabled and no credentials in storage/logs. No automatic retry after request ambiguity.
 4. Record separately: HTTP status, parsed response *type* only, whether the SoftAP disappears, whether Android returns to home Wi-Fi, and **independent** rediscovery of the same physical speaker on the test LAN. Never mark success from HTTP 200 or AP disappearance alone.
 5. If the first POST times out or fails, report **indeterminate** rather than automatically resubmitting. Reinspect local Bose state and the destination LAN before any new consent. Build/lint/CI and real device evidence must pass before advancing to full wizard implementation.
 
-**Decision:** B1 discovery PASS; B2 write **NOT YET AUTHORIZED**. Product 0.2.1 and its release artifact stay unchanged.
+**Updated decision:** B1 discovery PASS; debug-only **single-shot** B2 hardware experiment now authorized by D-028; production/write wizard and release remain NOT AUTHORIZED. Product 0.2.1 and its release artifact stay unchanged.
 
-## B2 offline request-encoding preparation — no write path (2026-10-29)
+## B2 offline request-encoding milestone (historical; followed by debug-only write test)
 
 - Added **debug-only** `BoseWirelessProfileXml.buildCandidate()`, which produces the AfterTouch community's proposed `AddWirelessProfile` XML string. It does **not** open a socket, issue POST, collect home Wi-Fi input, persist credentials or log XML.
 - For this initial *isolated WPA2 test* draft, SSID is limited to 1–32 printable ASCII characters and password to 8–63 printable ASCII characters. These are deliberate conservative **test-only** limits, not a claim about all SSIDs/security modes supported by Bose. Before a general wizard, revisit internationalized SSIDs, WPA variants and exact firmware requirements.
 - Escapes XML attribute metacharacters (`&`, `<`, `>`, quotes, apostrophes). Added host-side JUnit tests for expected candidate syntax, escaping and invalid test inputs; CI now invokes `:app:testDebugUnitTest`.
-- This prepares a separately consented, **single-shot** future write test but does not count as task T06 or authorize it. Device validation and retry reliability are still outstanding.
+- This was the first **offline-only** preparation milestone. It was followed by the D-028-authorized debug-only single-shot POST implementation. Actual device provisioning, recovery and production acceptance remain outstanding.
 
 ## B2 gated hardware experiment — 3+3 user confirmation (2026-10-29)
 
@@ -235,13 +235,13 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 
 **Next gate:** independently confirm the real-device test outcome and recovery from wrong credentials/failed association before progressing to a production wizard. Product 0.2.1 remains unchanged.
 
-## Phase B protocol research — no write authorization (2026-10-29)
+## Historical protocol research before B2 single-shot authorization (2026-10-29)
 
 - Bose's own SoundTouch 20 III instructions confirm the alternate browser-based setup at `http://192.0.2.1/`: choose the home network, enter its password, and submit via the speaker's setup page. This is **official evidence that local Wi-Fi provisioning exists**, but not documentation of the underlying HTTP request payload.
   https://support.bose.ca/article/soundtouch-20-series-iii-connecting-to-a-wi-fi-network
 - The community's SoundTouch setup investigation documents `POST /performWirelessSiteSurvey` and `POST /addWirelessProfile` on `:8090`, with an XML `AddWirelessProfile` payload. This is an **unverified community-derived contract** and has **not been called** on the test ST20 III. Do not assume its securityType values, firmware compatibility or credential-failure behavior without verifying the actual supported contract.
   https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md
-- An HTTP 200 from read-only `GET /info` proves the local API is listening, **not** that either Wi-Fi setup POST is supported on this firmware. Phase B remains blocked until remaining T03 recovery/cancellation gates and explicit write-path investigation. No credentials are handled by the current PoC.
+- An HTTP 200 from read-only `GET /info` proves the local API is listening, **not** that either Wi-Fi setup POST is supported on this firmware. The initial B1 probe handled no credentials; the later gated debug-only experiment is now implemented but has no hardware result yet.
 
 ## Evidence template
 
@@ -250,15 +250,15 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 | Hardware | ST20 Series III / 355589-SM2 |
 | Original Bose firmware/software | To be measured |
 | Android device/API level | To be measured |
-| Setup entry sequence succeeded | Unknown |
+| Setup entry sequence succeeded | Yes, based on user-reported 3+3 Wi-Fi picker/retry passes |
 | Setup SSID shown | Unknown; do not record private SSID verbatim publicly |
-| Network callback/permission outcome | Unknown |
-| Setup gateway or HTTP host | Unknown; probe after link established |
-| HTTP 80 / HTTP 8090 read-only response | Unknown |
+| Network callback/permission outcome | 3 first-start + 3 delayed-SoftAP retries successful, user report (raw traces pending) |
+| Setup gateway or HTTP host | `192.0.2.1` measured on reference Bose setup AP |
+| HTTP 80 / HTTP 8090 read-only response | Both HTTP 200; B1 `/supportedURLs` XML lists three Wi-Fi routes |
 | OnLost/unregister and normal network recovery | Unknown |
-| Phase A result | NOT TESTED |
-| Phase B eligibility | BLOCKED UNTIL PHASE A |
+| Phase A result | GET/connection/read-only recovery observed; 3+3 reliability user-confirmed |
+| Phase B eligibility | Debug-only single-shot test authorized; actual association result PENDING |
 
 ## Done criteria
 
-The PoC is a **measured, evidenced capability** rather than an inferred protocol match. Until the real Bose SoundTouch 20 test passes, no user-facing provisioning claim, no automatic profile POST and no app release version bump.
+The PoC is a **measured, evidenced capability** rather than an inferred protocol match. Until the real Bose SoundTouch 20 single-shot test and independent LAN join verification pass, no end-user provisioning claim, no automatic profile POST or retries, no main merge and no app release version bump.

@@ -130,7 +130,7 @@ Review/redact before sharing, although the new debug logger deliberately contain
 
 The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API. Do not infer Wi-Fi provisioning support from an open TCP/HTTP port without validating the exact endpoint and contract.
 
-## B2 first hardware test — prepared, results pending (2026-10-29)
+## B2 first hardware test — prepared; actual device result pending (2026-10-29)
 
 - Debug-only `B2: WLAN-Hardwaretest vorbereiten` uses the established Wi-Fi picker and reads the existing Phase A/B1 endpoints. B1 must advertise `/addWirelessProfile` before the credential form is displayed.
 - Explicit confirmation precedes exactly one POST. No retries after timeout or onLost, no secrets in debug logs/storage, and no claim of LAN association based on HTTP 200 alone.

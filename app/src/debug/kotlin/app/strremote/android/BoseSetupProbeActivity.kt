@@ -236,9 +236,26 @@ internal class BoseSetupProbeActivity : Activity() {
             isAllCaps = false
             minimumHeight = dp(48)
             setOnClickListener {
-                // Return to the Devices screen after releasing the Bose network.
-                closeSession()
-                finish()
+                if (postInFlight) {
+                    AlertDialog.Builder(this@BoseSetupProbeActivity)
+                        .setTitle("Laufenden POST abbrechen?")
+                        .setMessage(
+                            "Ein Abbruch kann nicht rückgängig machen, was bereits " +
+                                "an Bose gesendet wurde. Ergebnis wäre unbestimmt. " +
+                                "Vor einem neuen Versuch zuerst den Lautsprecher " +
+                                "im Test-WLAN und im Bose-Setup-Modus prüfen."
+                        )
+                        .setNegativeButton("Weiter abwarten", null)
+                        .setPositiveButton("Trotzdem trennen") { _, _ ->
+                            closeSession()
+                            finish()
+                        }
+                        .show()
+                } else {
+                    // Return to Devices after releasing the Bose network.
+                    closeSession()
+                    finish()
+                }
             }
         }
         column.addView(
