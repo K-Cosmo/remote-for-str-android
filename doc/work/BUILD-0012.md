@@ -235,6 +235,23 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
 
+## Hardware UI follow-up: screenshot-confirmed device-state stability and wizard polish (2026-10-29)
+
+**Observed by user on Pixel screenshot:** the previously stuck Devices list now displays a grey Bose-only SoundTouch at a verified local IP (with "STR fehlt") next to a working green STR SoundTouch 10 (STR 1.1.4). User reports the debug build currently appears stable and the WLAN picker popup is good. This is encouraging **user-observed** evidence, not exhaustive 3+3/B2 automatic verifier acceptance.
+
+**Requested KISS refinements and debug-branch implementation:**
+
+- Add **10dp transparent ListView divider** between device cards; keep STR Online/Offline semantics and callbacks unchanged.
+- Make **Raum** fully legible and actionable even for pending grey Bose speakers. Store the assignment in `PendingBoseStore` (not `SavedSpeaker`), preserve through future Wi-Fi changes, invalidate stale Wi-Fi association on a new submission, and carry the room into a saved STR endpoint only when actual STR is reachable and the user had no prior STR room assignment. Pure transition unit tests guard against stale verified IP and lost rooms.
+- Rename the debug-only "Neues Gerät hinzufügen" action to **"WLAN eines Lautsprechers einrichten"**: STR discovery remains automatic; this button configures Bose Wi-Fi.
+- Remove **both** debug-only `FLAG_SECURE` calls in the wizard. The former "Vom Admin deaktiviert" screenshot warning came from our own code, not a device administrator. Retain masked `TYPE_TEXT_VARIATION_PASSWORD`, no credential logging/persistence, and screenshot accessibility when the user chooses to capture a screen.
+- Make the wizard's light edge-to-edge system bars use **dark Android status/navigation icons**, preserve status-bar/nav-bar inset padding, and avoid drawing unreadable UI atop system icons.
+- Add a **live, indeterminate progress indicator** in wizard step 2 from the Bose request until `onAvailable` plus read-only capability check completes, or until a clear error/cancellation. Distinguish "searching Android Bose Wi-Fi" and "connected, checking SoundTouch".
+- After the one-shot Wi-Fi POST and the bounded 45-second LAN verification reaches a terminal result, the final action reads **"Fertig"**. During an ongoing transfer or automatic check the user can cancel explicitly; never imply the process is complete while a POST is still running.
+- Preserve last validated WLAN scan **popup formatting** unchanged. STR installation remains linked on the final page, and pending Bose rows still open that site.
+
+**QA acceptance:** Confirm screenshots work on all three wizard pages; system clock/notification icons are visible, distinct from the light background; step 2 spinner appears while searching, ends on success/cancel/error; STR speaker still opens; Bose room selection is persistent after app restart and Wi-Fi reconfiguration; 10dp card spacing; final "Fertig" action only appears after verification resolution; selected WLAN list remains unchanged. Real phone walkthrough needed before merge to `main`.
+
 ## BUILD-0012 integration regression and clean-code guardrails (2026-10-29)
 
 **User bug report:** after working on the Bose setup wizard, the existing Devices page could remain indefinitely at "Lautsprecher gefunden, STR-Verbindung wird geprüft…". The new wizard's system WLAN chooser is reported working again. User requests clear STR installation handoff, an attractive WLAN selection popup and a grey speaker row until STR is present.
