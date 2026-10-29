@@ -429,19 +429,16 @@ class MainActivity : Activity() {
             }
         )
 
-        // BUILD-0012 PoC is available only in the separate Android 10+ debug app.
-        // Keep production STR Remote 0.2.1 behavior and device UI unchanged.
-        if (Build.VERSION.SDK_INT >= 29 && packageName == "app.strremote.android.poc") {
+        // Android 10+ supports system-approved local Bose SoftAP setup.
+        // Android 8/9 retain the existing STR remote and discovery features.
+        if (Build.VERSION.SDK_INT >= 29) {
             val addDeviceButton = Button(this).apply {
                 text = getString(R.string.setup_speaker_wifi)
                 isAllCaps = false
                 setOnClickListener {
                     returningFromBoseSetup = true
                     startActivity(
-                        Intent().setClassName(
-                            this@MainActivity,
-                            "app.strremote.android.BoseSetupProbeActivity"
-                        )
+                        Intent(this@MainActivity, BoseSetupProbeActivity::class.java)
                     )
                 }
             }
@@ -911,7 +908,7 @@ class MainActivity : Activity() {
                     lastReachable = if (current.saved != null) reachable else current.lastReachable,
                     pendingBose = current.pendingBose && endpoint == null
                 )
-                if (endpoint != null && packageName == "app.strremote.android.poc") {
+                if (endpoint != null) {
                     // Keep any room assigned during Bose setup when STR appears,
                     // but do not overwrite an already saved user's STR room.
                     val pending = pendingBose.findMatchingStrDevice(
@@ -1358,7 +1355,7 @@ class MainActivity : Activity() {
             }
         }
 
-        if (packageName == "app.strremote.android.poc") {
+        run {
             // A configured original-firmware Bose speaker is NOT an STR endpoint.
             // Keep it as a separate, disabled-looking device until actual STR
             // discovery + endpoint probing proves the web remote is present.

@@ -10,13 +10,13 @@ android {
         applicationId = "app.strremote.android"
         minSdk = 26
         targetSdk = 37
-        versionCode = 10
-        versionName = "0.2.1"
+        versionCode = 11
+        versionName = "0.3.0"
     }
 
     buildTypes {
         debug {
-            // Separate package so PoC installs beside the signed production app.
+            // Separate package for pre-release validation beside the signed production app.
             applicationIdSuffix = ".poc"
         }
         release {

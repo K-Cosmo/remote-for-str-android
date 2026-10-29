@@ -1,31 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Normal permission required for ConnectivityManager.requestNetwork().
-         Debug variant only: the release app does not request local setup networks. -->
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-
-    <!-- Debug-only Wi-Fi provisioning proof: legacy Android 10–12L runtime access. -->
-    <uses-permission
-        android:name="android.permission.ACCESS_COARSE_LOCATION"
-        android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="32" />
-
-    <!-- Debug APK needs the Wi-Fi request permission on Android 13+, including API 37. -->
-    <uses-permission
-        android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:usesPermissionFlags="neverForLocation"
-        tools:remove="android:maxSdkVersion" />
-
-    <!-- Debug build has ONE launcher (MainActivity), clearly distinct from production. -->
-    <application android:label="STR Remote PoC" tools:replace="android:label">
-        <!-- Opened only from Devices -> Add new device on Android 10+. -->
-        <activity
-            android:name=".BoseSetupProbeActivity"
-            android:exported="false"
-            android:label="Bose Wi-Fi PoC (Debug)" />
-    </application>
+    <!-- Distinct debug application can still be installed beside the signed app. -->
+    <application
+        android:label="STR Remote (Debug)"
+        tools:replace="android:label" />
 </manifest>

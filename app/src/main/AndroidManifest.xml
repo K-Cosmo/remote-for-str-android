@@ -4,13 +4,19 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Local Bose setup AP requires an explicit Android system network request. -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- WifiNetworkSpecifier requires location permissions on Android 10–12L. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
-    <!-- Android 16 local-network protection compatibility path. -->
+    <!-- Android 13+ setup Wi-Fi selection; retained on API 37 and later. -->
     <uses-permission
         android:name="android.permission.NEARBY_WIFI_DEVICES"
-        android:maxSdkVersion="36"
         android:usesPermissionFlags="neverForLocation"
         tools:ignore="UnusedAttribute" />
 
@@ -27,6 +33,10 @@
         android:theme="@style/Theme.STRRemote"
         android:usesCleartextTraffic="true">
 
+        <activity
+            android:name=".BoseSetupProbeActivity"
+            android:exported="false"
+            android:label="@string/setup_speaker_wifi" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
