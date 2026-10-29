@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A + B1 DEVICE VERIFIED; 3+3 WIFI PICKER/RETRY GATE CONFIRMED BY TESTER; DEBUG-ONLY B2 SINGLE-POST READY FOR FIRST HARDWARE TEST (NOT YET RUN)
+**Status:** PHASE A/B1 CONFIRMED; 3+3 CONNECTION/RETRY PASSED; B2 WIFI LIST AND PROFILE TRANSFER USER-CONFIRMED; THREE-PAGE DEBUG WIZARD IMPLEMENTED, ON-DEVICE UX QA PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -234,6 +234,23 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Extend host-side tests for scan-status XML, expected successful responses and malicious/invalid input. Note that CI cannot replace an Android instrumented test; the real ST20 III scan remains to be retested.
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
+
+## Guided three-page setup wizard — UI acceptance pending (2026-10-29)
+
+**User hardware feedback:** the original SoundTouch 20 Series III now returns an actionable Wi-Fi network list, and the Wi-Fi configuration is reported to work. This is a positive tester report for the B2 path; the raw POST response and an independently identified LAN `/info` result were **not** supplied, so do not infer automatic on-device verification or blanket firmware compatibility.
+
+**Change:** the original one-page technical B1/B2 PoC screen is replaced by exactly **three separate guided pages** inside the existing debug-only Activity, with a result/verification screen *after* the three steps.
+
+1. **Step 1/3 — Lautsprecher vorbereiten:** Show the SoundTouch 20 Series III Preset 2 + Volume − button instruction and explicitly ask the user to confirm the amber Wi-Fi LED. Primary button: `Die WLAN-Anzeige leuchtet gelb`. No HTTP codes or protocol details.
+2. **Step 2/3 — Mit SoundTouch verbinden:** Explain Android's consent picker and its no-internet warning, with `Mit SoundTouch verbinden`, a visible status, and a stable explicit retry. Retain the tested **immediate first `requestNetwork`**, `Bose` prefix and **fresh-Activity retry** unchanged. After `GET /info` and `/supportedURLs` pass, automatically transition to step 3 with the Android-approved Bose `Network` still alive.
+3. **Step 3/3 — Heim-WLAN auswählen:** Auto-run the *speaker-side* site survey, show a compact selectable inline Wi-Fi list sorted by suitability/reception (first 8, expand on request), masked password entry, labeled SSID/password fields, manual fallback and `WLAN auf SoundTouch übertragen`. Show a separate explicit confirmation before **one** `/addWirelessProfile` POST. Do not auto-retry on ambiguous result.
+4. **After step 3 — WLAN-Verbindung prüfen (not step 4/4):** Present acknowledgement separately from independently verified destination-LAN membership. Give concrete router and phone-Wi-Fi instructions; only call it complete once the user verifies the same device is reachable on the destination LAN. Return to Devices. No false 'Einrichtung erfolgreich' status from HTTP 200 alone.
+
+**UI/technical separation:** Hide `/supportedURLs`, HTTP responses, API status and debug details behind the optional `Technische Details anzeigen` button. The default wizard uses human language. Restore the Wi-Fi network callback on cancellation/background exit, and prevent credentials from appearing in screenshots or persistent state (`FLAG_SECURE`). Preserve clear validation and separate test-WLAN warning because Bose sends credentials over plain HTTP.
+
+**Proof gates for next local build:** `:app:testDebugUnitTest :app:lintDebug :app:assembleDebug`, then real-device walkthrough of all three pages, retry and cancel/back, 8+/expanded WLAN list, manual fallback, password masking, explicit confirmation, post-attempt verification wording, automatic network return, and normal STR 0.2.1 unaffected. The new page design itself has **not yet been validated on the phone**.
+
+**Scope:** UI refactor is confined to `app/src/debug/...` and documentation. No changes to `main`, the production 0.2.1 APK, SSID picker transport, Bose API wire contracts, or package permissions.
 
 ## B2 hardware-test UI improvement — Bose-visible WLAN selection (2026-10-29)
 

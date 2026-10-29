@@ -1,7 +1,7 @@
 # BUILD-0012 — SoundTouch 20 Series III SoftAP Phase A observations
 
 **Date:** 2026-10-29
-**State:** PHASE A/B1 observed, 3+3 retry reliability gate USER-CONFIRMED, B2 first hardware POST NOT YET PERFORMED
+**State:** PHASE A/B1 plus 3+3 confirmed; B2 Wi-Fi survey and profile submission USER-REPORTED WORKING; three-page wizard UI pending on-device QA
 **Reference hardware:** Bose SoundTouch 20 Series III / 355589-SM2 / original Bose firmware (per test owner)
 **App:** STR Remote PoC, separate debug package `app.strremote.android.poc`
 
@@ -135,3 +135,12 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - Debug-only `B2: WLAN-Hardwaretest vorbereiten` uses the established Wi-Fi picker and reads the existing Phase A/B1 endpoints. B1 must advertise `/addWirelessProfile` before the credential form is displayed.
 - Explicit confirmation precedes exactly one POST. No retries after timeout or onLost, no secrets in debug logs/storage, and no claim of LAN association based on HTTP 200 alone.
 - **Tester to record:** B2 result string (redacted), whether the Bose setup AP disappears, association on a separate WPA2 test router, reappearance of the same speaker's `/info` on destination LAN, Android Wi-Fi recovery. All outcomes **pending**.
+
+
+## B2 functional hardware report and wizard UI follow-up — 2026-10-29
+
+- **Tester explicitly reports:** WLAN list loads on the SoundTouch 20 Series III; setting the desired WLAN on the SoundTouch also works.
+- No raw HTTP response, independently measured new speaker IP or sanitized LAN `/info` evidence was supplied in this conversation. Record *working according to tester*, not *independently verified by automated probe*.
+- **UX issue:** preceding single-page B2 PoC was too technical and the scanned WLAN list needed better formatting. Tester requested **3 steps as 3 pages**: prepare box, connect via Android, choose WLAN and transfer, with guided rather than API terminology.
+- New debug-only three-page wizard implemented with inline scan cards, eight initially shown entries and expandable list, hidden technical details, simple statuses, separate final verification page, and unchanged Android connection + Bose API submission logic.
+- **On-device checks still open:** page sizing on Pixel, back/cancel behavior, first connection/retry, auto-advance, WPA2 list selection, manual SSID, submit prompt, output verification wording and phone Wi-Fi recovery.
