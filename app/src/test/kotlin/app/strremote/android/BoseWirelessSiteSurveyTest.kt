@@ -67,6 +67,26 @@ class BoseWirelessSiteSurveyTest {
     }
 
     @Test
+    fun recognizesBoseScanStatusWithoutMisclassifyingAsInvalidXml() {
+        val result = BoseWirelessSiteSurvey.parseResponse(
+            "<status>/performWirelessSiteSurvey</status>".toByteArray(Charsets.UTF_8)
+        )
+        assertTrue(result.candidates.isEmpty())
+        assertTrue(result.status.contains("bestätigt Scan"))
+    }
+
+    @Test
+    fun rejectsUnsafeUtf16AndEntityDeclarations() {
+        val utf16 = "<PerformWirelessSiteSurveyResponse/>".toByteArray(Charsets.UTF_16LE)
+        assertTrue(BoseWirelessSiteSurvey.parseResponse(utf16).candidates.isEmpty())
+        val doctype = "<!DOCTYPE x [<!ENTITY foo SYSTEM \"file:///secret\">]>" +
+            "<PerformWirelessSiteSurveyResponse>&foo;</PerformWirelessSiteSurveyResponse>"
+        assertTrue(BoseWirelessSiteSurvey.parseResponse(
+            doctype.toByteArray(Charsets.UTF_8)
+        ).status.contains("DTD"))
+    }
+
+    @Test
     fun ignoresBlankAndOversizedSsid() {
         val longName = "x".repeat(70)
         val xml = """
