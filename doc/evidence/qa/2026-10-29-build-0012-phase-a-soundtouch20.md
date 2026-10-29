@@ -32,15 +32,15 @@ Root cause is **not yet independently proven**. The current `MainActivity` Retry
 ## Follow-up fix in test branch
 
 - Dedicated in-place `Erneut versuchen` in the Bose PoC remains tappable during an outstanding request.
-- Each attempt unregisters the previous `ConnectivityManager.NetworkCallback`, invalidates previous result callbacks, and issues a **new** `WifiNetworkSpecifier` `requestNetwork()` after a bounded 400 ms Android teardown interval.
-- Pending delayed requests are cancelled when leaving/cancelling the test; no automatic infinite search or background reconnection.
+- The first retry implementation added a 400 ms delay to every `requestNetwork()` call. **Regression observed by tester:** after installing that version, the speaker was no longer detected. The actual root cause is not yet established.
+- **Correction for next test:** restore the previously working **immediate** `requestNetwork()` invocation; retain a manually triggered in-place retry that unregisters the previous callback and discards its results, then performs a fresh request. No periodic background retries.
 - User guidance explains that an already-open Android system picker should be dismissed before triggering a new request.
 - Expanded read-only HTTP probes now include `GET http://192.0.2.1:8090/info`. SoundTouch API documentation identifies `/info` as the read-only device information endpoint; this PoC does **not** read or persist the XML response body, only status/content-type.
 - The public `v0.2.1` APK/source remain unchanged.
 
 ## Still open before Phase A acceptance
 
-- [ ] Re-test device appearing **after** initial failed/waiting attempt, using the **Bose PoC retry in the same screen**; no Activity restart
+- [ ] First re-confirm previously successful connection when the Bose is **already** in setup mode; then re-test device appearing **after** initial failed/waiting attempt using the **Bose PoC retry in the same screen**; no Activity restart
 - [ ] Verify explicit **Cancel** releases temporary network request
 - [ ] Verify a completed successful probe returns the phone to its regular Wi-Fi route
 - [ ] Record Android API level and original Bose firmware version, if available without writing settings
