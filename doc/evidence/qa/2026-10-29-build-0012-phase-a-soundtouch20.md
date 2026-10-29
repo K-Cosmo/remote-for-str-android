@@ -150,3 +150,10 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - Tester feedback: network list better suited to a popup than inline content; double confirmation undesirable; disabled submit button without visible progress is confusing; manual switch back to a generic "Ziel-WLAN" should be unnecessary when Android restores WLAN automatically.
 - New debug-only flow: popup SSID selection, one-tap POST, indeterminate progress indicator, restore Wi-Fi monitoring, bounded Bose mDNS/SSDP LAN discovery, original Bose identity comparison, and optional read-only active wireless profile check.
 - Real-device verification **PENDING** for the new automatic discovery, same-speaker identification, active WLAN name and final status. Prior report that standalone B2 survey/POST worked is not evidence that the new automated LAN check has passed.
+
+## Regression reported after guided wizard update (2026-10-29)
+
+- The Android Bose network selector reportedly aborts automatically before a network is selected, or shortly after Bose selection, with the system message **"Die Anwendung hat die Anfrage zur Auswahl eines Gerätes abgebrochen."** The phone sometimes needs time before a new request can succeed. Tester reports an empty `bose-setup-debug.log`.
+- The app still contains a 20-second `requestNetwork` timeout (elapsed since pressing Connect, **not** since the Bose network appears in the Android picker), and an aggressive 2-second `onStop` cleanup after `onAvailable`. These are concrete premature cancellation risks; precise runtime trigger cannot be claimed without callback event evidence.
+- Changed debug-only wizard to untimed `requestNetwork`, 45-second background cleanup for connected session, 1.5-second retry cooldown, and visible sanitized in-app diagnostics under technical details.
+- **Status: device retest pending; previous 3+3 reliability gate must be repeated.** Minimum tests: leave picker open >30 seconds without selection, select Bose with no Internet, retain Android-approved network during system dialog, fast and delayed retry, explicit cancellation, debug event evidence, no auto provisioning writes.

@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A/B1 CONFIRMED; 3+3 CONNECTION/RETRY PASSED; B2 WIFI LIST AND PROFILE TRANSFER USER-CONFIRMED; KISS WIZARD + AUTOMATIC LAN VERIFICATION IMPLEMENTED, ON-DEVICE QA PENDING
+**Status:** PHASE A/B1 AND ORIGINAL B2 USER-CONFIRMED; 3-PAGE WIZARD WIFI-PICKER REGRESSION REPORTED; LIFECYCLE/TIMEOUT FIX IMPLEMENTED, DEVICE RETEST REQUIRED
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -234,6 +234,26 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Extend host-side tests for scan-status XML, expected successful responses and malicious/invalid input. Note that CI cannot replace an Android instrumented test; the real ST20 III scan remains to be retested.
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
+
+## Critical regression: Android Wi-Fi chooser cancelled before selection / after selection (2026-10-29)
+
+**Tester report (after guided wizard UX changes, on actual phone):** Android displays "Es ist ein Fehler aufgetreten. Die Anwendung hat die Anfrage zur Auswahl eines Gerätes abgebrochen." The picker may display the Bose SSID for under 10 seconds, then close even with no selection. In other runs selection is followed by Android trying to validate Internet access, then the same error. Immediate retries, cancel/re-enter and app relaunch often fail, while waiting several seconds sometimes recovers. A tester's `bose-setup-debug.log` remained empty. Previous first-connect/retry 3+3 hardware tests passed **before** these later UX regressions.
+
+**Code review found two concrete premature cancellation paths (not yet proven to be the only causes):**
+
+1. `ConnectivityManager.requestNetwork(request, callback, 20_000)` started a strict 20-second timer as soon as the picker opened, **including time spent reading the list before choosing**. On timeout Android releases the request and the system picker can surface the app-cancelled error. This was already present in the earlier PoC, but an extended interactive wizard made it user-visible.
+2. After `onAvailable` the Activity could still be `onStop` because Android's system UI was on screen. The existing 2-second background cleanup would `unregisterNetworkCallback` while Android was still finishing the local-only Wi-Fi connection. This explicitly aborts the chooser/request.
+
+**Targeted debug-only correction:**
+
+- Use the no-timeout `requestNetwork(request, callback)`. The user can explicitly cancel the OS picker or abort the wizard; never let an artificial timer cancel them mid-decision.
+- Keep `awaitingConsent` until `onAvailable` or `onUnavailable`. Retain the working first-request logic (`WifiNetworkSpecifier("Bose" prefix)`, `removeCapability(NET_CAPABILITY_INTERNET)`, `Network.openConnection` scoped to Bose only); do **not** try to switch the entire process/default internet route.
+- For an already accepted connection, extend background cleanup from 2 s to 45 s. This protects legitimate Android Wi-Fi chooser/provisioning UI delays, but still releases network callbacks if the user backgrounds the wizard indefinitely; foreground return cancels cleanup. Explicit wizard cancel, Activity destruction and after-POST cleanup still unregister immediately.
+- Only **fresh-Activity retry** gets a 1.5 s cooldown after an unsuccessful request, to allow Android to dispose of its previous chooser. The first request is immediate, not delayed. No parallel callback requests.
+- Show sanitized in-app debug events/timestamps via `Technische Details anzeigen`. This makes an empty Logcat file diagnosable without logging device or network identifiers, credentials, XML or addresses.
+- Re-evaluate the earlier 3+3 reliability acceptance: it is historical evidence for a different UX iteration and **does not prove this new picker flow**.
+
+**Acceptance gate:** On real hardware, leave Android's Bose picker open for at least 30 seconds without selecting, then select the Bose AP and verify the app remains connected and reaches step 3. Repeat 3× immediate setup + 3× delayed SoftAP/retry, including fast cancel/exit and immediate vs delayed retry. Verify explicit no-internet behavior (Bose setup WLAN is deliberately local-only), no automatic disconnection during system UI, connection release after cancel/onDestroy, and no interference from post-transfer automatic LAN verifier. Do not merge/release until this hardware regression gate passes.
 
 ## Wizard UX feedback: one tap, popup selection, automatic LAN verification (2026-10-29)
 
