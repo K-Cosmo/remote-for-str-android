@@ -159,10 +159,10 @@ internal class BoseSetupProbeActivity : Activity() {
                 "Die Verbindungsanfrage anschließend bestätigen."
         )
         step(
-            "3 · Verbindung prüfen",
-            "Die App prüft die lokale Bose-API und gibt die temporäre WLAN-Verbindung " +
-                "danach automatisch frei. Wenn die Box erst später bereit ist, " +
-                "die Android-Auswahl schließen und „Erneut versuchen“ wählen."
+            "3 · Bose-Schnittstellen prüfen",
+            "Die App prüft lesend die lokale Bose-API und die angebotenen " +
+                "WLAN-Einrichtungsfunktionen. Danach gibt sie die temporäre " +
+                "Verbindung automatisch frei."
         )
         column.addView(
             steps,
@@ -230,7 +230,7 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         resultsView = paragraph(
             "Hier erscheinen die Ergebnisse der lokalen HTTP-Prüfungen " +
-                "(Statuscode und Content-Type).",
+                "und der Bose-API-Funktionsliste.",
             14f,
             ink
         ).apply {
@@ -500,6 +500,13 @@ internal class BoseSetupProbeActivity : Activity() {
                 // body, host identifiers or credentials are ever emitted.
                 trace("http_probe_result token=$token index=${observations.size} result=${if (observation.contains("-> HTTP 200")) "http200" else "other"}")
             }
+            if (Thread.currentThread().isInterrupted) return@Thread
+            // Phase B1: bounded, read-only capability inquiry. Only the names
+            // of three known Wi-Fi-related API endpoints are surfaced; the
+            // original XML body is discarded and cannot enter logs/UI.
+            trace("b1_supported_urls_start token=$token")
+            observations.add(BoseSupportedUrlsProbe.inspect(network))
+            trace("b1_supported_urls_finished token=$token")
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
                 trace("http_probe_complete token=$token")
