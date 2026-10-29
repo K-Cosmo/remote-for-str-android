@@ -47,11 +47,14 @@ internal class BoseSetupProbeActivity : Activity() {
     private companion object {
         const val PERMISSION_REQUEST = 12012
         const val LOG_TAG = "StrBoseSetup"
-        const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
         const val EXTRA_RESTART_AND_SEARCH = "bose_poc.restart_and_search"
         const val EXTRA_B2_MODE = "bose_poc.b2_mode"
         const val HTTP_TIMEOUT_MS = 1_800
-        const val BACKGROUND_CLEANUP_DELAY_MS = 2_000L
+        // Android's Wi-Fi picker is itself an Activity. After association succeeds,
+        // it may still be visible while Android finishes setup. A 2-second
+        // background timer destroyed the approved network prematurely.
+        const val BACKGROUND_CLEANUP_DELAY_MS = 45_000L
+        const val RETRY_COOLDOWN_MS = 1_500L
         const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
         data class LocalProbe(val host: String, val port: Int, val path: String)
         val LOCAL_PROBES = listOf(
@@ -66,6 +69,8 @@ internal class BoseSetupProbeActivity : Activity() {
         getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
     private val handler = Handler(Looper.getMainLooper())
+    private val diagnosticEvents = mutableListOf<String>()
+    private var technicalReport = "Noch keine Verbindung geprüft."
 
     private lateinit var startButton: Button
     private lateinit var cancelButton: Button
@@ -134,6 +139,24 @@ internal class BoseSetupProbeActivity : Activity() {
             LOG_TAG,
             "session=$debugSessionId event=$event elapsedMs=$elapsed api=${Build.VERSION.SDK_INT}"
         )
+        // A deliberately sanitized debug-only fallback when adb logcat is
+        // unavailable. Event names never contain SSIDs, network IDs, credentials,
+        // addresses, XML, response bodies or Android Network objects.
+        synchronized(diagnosticEvents) {
+            if (diagnosticEvents.size >= 70) diagnosticEvents.removeAt(0)
+            diagnosticEvents.add("t=${elapsed}ms  ${event}")
+        }
+        handler.post {
+            if (!isFinishing && !isDestroyed && ::resultsView.isInitialized) {
+                refreshDiagnosticView()
+            }
+        }
+    }
+
+    private fun refreshDiagnosticView() {
+        val events = synchronized(diagnosticEvents) { diagnosticEvents.toList() }
+        resultsView.text = technicalReport + "\n\nAblauf (ohne Netzwerkkennungen):\n" +
+            events.joinToString("\n")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -653,14 +676,15 @@ internal class BoseSetupProbeActivity : Activity() {
 
         val token = ++generation
         requestStartedAtMs = SystemClock.elapsedRealtime()
-        trace("request_configured token=$token timeoutMs=$NETWORK_REQUEST_TIMEOUT_MS")
+        trace("request_configured token=$token timeout=none user_controls_picker")
         hasStartedNetworkRequest = true
         awaitingConsent = true
         // Retry opens a fresh Activity and a fresh WifiNetworkSpecifier request.
         // No overlapping Android picker/network callbacks survive the restart.
         startButton.text = "Erneut versuchen"
         startButton.isEnabled = true
-        resultsView.text = "Die Verbindung wird vorbereitet …"
+        technicalReport = "Die Verbindung wird vorbereitet …"
+        refreshDiagnosticView()
         statusView.text =
             "Android sucht die SoundTouch. Wähle das Bose-WLAN im Systemfenster " +
                 "und bestätige die Verbindung."
@@ -692,10 +716,9 @@ internal class BoseSetupProbeActivity : Activity() {
                     }
                     trace("ui_onUnavailable token=$token")
                     closeSession()
-                    val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
-                        "Die SoundTouch wurde nicht gefunden. Prüfe, ob die WLAN-Anzeige " +
-                            "gelb leuchtet, und tippe auf „Erneut versuchen“."
+                        "Die WLAN-Auswahl wurde beendet oder die Verbindung war nicht möglich. " +
+                            "Prüfe die gelbe WLAN-Anzeige und tippe auf „Erneut versuchen“."
                 }
             }
 
@@ -729,7 +752,11 @@ internal class BoseSetupProbeActivity : Activity() {
         activeCallback = callback
         try {
             trace("requestNetwork_call token=$token")
-            connectivity.requestNetwork(request, callback, NETWORK_REQUEST_TIMEOUT_MS)
+            // No 20-second timeout: it also ran while the user was still
+            // reading the Android chooser and made the system display
+            // "App cancelled the device selection request".
+            // The user can cancel in the system dialog or in this Activity.
+            connectivity.requestNetwork(request, callback)
             trace("requestNetwork_returned token=$token")
         } catch (e: SecurityException) {
             trace("requestNetwork_error SecurityException")
@@ -794,7 +821,8 @@ internal class BoseSetupProbeActivity : Activity() {
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
                 trace("http_probe_complete token=$token")
-                resultsView.text = observations.joinToString("\n")
+                technicalReport = observations.joinToString("\n")
+                refreshDiagnosticView()
                 if (b2Mode && b1Report.supportsAddWirelessProfile) {
                     b2Network = network
                     boseDeviceId = identifiedDeviceId
@@ -854,7 +882,8 @@ internal class BoseSetupProbeActivity : Activity() {
                     "Keine WLAN-Liste verfügbar. Du kannst die Suche wiederholen " +
                         "oder den WLAN-Namen selbst eingeben."
                 }
-                resultsView.append("\n\nWLAN-Suche: " + result.status)
+                technicalReport += "\n\nWLAN-Suche: " + result.status
+                refreshDiagnosticView()
                 trace("b2_site_survey_end token=$token count=${result.candidates.size}")
                 renderSurveyNetworks()
                 if (result.candidates.any { it.selectable } && visible && currentPage == 3) {
@@ -910,9 +939,11 @@ internal class BoseSetupProbeActivity : Activity() {
                 profileResponseAcknowledged = result.contains("AddWirelessProfileResponse erkannt")
                 val disconnected = b2NetworkLostDuringPost
                 closeSession()
-                resultsView.append("\n\n" + result)
+                technicalReport += "\n\n" + result
+                refreshDiagnosticView()
                 if (disconnected) {
-                    resultsView.append("\nBose-Setup-WLAN während der Übertragung getrennt.")
+                    technicalReport += "\nBose-Setup-WLAN während der Übertragung getrennt."
+                    refreshDiagnosticView()
                 }
                 resultText.text =
                     if (profileResponseAcknowledged) {
@@ -1070,7 +1101,14 @@ internal class BoseSetupProbeActivity : Activity() {
             // Post from resumed UI: no request while the previous Activity is
             // closing or the new Activity has not yet entered foreground.
             handler.post {
-                if (!isFinishing && !isDestroyed) startOrRequestPermission()
+                if (!isFinishing && !isDestroyed) {
+                    statusView.text =
+                        "Androids vorige WLAN-Auswahl wird freigegeben. " +
+                            "Danach erscheint die neue Verbindungsauswahl."
+                    handler.postDelayed({
+                        if (!isFinishing && !isDestroyed) startOrRequestPermission()
+                    }, RETRY_COOLDOWN_MS)
+                }
             }
         }
     }
