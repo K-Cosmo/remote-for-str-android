@@ -70,6 +70,9 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var cancelButton: Button
     private lateinit var b2StartButton: Button
     private lateinit var b2Panel: LinearLayout
+    private lateinit var scanButton: Button
+    private lateinit var networkListButton: Button
+    private lateinit var surveyStatusView: TextView
     private lateinit var ssidField: EditText
     private lateinit var passwordField: EditText
     private lateinit var submitButton: Button
@@ -87,6 +90,9 @@ internal class BoseSetupProbeActivity : Activity() {
     private var b2Mode = false
     private var b2Network: Network? = null
     private var b2Verified = false
+    private var surveySupported = false
+    private var surveyInFlight = false
+    private var surveyCandidates: List<BoseWirelessSiteSurvey.Candidate> = emptyList()
     private var postAttempted = false
     private var postInFlight = false
     private var b2NetworkLostDuringPost = false
@@ -131,6 +137,12 @@ internal class BoseSetupProbeActivity : Activity() {
             setColor(Color.WHITE)
             cornerRadius = dp(12).toFloat()
             setStroke(dp(1), Color.rgb(218, 226, 234))
+        }
+
+        fun inputBackground(): GradientDrawable = GradientDrawable().apply {
+            setColor(Color.WHITE)
+            cornerRadius = dp(8).toFloat()
+            setStroke(dp(2), Color.rgb(126, 148, 169))
         }
 
         fun paragraph(value: String, size: Float, color: Int): TextView =
@@ -332,21 +344,74 @@ internal class BoseSetupProbeActivity : Activity() {
             13.5f,
             muted
         ))
+        b2Panel.addView(paragraph(
+            "Verfügbare WLANs (vom Bose-Lautsprecher erkannt)",
+            15.5f,
+            ink
+        ).apply { setTypeface(typeface, Typeface.BOLD) })
+
+        scanButton = Button(this).apply {
+            text = "WLANs suchen / Aktualisieren"
+            isAllCaps = false
+            minimumHeight = dp(48)
+            isEnabled = false
+            setOnClickListener { runBoseSurvey() }
+        }
+        networkListButton = Button(this).apply {
+            text = "Gefundene WLANs auswählen"
+            isAllCaps = false
+            minimumHeight = dp(48)
+            isEnabled = false
+            setOnClickListener { showSurveyNetworks() }
+        }
+        surveyStatusView = paragraph(
+            "Bose-WLANs werden abgefragt. Alternativ kann eine Test-SSID manuell eingegeben werden.",
+            14f,
+            muted
+        )
+        b2Panel.addView(scanButton)
+        b2Panel.addView(networkListButton)
+        b2Panel.addView(surveyStatusView)
+        b2Panel.addView(paragraph(
+            "WLAN-Name (SSID)",
+            15f,
+            ink
+        ).apply { setTypeface(typeface, Typeface.BOLD) })
         ssidField = EditText(this).apply {
-            hint = "Test-WLAN-Name (SSID)"
+            hint = "Test-WLAN auswählen oder SSID eintippen"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             setSingleLine(true)
-            isSaveEnabled = false
-            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
-        }
-        passwordField = EditText(this).apply {
-            hint = "Test-WLAN-Kennwort"
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            setSingleLine(true)
+            textSize = 16f
+            setTextColor(ink)
+            setHintTextColor(muted)
+            background = inputBackground()
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            minHeight = dp(54)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
         }
         b2Panel.addView(ssidField)
+        b2Panel.addView(paragraph(
+            "WLAN-Passwort (WPA2-Testnetz)",
+            15f,
+            ink
+        ).apply {
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(0, dp(16), 0, dp(8))
+        })
+        passwordField = EditText(this).apply {
+            hint = "Test-WLAN-Passwort eingeben"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+            textSize = 16f
+            setTextColor(ink)
+            setHintTextColor(muted)
+            background = inputBackground()
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            minHeight = dp(54)
+            isSaveEnabled = false
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        }
         b2Panel.addView(passwordField)
         submitButton = Button(this).apply {
             text = "Einmaligen POST bestätigen …"
@@ -636,13 +701,21 @@ internal class BoseSetupProbeActivity : Activity() {
                 if (b2Mode && b1Report.supportsAddWirelessProfile) {
                     b2Network = network
                     b2Verified = true
+                    surveySupported = b1Report.supportsWirelessSiteSurvey
                     startButton.isEnabled = false
                     b2Panel.visibility = View.VISIBLE
+                    scanButton.isEnabled = surveySupported
+                    surveyStatusView.text = if (surveySupported) {
+                        "Suche nach WLANs in Reichweite des Bose-Lautsprechers beginnt …"
+                    } else {
+                        "Bose meldet keine WLAN-Suchfunktion. SSID bitte manuell eingeben."
+                    }
                     statusView.text =
                         "B1 bestätigt /addWirelessProfile. Bose-WLAN bleibt verbunden. " +
-                            "Testnetz-Zugangsdaten eingeben und den einmaligen Schreibtest bestätigen. " +
+                            "WLAN aus der Liste auswählen oder Test-SSID manuell eingeben. " +
                             "Abbrechen trennt ohne Änderung."
-                    trace("b2_ready token=$token")
+                    trace("b2_ready token=$token surveySupported=$surveySupported")
+                    if (surveySupported) runBoseSurvey()
                 } else {
                     closeSession()
                     cancelButton.text = "Zurück zu Geräte"
@@ -660,9 +733,81 @@ internal class BoseSetupProbeActivity : Activity() {
         worker.start()
     }
 
+    private fun runBoseSurvey() {
+        val network = b2Network ?: return
+        if (!b2Mode || !b2Verified || !surveySupported || surveyInFlight ||
+            postInFlight || postAttempted || activeCallback == null
+        ) return
+
+        surveyInFlight = true
+        surveyCandidates = emptyList()
+        scanButton.isEnabled = false
+        networkListButton.isEnabled = false
+        submitButton.isEnabled = false
+        surveyStatusView.text = "Der Bose-Lautsprecher sucht verfügbare WLANs …"
+        val token = generation
+        trace("b2_site_survey_start token=$token")
+        val worker = Thread({
+            val result = BoseWirelessSiteSurvey.scan(network)
+            runOnUiThread {
+                if (token != generation) return@runOnUiThread
+                surveyInFlight = false
+                scanButton.isEnabled = true
+                submitButton.isEnabled = true
+                surveyCandidates = result.candidates
+                networkListButton.isEnabled = result.candidates.isNotEmpty()
+                surveyStatusView.text = result.status
+                trace("b2_site_survey_end token=$token count=${result.candidates.size}")
+                if (result.candidates.isNotEmpty() && visible && !isFinishing) {
+                    showSurveyNetworks()
+                }
+            }
+        }, "BoseWirelessSiteSurvey")
+        activeWorker = worker
+        worker.start()
+    }
+
+    private fun showSurveyNetworks() {
+        if (!b2Mode || !b2Verified || surveyCandidates.isEmpty() ||
+            surveyInFlight || postInFlight || postAttempted || isFinishing
+        ) return
+        // Network names are displayed solely in this on-device selection dialog;
+        // never write them to trace(), Logcat, persistent storage or evidence.
+        val choices = surveyCandidates.map { candidate ->
+            val reception = when {
+                candidate.signalDbm == null -> "Signal unbekannt"
+                candidate.signalDbm >= -55 -> "stark"
+                candidate.signalDbm >= -70 -> "mittel"
+                else -> "schwach"
+            }
+            if (candidate.selectable) {
+                "${candidate.ssid} · $reception"
+            } else {
+                "${candidate.ssid} · für WPA2-Test nicht unterstützt"
+            }
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("WLAN für den Bose-Lautsprecher auswählen")
+            .setItems(choices) { _, position ->
+                val candidate = surveyCandidates.getOrNull(position)
+                if (candidate != null && candidate.selectable) {
+                    ssidField.setText(candidate.ssid)
+                    ssidField.setSelection(ssidField.text.length)
+                    surveyStatusView.text =
+                        "Test-WLAN ausgewählt. Jetzt das zugehörige WPA2-Passwort eingeben."
+                } else {
+                    surveyStatusView.text =
+                        "Dieses WLAN ist für den WPA2-Hardwaretest nicht freigegeben. " +
+                            "Bitte ein WPA2-Test-WLAN wählen."
+                }
+            }
+            .setNegativeButton("Manuell eingeben", null)
+            .show()
+    }
+
     private fun confirmB2Post() {
         if (!b2Mode || !b2Verified || b2Network == null ||
-            activeCallback == null || postAttempted || postInFlight
+            activeCallback == null || postAttempted || postInFlight || surveyInFlight
         ) return
         // Never expose the password, SSID, XML or network identifier in logs.
         val valid = try {
@@ -784,6 +929,11 @@ internal class BoseSetupProbeActivity : Activity() {
         activeCallback = null
         b2Network = null
         b2Verified = false
+        surveySupported = false
+        surveyInFlight = false
+        surveyCandidates = emptyList()
+        if (::scanButton.isInitialized) scanButton.isEnabled = false
+        if (::networkListButton.isInitialized) networkListButton.isEnabled = false
         postInFlight = false
         b2NetworkLostDuringPost = false
         if (::ssidField.isInitialized) ssidField.text?.clear()
