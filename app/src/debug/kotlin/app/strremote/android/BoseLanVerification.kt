@@ -45,8 +45,8 @@ internal class BoseLanVerification(
     internal sealed class Status {
         object WaitingForWifi : Status()
         object Searching : Status()
-        data class Found(val wlanName: String?) : Status()
-        data class OtherWifi(val wlanName: String) : Status()
+        data class Found(val wlanName: String?, val host: String) : Status()
+        data class OtherWifi(val wlanName: String, val host: String) : Status()
         object NotFound : Status()
     }
 
@@ -60,7 +60,6 @@ internal class BoseLanVerification(
     private var currentWifi: Network? = null
     @Volatile private var stopped = true
     @Volatile private var verified = false
-    private var startedAt = 0L
     @Volatile private var scanGeneration = 0
     private val attempts = mutableMapOf<String, Long>()
 
@@ -68,7 +67,6 @@ internal class BoseLanVerification(
         stop()
         stopped = false
         verified = false
-        startedAt = android.os.SystemClock.elapsedRealtime()
         onUpdate(Status.WaitingForWifi)
 
         val wifiRequest = NetworkRequest.Builder()
@@ -264,9 +262,9 @@ internal class BoseLanVerification(
                         // verification than reachability alone.
                         verified = true
                         if (wlan == null || wlan == expectedSsid) {
-                            onUpdate(Status.Found(wlan))
+                            onUpdate(Status.Found(wlan, host))
                         } else {
-                            onUpdate(Status.OtherWifi(wlan))
+                            onUpdate(Status.OtherWifi(wlan, host))
                         }
                         stop()
                     }
