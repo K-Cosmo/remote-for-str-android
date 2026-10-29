@@ -16,16 +16,12 @@
         android:usesPermissionFlags="neverForLocation"
         tools:remove="android:maxSdkVersion" />
 
-    <application>
-        <!-- Separate launcher, not bundled in release builds. -->
+    <!-- Debug build has ONE launcher (MainActivity), clearly distinct from production. -->
+    <application android:label="STR Remote PoC">
+        <!-- Opened only from Devices -> Add new device on Android 10+. -->
         <activity
             android:name=".BoseSetupProbeActivity"
-            android:exported="true"
-            android:label="Bose Wi-Fi PoC (Debug)">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:exported="false"
+            android:label="Bose Wi-Fi PoC (Debug)" />
     </application>
 </manifest>
