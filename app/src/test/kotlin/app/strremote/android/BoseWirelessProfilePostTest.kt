@@ -26,9 +26,10 @@ class BoseWirelessProfilePostTest {
     @Test
     fun rejectsDoctypeAndOverlyLargeResponse() {
         assertFalse(BoseWirelessProfilePost.isExpectedAcknowledgement(
-            "<!DOCTYPE x [<!ENTITY test SYSTEM \"file:///etc/passwd\">]>" +
-                "<AddWirelessProfileResponse>&test;</AddWirelessProfileResponse>"
-                .toByteArray(Charsets.UTF_8)
+            (
+                "<!DOCTYPE x [<!ENTITY test SYSTEM \"file:///etc/passwd\">]>" +
+                    "<AddWirelessProfileResponse>&test;</AddWirelessProfileResponse>"
+            ).toByteArray(Charsets.UTF_8)
         ))
         assertFalse(BoseWirelessProfilePost.isExpectedAcknowledgement(
             ByteArray(8193) { 'x'.code.toByte() }
