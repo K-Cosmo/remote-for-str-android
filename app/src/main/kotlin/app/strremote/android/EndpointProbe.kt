@@ -2,13 +2,18 @@ package app.strremote.android
 
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 internal class EndpointProbe {
     // Bound concurrent HTTP checks. An mDNS burst must not create unbounded
     // threads or starve unrelated speaker/device operations.
-    private val executor: ExecutorService = Executors.newFixedThreadPool(4)
+    private val executor: ExecutorService = ThreadPoolExecutor(
+        4, 4, 0L, TimeUnit.MILLISECONDS, ArrayBlockingQueue(32)
+    )
 
     fun probe(candidate: SpeakerCandidate, callback: (SpeakerEndpoint?) -> Unit) {
         val preferred = candidate.advertisedPort.takeIf { it == 8888 || it == 17008 }
@@ -34,6 +39,7 @@ internal class EndpointProbe {
             callback(null)
             return
         }
+        try {
         executor.execute {
             val ports = buildList {
                 if (preferredPort == 8888 || preferredPort == 17008) add(preferredPort)
@@ -50,6 +56,9 @@ internal class EndpointProbe {
                 }
             }.getOrNull()
             callback(endpoint)
+        }
+        } catch (_: RejectedExecutionException) {
+            callback(null)
         }
     }
 
