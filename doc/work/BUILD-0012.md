@@ -235,6 +235,21 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
 
+## Wizard navigation correction — scalable dropdown, four tasks, terminal-only finish (2026-10-29)
+
+**Tester feedback:** The previous two-option model selection was not recognizable as interactive because the themed radio-button circles were invisible. The password-eye picture depicted the opposite of the field's visibility. Selecting the SSID and entering the password on one page forced unnecessary scrolling. Finally, a "Fertig" button could appear while Bose LAN verification was still running, and the STR handoff lengthened the same completion screen.
+
+**Debug-only changes:**
+
+- **Page 1 of 4:** Replace the RadioGroup with an accessible Android Spinner/dropdown and a **visible down-arrow** on the custom light surface. Entries remain explicit hardware-gated models (SoundTouch 20 III confirmed, SoundTouch 10 experiment). The dropdown scales to more verified models later; selection survives fresh-picker retries.
+- **Page 2 of 4:** Preserve the proven original Android Bose SoftAP picker, callbacks, and first-request path unchanged.
+- **Page 3 of 4:** Bose-side WLAN scan/status and the accepted SSID selection popup *only*. Selecting a Wi-Fi SSID closes the popup and moves directly to step 4. Manual SSID entry has a clear "Weiter zum Passwort" button and validation; no password field here.
+- **Page 4 of 4:** Show selected WLAN and a single masked password field (with eye toggle) plus one `WLAN auf SoundTouch übertragen` action. Eye icons are now **crossed out while concealed; open while visible**. Screen-reader action labels remain "Passwort anzeigen" / "Passwort verbergen". Back navigation retains the choice but remasks the password. The existing one-shot state-changing POST remains guarded and cannot be issued from another page.
+- **Processing page (not counted as another setup step):** Immediately on POST start, show a large indeterminate spinner. After HTTP completion, release the temporary Bose network, then wait on the regular Wi-Fi network, search for the *same Bose device*, and keep the spinner while verification is pending. No "Fertig" button here.
+- **Result page (not counted as another setup step):** Only a **terminal** verified/rejected/timeout outcome transitions to the separate result/STR handoff page. "Fertig" appears only for the `TERMINAL` state and this result page, enforced by pure `BoseSetupFlow.mayFinish` with tests. An inconclusive result is clearly labeled rather than presented as setup success; optionally retry **discovery only**, never resend credentials. Keep the final page short and navigable without scrolling on ordinary phone screens.
+
+**Regression gate:** Run debug unit tests (including model and flow policy), lint and debug build. On real device verify the dropdown arrow and choice persistence, password icon/visibility including back navigation, SSID popup → page 4, manual SSID path, transport callbacks, single POST, >=45-second pending search with **no premature "Fertig"**, success + not-found results and STR link. Existing STR device list must remain stable. This is a **UX build needing hardware acceptance**, not a `main` merge.
+
 ## Model selection and WLAN credential UX — SoundTouch 10 test gate (2026-10-29)
 
 **Observed:** Tester confirms that the Devices page is now working well and the formatted WLAN selection popup is satisfactory. On wizard page 3, the scanning status was too small and the password control lacked a show/hide eye. Page 1 incorrectly hardcoded the SoundTouch 20 Series III despite future SoundTouch 10 hardware testing.

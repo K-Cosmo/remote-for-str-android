@@ -173,3 +173,10 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - Official Bose support confirms 2 + volume minus until steady amber for both ST10 and ST20 III, and for ST30 III. ST10 uses front status LEDs; ST20 III has a display countdown. Firmware API compatibility is **not yet proven** by this shared preparation procedure.
 - The debug wizard now exposes ST20 III (hardware tested) and ST10 (Testbetrieb), retains the selection on picker retries, and makes the WLAN scan state prominent. ST30 III is explicitly outside the exposed test matrix.
 - **Next gate ST10, not yet passed:** initial Bose picker without internet, read-only /info and /supportedURLs, network survey, then one controlled WPA2 test-network profile submission and independent LAN verification. Record results separately by model; prior ST20 evidence must not be relabeled as ST10 evidence.
+
+## Four-step wizard and terminal verification QA gate (2026-10-29)
+
+- Tester reported missing radio-selection circles, inverted password-eye icon, needless scrolling when SSID/password shared page, and premature "Fertig" during ongoing LAN verification.
+- Changes in PoC branch: explicitly styled model dropdown with arrow, four setup task pages (prepare, Bose connect, WLAN choose, password), separate verification and terminal result screens. Same WLAN selection popup as previously accepted; no second confirmation or retry POST.
+- New `BoseSetupPhase` / `BoseSetupFlow.mayFinish` pure tests reject Finish in SENDING or VERIFYING and require terminal result page. Back navigation remasks entered password and retains SSID choice.
+- **Real-device QA remains open:** UI dimensions/contrast, spinner and completion gate across genuine Bose SoftAP reconnect, password visibility state, 45-second timeout and STR handoff.
