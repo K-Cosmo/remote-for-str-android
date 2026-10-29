@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** SPECIFIED / POC NOT STARTED
+**Status:** PHASE A PROTOTYPE IMPLEMENTED / REAL-DEVICE VERIFICATION PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -72,7 +72,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 ## Task sequence
 
 - [x] T01 Record product/transport/Android-floor decision for SoundTouch 20 Series III.
-- [ ] T02 Instrument a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry.
+- [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
 - [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version).
 - [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
@@ -80,6 +80,34 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 - [ ] T07 Test credentials transfer and LAN rediscovery on original firmware, including failures.
 - [ ] T08 Design/implement the full 1–2–3 wizard, separate from STR installation.
 - [ ] T09 Complete quality gates, doc convergence, and explicit acceptance before any new release.
+
+## T02 prototype implementation (2026-10-29)
+
+- Debug-only `app/src/debug/AndroidManifest.xml` declares appropriate runtime permissions and a separate debug launcher entry. The release variant contains no PoC Activity/launcher.
+- Debug `applicationIdSuffix = \".poc\"` gives package `app.strremote.android.poc`, allowing co-installation alongside the signed `app.strremote.android` without changing its private settings or signing identity.
+- `app/src/debug/kotlin/app/strremote/android/BoseSetupProbeActivity.kt` provides a minimal German UI with optional exact SSID. Blank SSID selects an Android system-approved SSID beginning with `Bose`.
+- Android 10–12L: request `ACCESS_FINE_LOCATION`; Android 13+: request `NEARBY_WIFI_DEVICES`; Android API 37+: also request `ACCESS_LOCAL_NETWORK`. The debug manifest removes the production `NEARBY_WIFI_DEVICES` API cap **only for debug**. The user still explicitly approves the `WifiNetworkSpecifier` request.
+- The network request removes Internet capability and is bounded to 30 s; only `Network.openConnection` performs local HTTP. Neither default-network switching nor `bindProcessToNetwork` occurs.
+- Fixed candidate probes: HTTP `GET /` (status/headers only) to `192.0.2.1:80`, `192.0.2.1:8090`, `192.168.1.1:80`, `192.168.1.1:8090`. No body read, POST, password input, firmware update or reset.
+- Explicit cancel, 30 s connection timeout, `onUnavailable`, `onLost`, Activity destruction and short background cleanup release the request. The pending Android system consent UI is not forcibly interrupted by `onStop`.
+- Known limitation: one untested debug-only implementation is **not** real-device evidence. Do not mark Phase A PASS or move on to provisioning until hardware validation.
+- Android documentation: https://developer.android.com/develop/connectivity/wifi/wifi-request and https://developer.android.com/develop/connectivity/wifi/wifi-permissions
+
+### Build and manual test instructions
+
+```powershell
+Set-Location "D:\\Android\\STR\\str-remote-android"
+git fetch origin
+git switch feature/build-0012-bose-wifi-provisioning
+git pull --ff-only
+.\\gradlew.bat clean :app:assembleDebug :app:lintDebug :app:assembleRelease --stacktrace
+adb devices
+adb install -r .\\app\\build\\outputs\\apk\\debug\\app-debug.apk
+```
+
+The debug PoC installs as `app.strremote.android.poc`. Launch the **Bose Wi-Fi PoC (Debug)** icon; the normal **STR Remote** icon from the debug build is also present. Signed production STR Remote stays installed with its own data.
+
+For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup mode using **Preset 2 + Vol−** until the Wi-Fi LED is amber; do not perform a factory reset. Open the PoC, leave SSID blank to use the Android Bose-prefix picker (or type the exact Setup SSID), accept Android's join prompt, and capture only the local HTTP status/content-type results. The PoC automatically releases the network after inspection. Test **Cancel**, missing network and permission denial separately. Never publish home Wi-Fi credentials, SSIDs, MAC/serial identifiers or full HTTP page bodies.
 
 ## Evidence template
 
