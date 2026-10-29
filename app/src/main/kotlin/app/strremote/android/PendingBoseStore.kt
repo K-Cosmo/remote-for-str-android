@@ -17,6 +17,14 @@ internal data class PendingBoseDevice(
     val room: RoomAssignment? = null
 )
 
+// Pure transitions keep room/name stable while avoiding a stale previous
+// Wi-Fi verification after the same speaker is configured again.
+internal fun PendingBoseDevice.afterSubmission(): PendingBoseDevice =
+    copy(host = null, verifiedOnWifi = false)
+
+internal fun PendingBoseDevice.afterVerification(host: String): PendingBoseDevice =
+    copy(host = host, verifiedOnWifi = true)
+
 internal class PendingBoseStore(context: Context) {
     private val preferences = context.getSharedPreferences(
         "str_remote_bose_setup_poc", Context.MODE_PRIVATE
@@ -55,9 +63,7 @@ internal class PendingBoseStore(context: Context) {
         val devices = list()
         val previous = devices.firstOrNull { it.deviceId == id }
         val existing = devices.filterNot { it.deviceId == id }
-        persist((existing + (previous ?: PendingBoseDevice(id)).copy(
-            host = null, verifiedOnWifi = false
-        )).takeLast(30))
+        persist((existing + (previous ?: PendingBoseDevice(id)).afterSubmission()).takeLast(30))
     }
 
     fun recordVerified(id: String, host: String) {
@@ -65,9 +71,7 @@ internal class PendingBoseStore(context: Context) {
         val devices = list()
         val existing = devices.filterNot { it.deviceId == id }
         val previous = devices.firstOrNull { it.deviceId == id } ?: PendingBoseDevice(id)
-        persist((existing + previous.copy(
-            host = host, verifiedOnWifi = true
-        )).takeLast(30))
+        persist((existing + previous.afterVerification(host)).takeLast(30))
     }
 
     fun remove(id: String) = persist(list().filterNot { it.deviceId == id })
