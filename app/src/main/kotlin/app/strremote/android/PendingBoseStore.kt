@@ -55,7 +55,9 @@ internal class PendingBoseStore(context: Context) {
         val devices = list()
         val previous = devices.firstOrNull { it.deviceId == id }
         val existing = devices.filterNot { it.deviceId == id }
-        persist((existing + (previous ?: PendingBoseDevice(id))).takeLast(30))
+        persist((existing + (previous ?: PendingBoseDevice(id)).copy(
+            host = null, verifiedOnWifi = false
+        )).takeLast(30))
     }
 
     fun recordVerified(id: String, host: String) {
