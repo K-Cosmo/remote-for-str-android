@@ -235,6 +235,26 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
 
+## Model selection and WLAN credential UX — SoundTouch 10 test gate (2026-10-29)
+
+**Observed:** Tester confirms that the Devices page is now working well and the formatted WLAN selection popup is satisfactory. On wizard page 3, the scanning status was too small and the password control lacked a show/hide eye. Page 1 incorrectly hardcoded the SoundTouch 20 Series III despite future SoundTouch 10 hardware testing.
+
+**Official model-specific evidence:**
+
+- SoundTouch 20 Series III: setup via **Preset 2 + Volume −** until the amber Wi-Fi light; five-second on-device display countdown and 'Setup'. Source: https://support.bose.de/article/soundtouch-20-iii-updating-the-software-or-firmware-of-your-product
+- SoundTouch 10: **Preset 2 + Volume −** until steady amber Wi-Fi light; simple front LEDs instead of the 20/30's richer display. Source: https://support.bose.co.uk/article/st10-speakerwireless-putting-a-system-into-setup-mode---ka08c000001pxf7aae
+- SoundTouch 30 Series III: also uses **Preset 2 + Volume −**; has a display. Source: https://support.bose.co.uk/article/soundtouch-30-iii-updating-the-software-or-firmware-of-your-product?language=en_GB
+- These documents prove the **button sequence**, **not** the compatibility of our reverse-engineered 8090 XML site-survey or profile-transfer endpoints. Original hardware / firmware variants must not be treated as identical without measurement.
+
+**Debug-only implementation:**
+
+1. Step 1 of 3 now contains an explicit model chooser, **SoundTouch 20 III – getestet** (selected by default, original reference device) and **SoundTouch 10 – Testbetrieb** (newly selectable for the next hardware gate). The instruction title, display/LED hint and trial-status text follow the selected model. No SoundTouch 30 III entry is exposed until its API has been tested. The choice is retained across fresh-Activity Wi-Fi-picker retries and configuration recreation via explicit ID restore.
+2. Step 3 now contains a prominent high-contrast blue status panel. A visible indeterminate spinner runs from the start of `BoseWirelessSiteSurvey.scan` to success/empty/error; completion removes the spinner and leaves legible result text. No extra questions or changed Bose API wire requests.
+3. WLAN password stays **masked by default** (`TYPE_TEXT_VARIATION_PASSWORD` plus `PasswordTransformationMethod`), with a 54dp eye button **inside the input frame**, switching between 'Passwort anzeigen' and 'Passwort verbergen'. Preserve caret and input value when toggling; do not store the password, and never log it. Screenshots are user-allowed; the eye intentionally makes visible secrets screenshot-visible when explicitly selected.
+4. Preserve the previously tested `WifiNetworkSpecifier` flow, POST single-attempt policy, improved WLAN popup, pending Bose/STR separation, and stable STR device-list state.
+
+**Next SoundTouch 10 hardware test (separate evidence gate):** Select ST10 Testbetrieb. Verify amber LED and the Android Bose WLAN picker, then confirm read-only `/info`, `/supportedURLs`, and `/performWirelessSiteSurvey` from the 10's own SoftAP. Record sanitized status and firmware version if readable. Only after these pass, attempt **one** WLAN profile transfer using a disposable WPA2 test WLAN/password; independently verify the same device on the intended LAN and its active profile. Verify no double POST, no indefinite spinner and unchanged existing STR playback. Until completed, ST10 remains *experimental* and is not included in production compatibility claims or merged to `main`.
+
 ## Hardware UI follow-up: screenshot-confirmed device-state stability and wizard polish (2026-10-29)
 
 **Observed by user on Pixel screenshot:** the previously stuck Devices list now displays a grey Bose-only SoundTouch at a verified local IP (with "STR fehlt") next to a working green STR SoundTouch 10 (STR 1.1.4). User reports the debug build currently appears stable and the WLAN picker popup is good. This is encouraging **user-observed** evidence, not exhaustive 3+3/B2 automatic verifier acceptance.

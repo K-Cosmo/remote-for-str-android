@@ -166,3 +166,10 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - Added separate debug-only Bose-without-STR registry, grey STR-missing rows opening external STR website, wizard link and formatted two-line WLAN popup.
 - Host-side regression tests introduced for discovery/timeout policy, tap routing, local Bose host validation and failed STR probe completion.
 - **Real-device status pending**: normal STR speaker still connects; Bose-only row displays grey and opens link; scan no longer hangs; wizard SSID picker and single POST remain usable. CI passing is necessary but not sufficient.
+
+## Follow-up: SoundTouch 10 compatibility testing (2026-10-29)
+
+- User confirmed Devices page now looks good and WLAN selection popup is acceptable. New UX needs: more prominent active WLAN-scan indicator; password initially masked with a toggle eye; model selector before the instructions.
+- Official Bose support confirms 2 + volume minus until steady amber for both ST10 and ST20 III, and for ST30 III. ST10 uses front status LEDs; ST20 III has a display countdown. Firmware API compatibility is **not yet proven** by this shared preparation procedure.
+- The debug wizard now exposes ST20 III (hardware tested) and ST10 (Testbetrieb), retains the selection on picker retries, and makes the WLAN scan state prominent. ST30 III is explicitly outside the exposed test matrix.
+- **Next gate ST10, not yet passed:** initial Bose picker without internet, read-only /info and /supportedURLs, network survey, then one controlled WPA2 test-network profile submission and independent LAN verification. Record results separately by model; prior ST20 evidence must not be relabeled as ST10 evidence.
