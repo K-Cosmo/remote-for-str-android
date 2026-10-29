@@ -1036,6 +1036,7 @@ internal class BoseSetupProbeActivity : Activity() {
         cancelBackgroundCleanup()
         val action = Runnable {
             if (!visible && !awaitingConsent && !postInFlight && activeCallback != null) {
+                trace("background_cleanup_fired")
                 closeSession()
                 showPage(2)
                 startButton.text = "Erneut versuchen"
@@ -1091,6 +1092,7 @@ internal class BoseSetupProbeActivity : Activity() {
         super.onStart()
         visible = true
         cancelBackgroundCleanup()
+        trace("activity_started")
     }
 
     override fun onResume() {
@@ -1115,9 +1117,11 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onStop() {
         visible = false
+        trace("activity_stopped awaitingConsent=$awaitingConsent callbackRegistered=${activeCallback != null}")
         // Android's own network-consent UI can temporarily stop this Activity.
         // Preserve the pending 20 s request; release connected networks in background.
         if (!awaitingConsent && !postInFlight && activeCallback != null) {
+            trace("background_cleanup_scheduled delayMs=$BACKGROUND_CLEANUP_DELAY_MS")
             scheduleBackgroundCleanup()
         }
         super.onStop()
