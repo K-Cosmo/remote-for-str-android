@@ -16,7 +16,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PatternMatcher
 import android.text.InputType
-import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
@@ -212,6 +211,7 @@ internal class BoseSetupProbeActivity : Activity() {
         }
     }
 
+    @android.annotation.TargetApi(29)
     private fun requestSetupNetwork() {
         closeSession()
         val ssid = ssidInput.text.toString().trim()
