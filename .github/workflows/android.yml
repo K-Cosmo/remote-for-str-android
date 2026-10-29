@@ -28,7 +28,7 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew --version
-          ./gradlew clean :app:assembleDebug :app:lintDebug :app:testDebugUnitTest :app:assembleRelease --stacktrace
+          ./gradlew clean :app:assembleDebug :app:lintDebug :app:testDebugUnitTest :app:assembleRelease :app:lintRelease :app:testReleaseUnitTest --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v7.0.1

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -161,10 +162,12 @@ internal class BoseSetupProbeActivity : Activity() {
         } else {
             -1L
         }
-        Log.d(
-            LOG_TAG,
-            "session=$debugSessionId event=$event elapsedMs=$elapsed api=${Build.VERSION.SDK_INT}"
-        )
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            Log.d(
+                LOG_TAG,
+                "session=$debugSessionId event=$event elapsedMs=$elapsed api=${Build.VERSION.SDK_INT}"
+            )
+        }
         // A deliberately sanitized debug-only fallback when adb logcat is
         // unavailable. Event names never contain SSIDs, network IDs, credentials,
         // addresses, XML, response bodies or Android Network objects.
@@ -196,7 +199,7 @@ internal class BoseSetupProbeActivity : Activity() {
         buildUi()
         trace("activity_created freshRetry=$resumeWithFreshSearch")
         if (Build.VERSION.SDK_INT < 29) {
-            statusView.text = "Nicht verfügbar: Dieser PoC benötigt Android 10 oder neuer."
+            statusView.text = "Für die WLAN-Einrichtung ist Android 10 oder neuer erforderlich."
             nextButton.isEnabled = false
             startButton.isEnabled = false
         }
@@ -556,8 +559,10 @@ internal class BoseSetupProbeActivity : Activity() {
         ))
         passwordPage.addView(passwordContainer)
         passwordPage.addView(text(
-            "Für den ersten Test nur ein separates WPA2-WLAN mit eigenem Passwort verwenden. " +
-                "Die Übertragung an Bose erfolgt ohne Verschlüsselung.",
+            "Die SoundTouch benötigt ein kompatibles WPA2-WLAN. " +
+                "Bose überträgt das Passwort im temporären Einrichtungs-WLAN per " +
+                "unverschlüsseltem HTTP. Verwende diese Funktion nur in einer " +
+                "vertrauenswürdigen Umgebung.",
             13.5f
         ).apply { setPadding(0, dp(12), 0, dp(8)) })
         submitButton = Button(this).apply {
@@ -963,8 +968,8 @@ internal class BoseSetupProbeActivity : Activity() {
             PackageManager.PERMISSION_GRANTED
         ) {
             statusView.text =
-                "PoC-Buildfehler: CHANGE_NETWORK_STATE fehlt. " +
-                    "Bitte die aktualisierte Debug-APK installieren."
+                "Die App hat keine Berechtigung, eine WLAN-Verbindung anzufordern. " +
+                    "Bitte die installierte App-Version prüfen."
             return
         }
 
@@ -997,7 +1002,7 @@ internal class BoseSetupProbeActivity : Activity() {
         ) {
             requestSetupNetwork()
         } else {
-            statusView.text = "Berechtigung nicht erteilt. Ohne Freigabe kein Setup-WLAN-Test."
+            statusView.text = "Die WLAN-Verbindung benötigt die erfragte Android-Berechtigung."
         }
     }
 
@@ -1266,7 +1271,7 @@ internal class BoseSetupProbeActivity : Activity() {
         } catch (_: IllegalArgumentException) {
             statusView.text =
                 "Bitte überprüfe WLAN-Namen und Passwort. Das Passwort muss für " +
-                    "diesen WPA2-Test 8–63 Zeichen enthalten."
+                    "diese WPA2-Verbindung 8–63 Zeichen enthalten."
             return
         }
 

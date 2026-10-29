@@ -53,7 +53,7 @@ internal object BoseWirelessSiteSurvey {
             emptyList(),
             "Bose WLAN-Suche ohne verwertbare Liste. " +
                 "POST: ${posted.status}; GET: ${fetched.status}. " +
-                "Test-SSID kann manuell eingegeben werden."
+                "WLAN-Name kann manuell eingegeben werden."
         )
     }
 
@@ -193,7 +193,7 @@ internal object BoseWirelessSiteSurvey {
             Result(
                 candidates,
                 if (candidates.isEmpty()) "HTTP 200, XML enthält keine WLAN-Einträge"
-                else "Bose hat ${candidates.size} WLAN(s) gemeldet. Testnetz auswählen."
+                else "Bose hat ${candidates.size} WLAN(s) gemeldet. Netzwerk auswählen."
             )
         } catch (_: javax.xml.parsers.ParserConfigurationException) {
             Result(emptyList(), "Android-XML-Parserkonfiguration fehlgeschlagen")

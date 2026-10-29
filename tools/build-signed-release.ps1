@@ -144,7 +144,7 @@ try {
     & $gradlew --version
     if ($LASTEXITCODE -ne 0) { throw "Gradle --version failed ($LASTEXITCODE)." }
 
-    & $gradlew clean :app:assembleDebug :app:lintDebug :app:assembleRelease --stacktrace
+    & $gradlew clean :app:assembleDebug :app:lintDebug :app:testDebugUnitTest :app:assembleRelease :app:lintRelease :app:testReleaseUnitTest --stacktrace
     if ($LASTEXITCODE -ne 0) { throw "Final Gradle build failed ($LASTEXITCODE)." }
 
     $releaseDir = Join-Path $ProjectRoot "app\build\outputs\apk\release"
@@ -179,8 +179,27 @@ try {
 
     Write-Host ""
     Write-Host "== Signature verification =="
-    & $apksigner verify --verbose --print-certs $signedApk
-    if ($LASTEXITCODE -ne 0) { throw "apksigner verify failed ($LASTEXITCODE)." }
+    $verificationOutput = & $apksigner verify --verbose --print-certs $signedApk 2>&1
+    $verifyExit = $LASTEXITCODE
+    $verificationOutput | ForEach-Object { Write-Host $_ }
+    if ($verifyExit -ne 0) { throw "apksigner verify failed ($verifyExit)." }
+
+    # Without precisely the same signing key as v0.2.1, Android will refuse
+    # the update. Refuse to package an unusable or unexpectedly signed APK.
+    $expectedCertificate = "3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32"
+    $verifyText = $verificationOutput | Out-String
+    $certificateMatch = [regex]::Match(
+        $verifyText,
+        'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]{64})'
+    )
+    if (-not $certificateMatch.Success) {
+        throw "Could not verify the signing certificate identity from apksigner output."
+    }
+    $actualCertificate = $certificateMatch.Groups[1].Value.ToLowerInvariant()
+    if ($actualCertificate -ne $expectedCertificate) {
+        throw "Wrong release-signing certificate: the APK cannot update installed STR Remote 0.2.1."
+    }
+    Write-Host "Release signer matches the v0.2.1 update identity."
 
     & $zipalign -c -P 16 -v 4 $signedApk
     if ($LASTEXITCODE -ne 0) { throw "zipalign verification failed ($LASTEXITCODE)." }
