@@ -26,6 +26,12 @@ import android.text.InputType
 import android.view.View
 import android.view.WindowInsetsController
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.text.method.PasswordTransformationMethod
+import android.view.Gravity
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Button
@@ -49,6 +55,7 @@ internal class BoseSetupProbeActivity : Activity() {
         const val PERMISSION_REQUEST = 12012
         const val LOG_TAG = "StrBoseSetup"
         const val EXTRA_RESTART_AND_SEARCH = "bose_poc.restart_and_search"
+        const val EXTRA_MODEL_ID = "bose_poc.model_id"
         const val EXTRA_B2_MODE = "bose_poc.b2_mode"
         const val HTTP_TIMEOUT_MS = 1_800
         // Android's Wi-Fi picker is itself an Activity. After association succeeds,
@@ -98,6 +105,12 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var b2Panel: LinearLayout
     private lateinit var scanButton: Button
     private lateinit var surveyStatusView: TextView
+    private lateinit var surveySpinner: ProgressBar
+    private lateinit var modelInstructionTitle: TextView
+    private lateinit var modelInstructionHint: TextView
+    private lateinit var modelTestNotice: TextView
+    private var selectedModel = BoseSetupModel.SOUND_TOUCH_20_III
+    private var passwordVisible = false
     private lateinit var ssidField: EditText
     private lateinit var passwordField: EditText
     private lateinit var submitButton: Button
@@ -167,6 +180,10 @@ internal class BoseSetupProbeActivity : Activity() {
         super.onCreate(savedInstanceState)
         b2Mode = true // Debug-only: the guided setup is now the default.
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
+        selectedModel = BoseSetupModel.fromId(
+            savedInstanceState?.getString(EXTRA_MODEL_ID)
+                ?: intent.getStringExtra(EXTRA_MODEL_ID)
+        )
         buildUi()
         trace("activity_created freshRetry=$resumeWithFreshSearch")
         if (Build.VERSION.SDK_INT < 29) {
@@ -174,6 +191,11 @@ internal class BoseSetupProbeActivity : Activity() {
             nextButton.isEnabled = false
             startButton.isEnabled = false
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(EXTRA_MODEL_ID, selectedModel.name)
+        super.onSaveInstanceState(outState)
     }
 
     private fun buildUi() {
@@ -230,20 +252,51 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         preparationPage = panel()
         preparationPage.addView(text(
-            "Wir verbinden deine SoundTouch mit deinem WLAN. Bereite dazu zuerst die Box vor."
+            "Wähle zunächst dein SoundTouch-Modell. Danach zeigen wir dir die passenden Schritte."
         ))
+        preparationPage.addView(heading("Lautsprecher-Modell"))
+        val modelSelection = RadioGroup(this).apply {
+            orientation = RadioGroup.VERTICAL
+            background = card()
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+        }
+        BoseSetupModel.entries.forEach { model ->
+            val option = RadioButton(this).apply {
+                id = View.generateViewId()
+                text = model.selectionLabel
+                textSize = 16f
+                setTextColor(ink)
+                setPadding(dp(10), dp(10), dp(8), dp(10))
+                minHeight = dp(50)
+                isChecked = model == selectedModel
+                setOnClickListener {
+                    selectedModel = model
+                    renderModelInstructions()
+                }
+            }
+            modelSelection.addView(option)
+        }
+        preparationPage.addView(modelSelection)
+        modelTestNotice = text("", 14f, muted).apply {
+            setPadding(0, dp(10), 0, dp(14))
+        }
+        preparationPage.addView(modelTestNotice)
         val instructionCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = card()
             setPadding(dp(16), dp(16), dp(16), dp(8))
         }
-        instructionCard.addView(heading("Am SoundTouch 20 Series III"))
+        modelInstructionTitle = heading("")
+        instructionCard.addView(modelInstructionTitle)
         instructionCard.addView(text(
             "1. Schalte den Lautsprecher ein.\n" +
                 "2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n" +
-                "3. Warte, bis die WLAN-Anzeige gelb leuchtet."
+                "3. Warte, bis die WLAN-Anzeige dauerhaft gelb leuchtet."
         ))
+        modelInstructionHint = text("", 14f, muted)
+        instructionCard.addView(modelInstructionHint)
         preparationPage.addView(instructionCard)
+        renderModelInstructions()
         preparationPage.addView(text(
             "Die Box öffnet dann ein eigenes Bose-WLAN. Du musst dessen Namen nicht eingeben.",
             14f
@@ -335,10 +388,36 @@ internal class BoseSetupProbeActivity : Activity() {
             setOnClickListener { runBoseSurvey() }
         }
         b2Panel.addView(scanButton)
-        surveyStatusView = text("Suche nach WLANs …", 14f).apply {
-            setPadding(0, dp(10), 0, dp(8))
+        val surveyBanner = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(229, 240, 251))
+                cornerRadius = dp(12).toFloat()
+                setStroke(dp(1), Color.rgb(173, 205, 229))
+            }
+            setPadding(dp(14), dp(14), dp(14), dp(14))
         }
-        b2Panel.addView(surveyStatusView)
+        surveySpinner = ProgressBar(
+            this, null, android.R.attr.progressBarStyleSmall
+        ).apply {
+            isIndeterminate = true
+            visibility = View.GONE
+        }
+        surveyBanner.addView(surveySpinner, LinearLayout.LayoutParams(
+            dp(30), dp(30)
+        ).apply { marginEnd = dp(14) })
+        surveyStatusView = text("WLAN-Suche wird vorbereitet …", 16f, ink).apply {
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(0, 0, 0, 0)
+        }
+        surveyBanner.addView(surveyStatusView, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        ))
+        b2Panel.addView(surveyBanner, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = dp(12); bottomMargin = dp(10) })
         // An extra popup owns the network list; do not make users scroll past
         // dozens of SSIDs to reach the password and submit button.
         manualWifiButton = Button(this).apply {
@@ -374,20 +453,51 @@ internal class BoseSetupProbeActivity : Activity() {
         b2Panel.addView(heading("WLAN-Passwort").apply {
             setPadding(0, dp(18), 0, dp(10))
         })
+        val passwordContainer = FrameLayout(this)
         passwordField = EditText(this).apply {
-            hint = "Passwort für das ausgewählte WLAN"
+            hint = "WLAN-Passwort eingeben"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            transformationMethod = PasswordTransformationMethod.getInstance()
+            setTypeface(Typeface.DEFAULT)
             setSingleLine(true)
             textSize = 16f
             setTextColor(ink)
             setHintTextColor(muted)
             background = card(Color.rgb(126, 148, 169))
-            setPadding(dp(12), dp(10), dp(12), dp(10))
+            setPadding(dp(12), dp(10), dp(60), dp(10))
             minHeight = dp(54)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
         }
-        b2Panel.addView(passwordField)
+        passwordContainer.addView(passwordField, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
+        val passwordEye = ImageButton(this).apply {
+            setImageResource(R.drawable.ic_str_visibility)
+            contentDescription = "Passwort anzeigen"
+            setBackgroundColor(Color.TRANSPARENT)
+            scaleType = ImageButton.ScaleType.CENTER_INSIDE
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            isFocusable = true
+            setOnClickListener {
+                val selection = passwordField.selectionStart.coerceAtLeast(0)
+                passwordVisible = !passwordVisible
+                passwordField.transformationMethod =
+                    if (passwordVisible) null else PasswordTransformationMethod.getInstance()
+                setImageResource(
+                    if (passwordVisible) R.drawable.ic_str_visibility_off
+                    else R.drawable.ic_str_visibility
+                )
+                contentDescription =
+                    if (passwordVisible) "Passwort verbergen" else "Passwort anzeigen"
+                passwordField.setSelection(selection.coerceAtMost(passwordField.text.length))
+            }
+        }
+        passwordContainer.addView(passwordEye, FrameLayout.LayoutParams(
+            dp(54), dp(54), Gravity.END or Gravity.CENTER_VERTICAL
+        ))
+        b2Panel.addView(passwordContainer)
         b2Panel.addView(text(
             "Für den ersten Test nur ein separates WPA2-WLAN mit eigenem Passwort verwenden. " +
                 "Die Übertragung an Bose erfolgt ohne Verschlüsselung.",
@@ -602,6 +712,26 @@ internal class BoseSetupProbeActivity : Activity() {
         cancelButton.isEnabled = true
     }
 
+    private fun renderModelInstructions() {
+        if (!::modelInstructionTitle.isInitialized) return
+        modelInstructionTitle.text = "Am " + selectedModel.modelLabel
+        modelInstructionHint.text = selectedModel.setupHint
+        modelTestNotice.text =
+            if (selectedModel.protocolVerifiedOnDevice) {
+                "Die WLAN-Einrichtung wurde auf diesem Modell bereits erfolgreich getestet."
+            } else {
+                "Testbetrieb: Die Bose-Tastenkombination ist dokumentiert. " +
+                    "Unsere WLAN-API wurde auf diesem Modell noch nicht erprobt. " +
+                    "Bitte zuerst die WLAN-Suche prüfen."
+            }
+    }
+
+    private fun setSurveyBusy(busy: Boolean) {
+        if (::surveySpinner.isInitialized) {
+            surveySpinner.visibility = if (busy) View.VISIBLE else View.GONE
+        }
+    }
+
     private fun showWifiPicker() {
         if (surveyInFlight || postAttempted || currentPage != 3) return
         val available = surveyCandidates.filter { it.selectable }
@@ -725,6 +855,7 @@ internal class BoseSetupProbeActivity : Activity() {
         closeSession()
         val restart = Intent(this, BoseSetupProbeActivity::class.java).apply {
             putExtra(EXTRA_RESTART_AND_SEARCH, true)
+            putExtra(EXTRA_MODEL_ID, selectedModel.name)
         }
         startActivity(restart)
         finish()
@@ -961,10 +1092,11 @@ internal class BoseSetupProbeActivity : Activity() {
                     startButton.text = "Weiter zur WLAN-Auswahl"
                     scanButton.isEnabled = surveySupported
                     surveyStatusView.text = if (surveySupported) {
-                        "Suche nach WLANs in Reichweite der SoundTouch …"
+                        "WLAN-Suche wird vorbereitet …"
                     } else {
-                        "Keine WLAN-Liste verfügbar. Bitte den Namen manuell eingeben."
+                        "Keine WLAN-Suche verfügbar. Bitte den Namen manuell eingeben."
                     }
+                    setSurveyBusy(false)
                     statusView.text =
                         "SoundTouch verbunden. Wähle jetzt ihr zukünftiges WLAN aus."
                     setConnectionBusy(false)
@@ -997,7 +1129,8 @@ internal class BoseSetupProbeActivity : Activity() {
         scanButton.isEnabled = false
         chooseWifiButton.isEnabled = false
         submitButton.isEnabled = false
-        surveyStatusView.text = "Der Bose-Lautsprecher sucht verfügbare WLANs …"
+        surveyStatusView.text = "Deine SoundTouch sucht gerade nach verfügbaren WLANs …"
+        setSurveyBusy(true)
         val token = generation
         trace("b2_site_survey_start token=$token")
         val worker = Thread({
@@ -1005,6 +1138,7 @@ internal class BoseSetupProbeActivity : Activity() {
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
                 surveyInFlight = false
+                setSurveyBusy(false)
                 scanButton.isEnabled = true
                 submitButton.isEnabled = true
                 surveyCandidates = result.candidates
@@ -1222,6 +1356,7 @@ internal class BoseSetupProbeActivity : Activity() {
         surveySupported = false
         surveyInFlight = false
         surveyCandidates = emptyList()
+        setSurveyBusy(false)
         if (::scanButton.isInitialized) scanButton.isEnabled = false
         if (::chooseWifiButton.isInitialized) chooseWifiButton.isEnabled = false
         postInFlight = false
@@ -1263,7 +1398,7 @@ internal class BoseSetupProbeActivity : Activity() {
         visible = false
         trace("activity_stopped awaitingConsent=$awaitingConsent callbackRegistered=${activeCallback != null}")
         // Android's own network-consent UI can temporarily stop this Activity.
-        // Preserve the pending 20 s request; release connected networks in background.
+        // Keep the Android Wi-Fi picker request; release connected networks in background.
         if (!awaitingConsent && !postInFlight && activeCallback != null) {
             trace("background_cleanup_scheduled delayMs=$BACKGROUND_CLEANUP_DELAY_MS")
             scheduleBackgroundCleanup()
