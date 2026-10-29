@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A API AND HOME-WIFI RECOVERY VERIFIED; REPEATED DISCOVERY/RETRY REGRESSION OPEN ON SOUNDTOUCH 20 III
+**Status:** PHASE A API AND NETWORK RECOVERY VERIFIED; B1 READ-ONLY CAPABILITY RESEARCH IMPLEMENTED, DEVICE RESULT PENDING; RETRY RELIABILITY NOT PROVEN
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -75,7 +75,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
 - [x] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. Confirmed by tester: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry, Cancel/return-to-Devices and automatic home-Wi-Fi recovery after the probe all verified.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
-- [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
+- [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B. **B1 read-only work in progress**: `GET /supportedURLs` reports whether the specific original Bose firmware advertises Wi-Fi endpoints. Positive result alone does not authorize profile POST.
 - [ ] T06 Only if GO: implement credential submission with the safety guards above.
 - [ ] T07 Test credentials transfer and LAN rediscovery on original firmware, including failures.
 - [ ] T08 Design/implement the full 1–2–3 wizard, separate from STR installation.
@@ -146,6 +146,38 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
   https://developer.android.com/develop/connectivity/wifi/wifi-scan
 - **Regression gate:** test 3 consecutive first-try cases with SoftAP already active; then 3 cases where the speaker only enters SoftAP mode **after** the first Android picker is closed. Each retry must present a *new* Android dialog and connect to `:8090/info`. Record whether failure happens before the Android dialog, inside the dialog (no Bose entry), at `onUnavailable`, or only after `onAvailable`. No credentials are transmitted.
 - **Don't release Phase B:** do not implement or claim write-path support until this reliability gate and firmware-specific provision contract are understood.
+
+## B1 capability probe implementation (2026-10-29)
+
+**Research basis:**
+
+1. Bose supports Wi-Fi setup through the device-local browser UI on `http://192.0.2.1/` (official SoundTouch 20 Series III support page). This proves a usable setup route, but not its programmatic HTTP request body:
+   https://support.bose.de/article/soundtouch-20-series-iii-connecting-to-a-wi-fi-network
+2. Community project AfterTouch implements `POST /addWirelessProfile` using `<AddWirelessProfile><profile ssid="..." password="..." securityType="wpa_or_wpa2" /></AddWirelessProfile>` and optionally `POST /performWirelessSiteSurvey`. This is implementation evidence **from a third party and other tested Bose firmware**, not a successful write on our original-firmware ST20 III:
+   https://github.com/gesellix/Bose-SoundTouch/blob/main/pkg/service/setup/wifi_provision.go
+   https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md
+3. `GET /supportedURLs` returns a firmware-specific XML list of available API paths; only a test on our reference hardware can establish if the original ST20 III lists the two Wi-Fi endpoints:
+   https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/reference/API-ENDPOINTS.md
+
+**What the debug PoC does now:**
+
+- After the already verified read-only `GET http://192.0.2.1:80/` and `GET http://192.0.2.1:8090/info`, invoke `GET http://192.0.2.1:8090/supportedURLs` through the **exact Android `Network` object** authorized for the Bose SoftAP. No default-route binding.
+- Accept only HTTP 200 XML, enforce 2.5 s connect/read timeouts, disable redirects and caching, and bound the XML body to 64 KiB.
+- Parse XML strictly enough to reject an unexpected root and DOCTYPE, and **only show literal whitelisted path membership**: `/addWirelessProfile`, `/performWirelessSiteSurvey`, `/getActiveWirelessProfile`.
+- Do **not** display/store/log full XML, device IDs, SSIDs, MACs, serials, credentials or arbitrary endpoints. A route listed in `/supportedURLs` is a **capability hint**, not proof of a supported POST schema or working write on this firmware.
+- Release the temporary setup-Wi-Fi connection after all read-only probes as before. Keep retry/Cancel, app version and production implementation unchanged.
+- Code: `app/src/debug/kotlin/app/strremote/android/BoseSupportedUrlsProbe.kt` and the B1 call site in `BoseSetupProbeActivity.kt`. There is no `POST` implementation, credential form, provisioning wizard or automatic Bose firmware modification.
+
+**B1 evidence to capture on SoundTouch 20 Series III:**
+
+- [ ] HTTP status for `GET /supportedURLs` and if 200, whether valid `supportedURLs` XML was detected
+- [ ] Whether `/addWirelessProfile` and `/performWirelessSiteSurvey` are each listed; classify absence as *not listed*, not impossible
+- [ ] Confirm unchanged `/info` HTTP 200, normal Wi-Fi restoration, and no regression in Cancel/retry
+- [ ] Inspect whether the Bose setup page and capabilities provide a sufficiently trustworthy indication of security types before designing a write test
+- [ ] Only then prepare a separately approved **debug-only, explicit-consent write** to a throwaway test Wi-Fi with local network verification. Do not silently repeat an ambiguous write: an HTTP timeout might mean the speaker already accepted the profile and is switching networks.
+- [ ] Run build/lint/CI and test on original-firmware hardware
+
+Until this B1 evidence is collected, **Phase B2 write = BLOCKED**. Also avoid treating any unverified Android 17 retry success as universal compatibility.
 
 ## Phase B protocol research — no write authorization (2026-10-29)
 
