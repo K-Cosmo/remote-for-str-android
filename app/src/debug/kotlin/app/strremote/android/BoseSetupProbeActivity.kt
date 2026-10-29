@@ -93,6 +93,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var completionPage: LinearLayout
     private lateinit var manualNextButton: Button
     private lateinit var chosenPasswordNetworkView: TextView
+    private lateinit var completionStatusText: TextView
+    private lateinit var completionRetryButton: Button
     private lateinit var passwordEye: ImageButton
     private lateinit var connectionPage: LinearLayout
     private lateinit var resultPage: LinearLayout
@@ -483,6 +485,7 @@ internal class BoseSetupProbeActivity : Activity() {
             setOnClickListener {
                 val name = ssidField.text.toString()
                 if (name.length in 1..32 && name.all { it.code in 0x20..0x7e }) {
+                    setupPhase = BoseSetupPhase.ENTERING_PASSWORD
                     showPage(4)
                 } else {
                     surveyStatusView.text =
@@ -531,19 +534,7 @@ internal class BoseSetupProbeActivity : Activity() {
             scaleType = ImageView.ScaleType.CENTER_INSIDE
             setPadding(dp(10), dp(10), dp(10), dp(10))
             isFocusable = true
-            setOnClickListener {
-                val selection = passwordField.selectionStart.coerceAtLeast(0)
-                passwordVisible = !passwordVisible
-                passwordField.transformationMethod =
-                    if (passwordVisible) null else PasswordTransformationMethod.getInstance()
-                setImageResource(
-                    if (passwordVisible) R.drawable.ic_str_visibility
-                    else R.drawable.ic_str_visibility_off
-                )
-                contentDescription =
-                    if (passwordVisible) "Passwort verbergen" else "Passwort anzeigen"
-                passwordField.setSelection(selection.coerceAtMost(passwordField.text.length))
-            }
+            setOnClickListener { setPasswordVisible(!passwordVisible) }
         }
         passwordContainer.addView(passwordEye, FrameLayout.LayoutParams(
             dp(54), dp(54), Gravity.END or Gravity.CENTER_VERTICAL
@@ -594,8 +585,8 @@ internal class BoseSetupProbeActivity : Activity() {
 
         completionPage = panel()
         completionPage.addView(heading("Ergebnis der WLAN-Einrichtung"))
-        val resultSummary = text("Die Prüfung ist abgeschlossen.", 16f, ink)
-        completionPage.addView(resultSummary)
+        completionStatusText = text("Die Prüfung ist abgeschlossen.", 16f, ink)
+        completionPage.addView(completionStatusText)
         // The resultText view is moved to the completion page only when
         // the verification reaches a terminal state.
         completionPage.addView(heading("Nächster Schritt: SoundTouch Reborn"))
@@ -619,13 +610,13 @@ internal class BoseSetupProbeActivity : Activity() {
             }
         }
         completionPage.addView(strWebsiteButton)
-        val completionRetry = Button(this).apply {
+        completionRetryButton = Button(this).apply {
             text = "SoundTouch erneut suchen"
             isAllCaps = false
             visibility = View.GONE
             setOnClickListener { beginLanVerification() }
         }
-        completionPage.addView(completionRetry)
+        completionPage.addView(completionRetryButton)
         content.addView(completionPage)
 
         detailsButton = Button(this).apply {
@@ -676,6 +667,10 @@ internal class BoseSetupProbeActivity : Activity() {
                         showPage(1)
                     }
                     3 -> showPage(2)
+                    4 -> {
+                        setPasswordVisible(false)
+                        showPage(3)
+                    }
                 }
             }
         }
@@ -745,21 +740,30 @@ internal class BoseSetupProbeActivity : Activity() {
         preparationPage.visibility = if (page == 1) View.VISIBLE else View.GONE
         connectionPage.visibility = if (page == 2) View.VISIBLE else View.GONE
         b2Panel.visibility = if (page == 3) View.VISIBLE else View.GONE
-        resultPage.visibility = if (page == 4) View.VISIBLE else View.GONE
-        stepLabel.text = if (page == 4) "Einrichtung – Abschluss"
-                         else "Schritt " + page + " von 3"
+        passwordPage.visibility = if (page == 4) View.VISIBLE else View.GONE
+        resultPage.visibility = if (page == 5) View.VISIBLE else View.GONE
+        completionPage.visibility = if (page == 6) View.VISIBLE else View.GONE
+        stepLabel.text = if (page >= 5) "Einrichtung – Abschluss"
+            else "Schritt $page von ${BoseSetupFlow.STEP_COUNT}"
         pageTitle.text = when (page) {
             1 -> "Lautsprecher vorbereiten"
             2 -> "Mit SoundTouch verbinden"
             3 -> "Heim-WLAN auswählen"
-            else -> "WLAN-Verbindung prüfen"
+            4 -> "WLAN-Passwort eingeben"
+            5 -> "Verbindung wird überprüft"
+            else -> "Einrichtung abgeschlossen"
+        }
+        if (page == 4) {
+            chosenPasswordNetworkView.text = "WLAN: " + ssidField.text.toString()
+            setPasswordVisible(false)
         }
         statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
         detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
-        backButton.visibility = if (page == 2 || page == 3) View.VISIBLE else View.GONE
-        // During the transfer/check the footer remains an explicit cancel.
-        // Only the terminal result replaces it with the clear "Fertig" action.
-        cancelButton.text = if (page == 4) "Abbrechen" else "Einrichtung abbrechen"
+        backButton.visibility = if (page in 2..4) View.VISIBLE else View.GONE
+        val mayFinish = BoseSetupFlow.mayFinish(setupPhase, page)
+        cancelButton.text = if (mayFinish) "Fertig"
+                            else if (page == 5) "Abbrechen"
+                            else "Einrichtung abbrechen"
         cancelButton.isEnabled = true
         pageScroll.post { pageScroll.scrollTo(0, 0) }
         trace("wizard_page_" + page)
@@ -772,9 +776,26 @@ internal class BoseSetupProbeActivity : Activity() {
         if (!busy && currentPage == 2) startButton.isEnabled = true
     }
 
-    private fun finishSetup() {
-        cancelButton.text = "Fertig"
-        cancelButton.isEnabled = true
+    private fun finishSetup(offerRetry: Boolean = false) {
+        setupPhase = BoseSetupPhase.TERMINAL
+        resultSpinner.visibility = View.GONE
+        completionStatusText.text = resultText.text
+        completionRetryButton.visibility = if (offerRetry) View.VISIBLE else View.GONE
+        showPage(BoseSetupFlow.COMPLETE_PAGE)
+    }
+
+    private fun setPasswordVisible(visible: Boolean) {
+        if (!::passwordField.isInitialized || !::passwordEye.isInitialized) return
+        val selection = passwordField.selectionStart.coerceAtLeast(0)
+        passwordVisible = visible
+        passwordField.transformationMethod =
+            if (visible) null else PasswordTransformationMethod.getInstance()
+        passwordEye.setImageResource(
+            if (visible) R.drawable.ic_str_visibility else R.drawable.ic_str_visibility_off
+        )
+        passwordEye.contentDescription =
+            if (visible) "Passwort verbergen" else "Passwort anzeigen"
+        passwordField.setSelection(selection.coerceAtMost(passwordField.text.length))
     }
 
     private fun renderModelInstructions() {
@@ -849,7 +870,8 @@ internal class BoseSetupProbeActivity : Activity() {
                     manualNextButton.visibility = View.GONE
                     selectedWifiView.text = "Ausgewählt: " + candidate.ssid
                     passwordField.text?.clear()
-                    surveyStatusView.text = "Gib jetzt das Passwort für dieses WLAN ein."
+                    surveyStatusView.text = "WLAN ausgewählt."
+                    setupPhase = BoseSetupPhase.ENTERING_PASSWORD
                     dialog.dismiss()
                     showPage(4)
                 }
@@ -1160,6 +1182,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     setSurveyBusy(false)
                     statusView.text =
                         "SoundTouch verbunden. Wähle jetzt ihr zukünftiges WLAN aus."
+                    setupPhase = BoseSetupPhase.CHOOSING_NETWORK
                     setConnectionBusy(false)
                     trace("b2_ready token=$token surveySupported=$surveySupported")
                     showPage(3)
@@ -1226,6 +1249,7 @@ internal class BoseSetupProbeActivity : Activity() {
         if (!b2Mode || !b2Verified || b2Network == null ||
             activeCallback == null || postAttempted || postInFlight || surveyInFlight
         ) return
+        if (currentPage != BoseSetupFlow.PASSWORD_PAGE) return
         val ssid = ssidField.text.toString()
         val payload = try {
             BoseWirelessProfileXml.buildCandidate(
@@ -1247,12 +1271,13 @@ internal class BoseSetupProbeActivity : Activity() {
         submitButton.isEnabled = false
         postAttempted = true
         postInFlight = true
+        setupPhase = BoseSetupPhase.SENDING
         val token = generation
         resultSpinner.visibility = View.VISIBLE
         retryVerificationButton.visibility = View.GONE
         resultText.text = "WLAN-Einstellungen werden übertragen …"
         statusView.text = "Bitte warten. Die SoundTouch stellt ihre WLAN-Verbindung um."
-        showPage(4)
+        showPage(BoseSetupFlow.VERIFY_PAGE)
         trace("b2_post_started token=$token")
         val worker = Thread({
             val result = try {
@@ -1294,6 +1319,8 @@ internal class BoseSetupProbeActivity : Activity() {
     }
 
     private fun beginLanVerification() {
+        setupPhase = BoseSetupPhase.VERIFYING
+        showPage(BoseSetupFlow.VERIFY_PAGE)
         lanVerification?.stop()
         lanVerification = null
         val id = boseDeviceId
@@ -1315,7 +1342,10 @@ internal class BoseSetupProbeActivity : Activity() {
             "Wir warten auf die WLAN-Verbindung deines Smartphones und " +
                 "suchen dort deine SoundTouch …"
         val verifier = BoseLanVerification(this, id, ssid, lastBoseSetupNetwork) { outcome ->
-            if (isFinishing || isDestroyed || currentPage != 4) return@BoseLanVerification
+            if (isFinishing || isDestroyed ||
+                currentPage != BoseSetupFlow.VERIFY_PAGE ||
+                setupPhase != BoseSetupPhase.VERIFYING
+            ) return@BoseLanVerification
             when (outcome) {
                 BoseLanVerification.Status.WaitingForWifi -> {
                     resultSpinner.visibility = View.VISIBLE
@@ -1352,7 +1382,7 @@ internal class BoseSetupProbeActivity : Activity() {
                             "mit dem WLAN „" + outcome.wlanName + "“ verbunden. " +
                             "Bitte prüfe, ob das gewünschte WLAN ausgewählt war."
                     statusView.text = "SoundTouch gefunden, WLAN stimmt nicht überein."
-                    finishSetup()
+                    finishSetup(offerRetry = true)
                 }
                 BoseLanVerification.Status.NotFound -> {
                     resultSpinner.visibility = View.GONE
@@ -1362,7 +1392,7 @@ internal class BoseSetupProbeActivity : Activity() {
                             "Sie könnte noch verbinden oder in einem anderen WLAN sein. " +
                             "Du kannst erneut suchen, ohne das Passwort erneut zu senden."
                     statusView.text = "WLAN-Verbindung der SoundTouch nicht bestätigt."
-                    finishSetup()
+                    finishSetup(offerRetry = true)
                 }
             }
         }
