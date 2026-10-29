@@ -1,13 +1,13 @@
 # BUILD-0012 — SoundTouch 20 Series III SoftAP Phase A observations
 
 **Date:** 2026-10-29
-**State:** PARTIAL PHASE A — setup web page and read-only API confirmed on real hardware; in-place retry/callback cleanup still unverified
+**State:** PARTIAL PHASE A — setup HTTP API and in-place retry confirmed; cancel returns to home Wi-Fi; cancel navigation regression fixed in code, hardware re-test pending
 **Reference hardware:** Bose SoundTouch 20 Series III / 355589-SM2 / original Bose firmware (per test owner)
 **App:** STR Remote PoC, separate debug package `app.strremote.android.poc`
 
 ## User-observed results
 
-The user confirms that a fresh Android Bose-setup connection flow works **again after removing the 400 ms deferred request** when the speaker is already in setup mode. The debug app issues read-only `GET` requests scoped to the Android-selected `Network`, and displays only HTTP status/content-type or network exception class. The user has not yet confirmed whether **in-place retry** works when the speaker enters setup mode later.
+The user confirms that a fresh Android Bose-setup connection flow works **again after removing the 400 ms deferred request** when the speaker is already in setup mode. The debug app issues read-only `GET` requests scoped to the Android-selected `Network`, and displays only HTTP status/content-type or network exception class. The user subsequently confirmed that **in-place retry works** when the speaker enters setup mode later.
 
 | Target | User-observed result | Interpretation |
 |---|---|---|
@@ -34,17 +34,25 @@ Root cause is **not yet independently proven**. The current `MainActivity` Retry
 
 - Dedicated in-place `Erneut versuchen` in the Bose PoC remains tappable during an outstanding request.
 - The first retry implementation added a 400 ms delay to every `requestNetwork()` call. **Regression observed by tester:** after installing that version, the speaker was no longer detected. The actual root cause is not yet established.
-- **Correction validated for initial connection:** after reverting the 400 ms delay, a fresh connection to an already-ready Bose setup AP again succeeded, including an HTTP 200 response from `/info`. The in-place retry still needs separate confirmation. The PoC retains a manually triggered retry that unregisters the previous callback, discards its results, then performs a fresh immediate request. No periodic background retries.
+- **Correction validated for initial connection:** after reverting the 400 ms delay, a fresh connection to an already-ready Bose setup AP again succeeded, including an HTTP 200 response from `/info`. The in-place retry is now independently confirmed by the tester. The PoC retains a manually triggered retry that unregisters the previous callback, discards its results, then performs a fresh immediate request. No periodic background retries.
 - User guidance explains that an already-open Android system picker should be dismissed before triggering a new request.
 - Expanded read-only HTTP probes now include `GET http://192.0.2.1:8090/info`. SoundTouch API documentation identifies `/info` as the read-only device information endpoint; this PoC does **not** read or persist the XML response body, only status/content-type.
 - The public `v0.2.1` APK/source remain unchanged.
 
+## Follow-up usability observations (2026-10-29)
+
+- **Retry accepted by tester:** the Bose SoftAP is detected by pressing `Erneut versuchen` in the same setup screen after the speaker becomes ready.
+- **Cancel releases the temporary Wi-Fi connection:** Android reconnects to the previous home Wi-Fi, observed by tester.
+- **Cancel navigation bug:** the existing button only called `closeSession()` and updated its status text, leaving the setup Activity open. A debug-only follow-up now calls `finish()` after `closeSession()`, returning to the caller's Devices page. **The code correction still needs device UX confirmation.**
+- **Visual usability:** the tester requested that the wizard start below system status icons and use clearer visual grouping. The follow-up adds system-bar insets to the scroll container and separates preparation steps, controls, status and results into more legible sections. Device screenshot verification remains pending.
+
 ## Still open before Phase A acceptance
 
 - [x] Reconfirm previously successful connection when the Bose is **already** in setup mode after reverting deferred request (user-reported successful)
-- [ ] Re-test device appearing **after** initial failed/waiting attempt using the **Bose PoC retry in the same screen**; no Activity restart
-- [ ] Verify explicit **Cancel** releases temporary network request
-- [ ] Verify a completed successful probe returns the phone to its regular Wi-Fi route
+- [x] Re-test device appearing **after** initial failed/waiting attempt using the **Bose PoC retry in the same screen**; tester confirms it works
+- [x] Verify explicit **Cancel** releases temporary network request and Android returns to the home Wi-Fi (tester confirmed)
+- [ ] Verify **updated Cancel button exits the wizard and returns to Devices**; home Wi-Fi restoration already confirmed
+- [ ] Separately verify that automatic release after a **completed successful probe** returns the phone to its home Wi-Fi; explicit Cancel recovery confirmed
 - [ ] Record Android API level and original Bose firmware version, if available without writing settings
 - [x] Record status/content-type of read-only Bose `GET /info` on 8090: **HTTP 200; text/xml**
 - [ ] Confirm local build/lint/CI of the retry revision and device smoke
