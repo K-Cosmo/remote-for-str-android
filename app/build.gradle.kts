@@ -15,6 +15,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Separate package so PoC installs beside the signed production app.
+            applicationIdSuffix = ".poc"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
