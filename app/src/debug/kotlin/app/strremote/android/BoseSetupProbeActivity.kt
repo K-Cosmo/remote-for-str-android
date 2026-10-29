@@ -2,6 +2,7 @@ package app.strremote.android
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -16,13 +17,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.os.PatternMatcher
-import android.text.InputType
-import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -39,18 +38,17 @@ import java.net.URL
 internal class BoseSetupProbeActivity : Activity() {
     private companion object {
         const val PERMISSION_REQUEST = 12012
-        const val NETWORK_REQUEST_TIMEOUT_MS = 30_000
+        const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
+        const val EXTRA_RESTART_AND_SEARCH = "bose_poc.restart_and_search"
         const val HTTP_TIMEOUT_MS = 1_800
         const val BACKGROUND_CLEANUP_DELAY_MS = 2_000L
         const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
         data class LocalProbe(val host: String, val port: Int, val path: String)
         val LOCAL_PROBES = listOf(
+            // Validated on the reference SoundTouch 20 Series III.
+            // Remove known timeouts (192.168.1.1) and non-API root (8090/).
             LocalProbe("192.0.2.1", 80, "/"),
-            LocalProbe("192.0.2.1", 8090, "/"),
-            // / on port 8090 may return 404 even when the Bose API works.
-            LocalProbe("192.0.2.1", 8090, "/info"),
-            LocalProbe("192.168.1.1", 80, "/"),
-            LocalProbe("192.168.1.1", 8090, "/")
+            LocalProbe("192.0.2.1", 8090, "/info")
         )
     }
 
@@ -59,7 +57,6 @@ internal class BoseSetupProbeActivity : Activity() {
     }
     private val handler = Handler(Looper.getMainLooper())
 
-    private lateinit var ssidInput: EditText
     private lateinit var startButton: Button
     private lateinit var cancelButton: Button
     private lateinit var statusView: TextView
@@ -71,10 +68,14 @@ internal class BoseSetupProbeActivity : Activity() {
     private var awaitingConsent = false
     private var visible = false
     private var backgroundCleanup: Runnable? = null
+    private var hasStartedNetworkRequest = false
+    private var resumeWithFreshSearch = false
+    private var requestStartedAtMs = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         buildUi()
+        resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
         if (Build.VERSION.SDK_INT < 29) {
             statusView.text = "Nicht verfügbar: Dieser PoC benötigt Android 10 oder neuer."
             startButton.isEnabled = false
@@ -162,56 +163,17 @@ internal class BoseSetupProbeActivity : Activity() {
             )
         )
 
-        // Normal flow: Android presents the Bose setup Wi-Fi and the user
-        // chooses it. Exact SSID input is reserved for uncommon setups and
-        // must never look like a required home-network credential field.
-        val advancedDescription = paragraph(
-            "Nur für Geräte, deren Setup-WLAN nicht mit „Bose“ beginnt. " +
-                "Hier den exakten WLAN-Namen der Box eingeben – nicht den Heim-WLAN-Namen.",
-            13.5f,
-            muted
-        ).apply {
-            visibility = View.GONE
-        }
-
-        ssidInput = EditText(this).apply {
-            hint = "Exakter Name des Bose-Setup-WLANs"
-            inputType = InputType.TYPE_CLASS_TEXT
-            isSingleLine = true
-            setTextColor(ink)
-            setHintTextColor(muted)
-            visibility = View.GONE
-        }
-        val advancedToggle = TextView(this).apply {
-            text = "Erweitert: Anderes Bose-Setup-WLAN verwenden"
-            textSize = 14f
-            setTextColor(accent)
-            minimumHeight = dp(48)
-            setPadding(0, dp(12), 0, dp(8))
-            setOnClickListener {
-                val expand = ssidInput.visibility != View.VISIBLE
-                advancedDescription.visibility = if (expand) View.VISIBLE else View.GONE
-                ssidInput.visibility = if (expand) View.VISIBLE else View.GONE
-                text = if (expand) "Erweiterte Option schließen"
-                       else "Erweitert: Anderes Bose-Setup-WLAN verwenden"
-                if (!expand) ssidInput.setText("")
-            }
-        }
-        column.addView(advancedToggle)
-        column.addView(advancedDescription)
-        column.addView(
-            ssidInput,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
-
         startButton = Button(this).apply {
             text = "Setup-WLAN suchen"
             isAllCaps = false
             minimumHeight = dp(48)
-            setOnClickListener { startOrRequestPermission() }
+            setOnClickListener {
+                if (hasStartedNetworkRequest) {
+                    restartWizardForFreshSearch()
+                } else {
+                    startOrRequestPermission()
+                }
+            }
         }
         cancelButton = Button(this).apply {
             text = "Trennen / Abbrechen"
@@ -311,6 +273,22 @@ internal class BoseSetupProbeActivity : Activity() {
         if (Build.VERSION.SDK_INT >= 37) add(ACCESS_LOCAL_NETWORK)
     }
 
+    /**
+     * A same-Activity retry can inherit Android's stale Wi-Fi selection state.
+     * The tester confirmed that fully restarting onboarding recovers discovery,
+     * so retry now reproduces that successful lifecycle in one tap.
+     *
+     * Do not delay or otherwise modify the proven FIRST requestNetwork() path.
+     */
+    private fun restartWizardForFreshSearch() {
+        closeSession()
+        val restart = Intent(this, BoseSetupProbeActivity::class.java).apply {
+            putExtra(EXTRA_RESTART_AND_SEARCH, true)
+        }
+        startActivity(restart)
+        finish()
+    }
+
     private fun startOrRequestPermission() {
         if (Build.VERSION.SDK_INT < 29) return
 
@@ -360,29 +338,12 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun requestSetupNetwork() {
         closeSession()
         cancelButton.text = "Trennen / Abbrechen"
-        // A collapsed advanced section must not silently reuse a stale SSID.
-        val ssid = if (ssidInput.visibility == View.VISIBLE) {
-            ssidInput.text.toString().trim()
-        } else {
-            ""
-        }
-        if (ssid.toByteArray(Charsets.UTF_8).size > 32) {
-            statusView.text = "SSID zu lang (maximal 32 UTF-8-Bytes)."
-            return
-        }
 
-        val specifier = try {
-            WifiNetworkSpecifier.Builder().apply {
-                if (ssid.isEmpty()) {
-                    setSsidPattern(PatternMatcher("Bose", PatternMatcher.PATTERN_PREFIX))
-                } else {
-                    setSsid(ssid)
-                }
-            }.build()
-        } catch (e: IllegalArgumentException) {
-            statusView.text = "SSID nicht zulässig. Bitte die WLAN-Bezeichnung prüfen."
-            return
-        }
+        // No manual SSID entry: Android finds nearby "Bose..." setup networks.
+        // A real user must still approve the local-only Wi-Fi connection.
+        val specifier = WifiNetworkSpecifier.Builder()
+            .setSsidPattern(PatternMatcher("Bose", PatternMatcher.PATTERN_PREFIX))
+            .build()
 
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
@@ -391,24 +352,27 @@ internal class BoseSetupProbeActivity : Activity() {
             .build()
 
         val token = ++generation
+        requestStartedAtMs = SystemClock.elapsedRealtime()
+        hasStartedNetworkRequest = true
         awaitingConsent = true
-        // Keep retry actionable without leaving this Activity. The previous
-        // request is unregistered by closeSession() and the new one is fresh.
+        // Retry opens a fresh Activity and a fresh WifiNetworkSpecifier request.
+        // No overlapping Android picker/network callbacks survive the restart.
         startButton.text = "Erneut versuchen"
         startButton.isEnabled = true
         resultsView.text = "Noch keine Probe-Ergebnisse."
         statusView.text =
-            "Neue WLAN-Suche wird gestartet. Androids Abfrage bestätigen " +
-                "(max. 30 s). Ist die Box noch nicht bereit: " +
-                "Auswahl schließen, dann hier „Erneut versuchen“. " +
-                "Das Bose-WLAN braucht kein Internet."
+            "Android sucht das Bose-Setup-WLAN (bis zu 20 Sekunden). " +
+                "Bitte die Systemabfrage bestätigen. Ist die Box noch nicht bereit, " +
+                "die Auswahl schließen und „Erneut versuchen“ wählen."
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 runOnUiThread {
                     if (token != generation) return@runOnUiThread
                     awaitingConsent = false
-                    statusView.text = "Bose-WLAN von Android bereitgestellt. Prüfe lokale HTTP-Endpunkte …"
+                    val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
+                    statusView.text =
+                        "Bose-WLAN nach ${seconds} s verbunden. Prüfe lokale HTTP-Endpunkte …"
                     probeReadOnly(network, token)
                     scheduleBackgroundCleanup()
                 }
@@ -418,10 +382,11 @@ internal class BoseSetupProbeActivity : Activity() {
                 runOnUiThread {
                     if (token != generation) return@runOnUiThread
                     closeSession()
+                    val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
-                        "Noch kein Bose-Setup-WLAN verfügbar oder Anfrage abgebrochen. " +
-                            "Sobald die WLAN-LED gelb leuchtet, hier „Erneut versuchen“ " +
-                            "wählen. Dies startet eine neue Android-Suche."
+                        "Android hat innerhalb von ${seconds} s keine Verbindung bereitgestellt " +
+                            "oder die Auswahl wurde abgebrochen. " +
+                            "Wenn die Bose-WLAN-LED gelb leuchtet, „Erneut versuchen“ wählen."
                 }
             }
 
@@ -435,9 +400,8 @@ internal class BoseSetupProbeActivity : Activity() {
                 }
             }
         }
-        // Use the original, device-validated immediate connection path.
-        // Retrying calls requestSetupNetwork() again: it releases the previous
-        // callback first and issues a fresh Android system Wi-Fi request.
+        // Keep the original, device-validated immediate connection path.
+        // Retry instead recreates the entire PoC Activity after callback release.
         activeCallback = callback
         try {
             connectivity.requestNetwork(request, callback, NETWORK_REQUEST_TIMEOUT_MS)
@@ -540,6 +504,18 @@ internal class BoseSetupProbeActivity : Activity() {
         super.onStart()
         visible = true
         cancelBackgroundCleanup()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (resumeWithFreshSearch) {
+            resumeWithFreshSearch = false
+            // Post from resumed UI: no request while the previous Activity is
+            // closing or the new Activity has not yet entered foreground.
+            handler.post {
+                if (!isFinishing && !isDestroyed) startOrRequestPermission()
+            }
+        }
     }
 
     override fun onStop() {
