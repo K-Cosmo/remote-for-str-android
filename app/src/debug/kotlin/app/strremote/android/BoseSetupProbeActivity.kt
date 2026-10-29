@@ -273,7 +273,8 @@ internal class BoseSetupProbeActivity : Activity() {
         statusView.text =
             "Neue WLAN-Suche wird gestartet. Androids Abfrage bestätigen " +
                 "(max. 30 s). Ist die Box noch nicht bereit: " +
-                "Auswahl schließen, dann hier „Erneut versuchen“. "+ "Das Bose-WLAN braucht kein Internet."
+                "Auswahl schließen, dann hier „Erneut versuchen“. " +
+                "Das Bose-WLAN braucht kein Internet."
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
