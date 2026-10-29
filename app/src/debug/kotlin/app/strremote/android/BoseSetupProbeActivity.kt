@@ -78,7 +78,6 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var pageTitle: TextView
     private lateinit var resultText: TextView
     private lateinit var detailsButton: Button
-    private lateinit var networkChoices: LinearLayout
     private lateinit var chooseWifiButton: Button
     private lateinit var manualWifiButton: Button
     private lateinit var selectedWifiView: TextView
@@ -109,7 +108,6 @@ internal class BoseSetupProbeActivity : Activity() {
     private var b2Verified = false
     private var surveySupported = false
     private var surveyInFlight = false
-    private var showAllWifiNetworks = false
     private var surveyCandidates: List<BoseWirelessSiteSurvey.Candidate> = emptyList()
     private var postAttempted = false
     private var postInFlight = false
@@ -298,7 +296,6 @@ internal class BoseSetupProbeActivity : Activity() {
             setPadding(0, dp(10), 0, dp(8))
         }
         b2Panel.addView(surveyStatusView)
-        networkChoices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         // An extra popup owns the network list; do not make users scroll past
         // dozens of SSIDs to reach the password and submit button.
         manualWifiButton = Button(this).apply {
@@ -833,7 +830,6 @@ internal class BoseSetupProbeActivity : Activity() {
         ) return
 
         surveyInFlight = true
-        showAllWifiNetworks = false
         surveyCandidates = emptyList()
         scanButton.isEnabled = false
         chooseWifiButton.isEnabled = false
@@ -1046,10 +1042,8 @@ internal class BoseSetupProbeActivity : Activity() {
         b2Verified = false
         surveySupported = false
         surveyInFlight = false
-        showAllWifiNetworks = false
         surveyCandidates = emptyList()
         if (::scanButton.isInitialized) scanButton.isEnabled = false
-        if (::networkChoices.isInitialized) networkChoices.removeAllViews()
         if (::chooseWifiButton.isInitialized) chooseWifiButton.isEnabled = false
         postInFlight = false
         b2NetworkLostDuringPost = false
