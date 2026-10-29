@@ -28,6 +28,7 @@ import android.view.WindowInsetsController
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.text.method.PasswordTransformationMethod
@@ -477,7 +478,7 @@ internal class BoseSetupProbeActivity : Activity() {
             setImageResource(R.drawable.ic_str_visibility)
             contentDescription = "Passwort anzeigen"
             setBackgroundColor(Color.TRANSPARENT)
-            scaleType = ImageButton.ScaleType.CENTER_INSIDE
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
             setPadding(dp(10), dp(10), dp(10), dp(10))
             isFocusable = true
             setOnClickListener {
