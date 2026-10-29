@@ -102,6 +102,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private var b2Verified = false
     private var surveySupported = false
     private var surveyInFlight = false
+    private var showAllWifiNetworks = false
     private var surveyCandidates: List<BoseWirelessSiteSurvey.Candidate> = emptyList()
     private var postAttempted = false
     private var postInFlight = false
@@ -474,7 +475,8 @@ internal class BoseSetupProbeActivity : Activity() {
         val ink = Color.rgb(23, 46, 67)
         val muted = Color.rgb(66, 84, 101)
         val accent = Color.rgb(18, 69, 113)
-        for (candidate in surveyCandidates) {
+        val visibleNetworks = if (showAllWifiNetworks) surveyCandidates else surveyCandidates.take(8)
+        for (candidate in visibleNetworks) {
             val selected = candidate.ssid == ssidField.text.toString()
             val signal = when {
                 candidate.signalDbm == null -> "Signal unbekannt"
@@ -522,6 +524,17 @@ internal class BoseSetupProbeActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(8) })
+        }
+        if (surveyCandidates.size > 8) {
+            networkChoices.addView(Button(this).apply {
+                isAllCaps = false
+                text = if (showAllWifiNetworks) "Weniger WLANs anzeigen"
+                       else "Alle " + surveyCandidates.size + " WLANs anzeigen"
+                setOnClickListener {
+                    showAllWifiNetworks = !showAllWifiNetworks
+                    renderSurveyNetworks()
+                }
+            })
         }
     }
 
@@ -806,6 +819,7 @@ internal class BoseSetupProbeActivity : Activity() {
         ) return
 
         surveyInFlight = true
+        showAllWifiNetworks = false
         surveyCandidates = emptyList()
         scanButton.isEnabled = false
         networkChoices.removeAllViews()
@@ -966,6 +980,7 @@ internal class BoseSetupProbeActivity : Activity() {
         b2Verified = false
         surveySupported = false
         surveyInFlight = false
+        showAllWifiNetworks = false
         surveyCandidates = emptyList()
         if (::scanButton.isInitialized) scanButton.isEnabled = false
         if (::networkChoices.isInitialized) networkChoices.removeAllViews()
