@@ -184,6 +184,18 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun startOrRequestPermission() {
         if (Build.VERSION.SDK_INT < 29) return
 
+        // CHANGE_NETWORK_STATE is a normal install-time permission, not a
+        // runtime permission. A missing manifest entry causes requestNetwork()
+        // to throw SecurityException before Android shows the Wi-Fi picker.
+        if (checkSelfPermission(Manifest.permission.CHANGE_NETWORK_STATE) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            statusView.text =
+                "PoC-Buildfehler: CHANGE_NETWORK_STATE fehlt. " +
+                    "Bitte die aktualisierte Debug-APK installieren."
+            return
+        }
+
         val missing = requiredPermissions().filter {
             checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
         }
@@ -286,8 +298,8 @@ internal class BoseSetupProbeActivity : Activity() {
         } catch (e: SecurityException) {
             closeSession()
             statusView.text =
-                "Android verweigert die Netzwerk-Anforderung. Bitte Standort/WLAN-" +
-                    " und Geräteberechtigungen prüfen."
+                "Android hat die WLAN-Anforderung verweigert (SecurityException). " +
+                    "Bitte WLAN und die erteilten App-Berechtigungen prüfen."
         } catch (e: IllegalArgumentException) {
             closeSession()
             statusView.text = "Netzwerk-Anforderung abgelehnt: ungültige Android-Konfiguration."
