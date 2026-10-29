@@ -1,7 +1,7 @@
 # BUILD-0012 — SoundTouch 20 Series III SoftAP Phase A observations
 
 **Date:** 2026-10-29
-**State:** PARTIAL PHASE A — setup HTTP API and in-place retry confirmed; cancel returns to home Wi-Fi; cancel navigation regression fixed in code, hardware re-test pending
+**State:** PARTIAL PHASE A — setup API, retry, Cancel exit and normal Wi-Fi recovery confirmed by tester; protocol write contract still untested
 **Reference hardware:** Bose SoundTouch 20 Series III / 355589-SM2 / original Bose firmware (per test owner)
 **App:** STR Remote PoC, separate debug package `app.strremote.android.poc`
 
@@ -43,16 +43,24 @@ Root cause is **not yet independently proven**. The current `MainActivity` Retry
 
 - **Retry accepted by tester:** the Bose SoftAP is detected by pressing `Erneut versuchen` in the same setup screen after the speaker becomes ready.
 - **Cancel releases the temporary Wi-Fi connection:** Android reconnects to the previous home Wi-Fi, observed by tester.
-- **Cancel navigation bug:** the existing button only called `closeSession()` and updated its status text, leaving the setup Activity open. A debug-only follow-up now calls `finish()` after `closeSession()`, returning to the caller's Devices page. **The code correction still needs device UX confirmation.**
-- **Visual usability:** the tester requested that the wizard start below system status icons and use clearer visual grouping. The follow-up adds system-bar insets to the scroll container and separates preparation steps, controls, status and results into more legible sections. Device screenshot verification remains pending.
+- **Cancel navigation accepted:** the corrected button calls `closeSession()` then `finish()`; the tester confirms it returns to the Devices page.
+- **Visual usability:** revised screenshot supplied by tester: clearer step grouping and content below the system bar are accepted as an improvement. Further simplification requested for the poorly discoverable optional Bose-SSID field.
+
+## Network lifecycle observation and SSID UX clarification (2026-10-29)
+
+- After read-only Phase A completes its HTTP requests, `probeReadOnly()` deliberately calls `closeSession()`, which unregisters the Android `NetworkCallback`. The tester observed that Android immediately returns to the normal/home Wi-Fi **without pressing Cancel**. This is the expected and desired behavior for an independent, read-only connectivity probe.
+- **Cancel** independently releases a running setup-network request and now also closes the Activity, returning to Devices; the tester confirmed the navigation.
+- The displayed `Bose-Setup-SSID (optional)` field was an `EditText` used to override the Android request's default `Bose` SSID prefix. It was **not** intended for the future home-Wi-Fi SSID or password. The field looked like ordinary text and confused the tester. The next debug-only UX revision removes it from the normal flow and places an explicit exact-SSID field behind an `Erweitert` toggle. Hiding advanced mode clears any previously entered override.
+- The read-only status now explicitly explains automatic network release and the button becomes `Zurück zu Geräte` after the measurement. **The changed labels/advanced toggle require a fresh screenshot/device smoke.**
+- In the later credential-provisioning phase, Android must keep the temporary Bose network until the **validated and user-confirmed submission** completes or fails; do not copy the Phase-A immediate-release point into the middle of a write operation.
 
 ## Still open before Phase A acceptance
 
 - [x] Reconfirm previously successful connection when the Bose is **already** in setup mode after reverting deferred request (user-reported successful)
 - [x] Re-test device appearing **after** initial failed/waiting attempt using the **Bose PoC retry in the same screen**; tester confirms it works
 - [x] Verify explicit **Cancel** releases temporary network request and Android returns to the home Wi-Fi (tester confirmed)
-- [ ] Verify **updated Cancel button exits the wizard and returns to Devices**; home Wi-Fi restoration already confirmed
-- [ ] Separately verify that automatic release after a **completed successful probe** returns the phone to its home Wi-Fi; explicit Cancel recovery confirmed
+- [x] Verify **updated Cancel button exits the wizard and returns to Devices**; tester confirms
+- [x] Verify that automatic release after a **completed successful probe** returns the phone to its home Wi-Fi; tester directly observed this behavior
 - [ ] Record Android API level and original Bose firmware version, if available without writing settings
 - [x] Record status/content-type of read-only Bose `GET /info` on 8090: **HTTP 200; text/xml**
 - [ ] Confirm local build/lint/CI of the retry revision and device smoke
