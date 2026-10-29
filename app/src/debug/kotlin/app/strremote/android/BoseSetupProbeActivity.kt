@@ -18,6 +18,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.os.PatternMatcher
 import android.view.ViewGroup
 import android.view.WindowInsets
@@ -38,6 +39,7 @@ import java.net.URL
 internal class BoseSetupProbeActivity : Activity() {
     private companion object {
         const val PERMISSION_REQUEST = 12012
+        const val LOG_TAG = "StrBoseSetup"
         const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
         const val EXTRA_RESTART_AND_SEARCH = "bose_poc.restart_and_search"
         const val HTTP_TIMEOUT_MS = 1_800
@@ -71,11 +73,29 @@ internal class BoseSetupProbeActivity : Activity() {
     private var hasStartedNetworkRequest = false
     private var resumeWithFreshSearch = false
     private var requestStartedAtMs = 0L
+    private val debugSessionId = Integer.toHexString(System.identityHashCode(this))
+
+    /**
+     * Diagnostic events deliberately exclude SSIDs, BSSIDs, MACs, IP addresses,
+     * passwords, response bodies and Android Network objects. Debug source only.
+     */
+    private fun trace(event: String) {
+        val elapsed = if (requestStartedAtMs > 0L) {
+            SystemClock.elapsedRealtime() - requestStartedAtMs
+        } else {
+            -1L
+        }
+        Log.d(
+            LOG_TAG,
+            "session=$debugSessionId event=$event elapsedMs=$elapsed api=${Build.VERSION.SDK_INT}"
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         buildUi()
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
+        trace("activity_created freshRetry=$resumeWithFreshSearch")
         if (Build.VERSION.SDK_INT < 29) {
             statusView.text = "Nicht verfügbar: Dieser PoC benötigt Android 10 oder neuer."
             startButton.isEnabled = false
@@ -281,6 +301,7 @@ internal class BoseSetupProbeActivity : Activity() {
      * Do not delay or otherwise modify the proven FIRST requestNetwork() path.
      */
     private fun restartWizardForFreshSearch() {
+        trace("retry_new_activity")
         closeSession()
         val restart = Intent(this, BoseSetupProbeActivity::class.java).apply {
             putExtra(EXTRA_RESTART_AND_SEARCH, true)
@@ -290,6 +311,7 @@ internal class BoseSetupProbeActivity : Activity() {
     }
 
     private fun startOrRequestPermission() {
+        trace("start_pressed")
         if (Build.VERSION.SDK_INT < 29) return
 
         // CHANGE_NETWORK_STATE is a normal install-time permission, not a
@@ -308,10 +330,12 @@ internal class BoseSetupProbeActivity : Activity() {
             checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
         }
         if (missing.isNotEmpty()) {
+            trace("runtime_permission_request count=${missing.size}")
             statusView.text = "Android benötigt zunächst die WLAN-/Netzwerkberechtigung."
             requestPermissions(missing.toTypedArray(), PERMISSION_REQUEST)
             return
         }
+        trace("permissions_granted")
         requestSetupNetwork()
     }
 
@@ -322,6 +346,7 @@ internal class BoseSetupProbeActivity : Activity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != PERMISSION_REQUEST) return
+        trace("runtime_permission_result allGranted=${grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }}")
         if (grantResults.isNotEmpty() &&
             grantResults.all { it == PackageManager.PERMISSION_GRANTED } &&
             requiredPermissions().all {
@@ -336,6 +361,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     @android.annotation.TargetApi(29)
     private fun requestSetupNetwork() {
+        trace("request_prepare")
         closeSession()
         cancelButton.text = "Trennen / Abbrechen"
 
@@ -353,6 +379,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
         val token = ++generation
         requestStartedAtMs = SystemClock.elapsedRealtime()
+        trace("request_configured token=$token timeoutMs=$NETWORK_REQUEST_TIMEOUT_MS")
         hasStartedNetworkRequest = true
         awaitingConsent = true
         // Retry opens a fresh Activity and a fresh WifiNetworkSpecifier request.
@@ -367,8 +394,13 @@ internal class BoseSetupProbeActivity : Activity() {
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
+                trace("callback_onAvailable token=$token")
                 runOnUiThread {
-                    if (token != generation) return@runOnUiThread
+                    if (token != generation) {
+                        trace("callback_onAvailable_stale token=$token")
+                        return@runOnUiThread
+                    }
+                    trace("ui_onAvailable token=$token")
                     awaitingConsent = false
                     val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
@@ -379,8 +411,13 @@ internal class BoseSetupProbeActivity : Activity() {
             }
 
             override fun onUnavailable() {
+                trace("callback_onUnavailable token=$token")
                 runOnUiThread {
-                    if (token != generation) return@runOnUiThread
+                    if (token != generation) {
+                        trace("callback_onUnavailable_stale token=$token")
+                        return@runOnUiThread
+                    }
+                    trace("ui_onUnavailable token=$token")
                     closeSession()
                     val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
@@ -391,8 +428,13 @@ internal class BoseSetupProbeActivity : Activity() {
             }
 
             override fun onLost(network: Network) {
+                trace("callback_onLost token=$token")
                 runOnUiThread {
-                    if (token != generation) return@runOnUiThread
+                    if (token != generation) {
+                        trace("callback_onLost_stale token=$token")
+                        return@runOnUiThread
+                    }
+                    trace("ui_onLost token=$token")
                     closeSession()
                     statusView.text =
                         "Setup-WLAN getrennt. Für eine neue Verbindung hier " +
@@ -404,22 +446,28 @@ internal class BoseSetupProbeActivity : Activity() {
         // Retry instead recreates the entire PoC Activity after callback release.
         activeCallback = callback
         try {
+            trace("requestNetwork_call token=$token")
             connectivity.requestNetwork(request, callback, NETWORK_REQUEST_TIMEOUT_MS)
+            trace("requestNetwork_returned token=$token")
         } catch (e: SecurityException) {
+            trace("requestNetwork_error SecurityException")
             closeSession()
             statusView.text =
                 "Android hat die WLAN-Anforderung verweigert (SecurityException). " +
                     "Bitte WLAN und die erteilten App-Berechtigungen prüfen."
         } catch (e: IllegalArgumentException) {
+            trace("requestNetwork_error IllegalArgumentException")
             closeSession()
             statusView.text = "Netzwerk-Anforderung abgelehnt: ungültige Android-Konfiguration."
         } catch (e: RuntimeException) {
+            trace("requestNetwork_error ${e.javaClass.simpleName}")
             closeSession()
             statusView.text = "Netzwerk-Anforderung fehlgeschlagen (${e.javaClass.simpleName})."
         }
     }
 
     private fun probeReadOnly(network: Network, token: Int) {
+        trace("http_probe_start token=$token")
         activeWorker?.interrupt()
         val worker = Thread({
             val observations = mutableListOf<String>()
@@ -448,9 +496,13 @@ internal class BoseSetupProbeActivity : Activity() {
                     connection?.disconnect()
                 }
                 observations.add(observation)
+                // Target is one of two compile-time Bose endpoints. No response
+                // body, host identifiers or credentials are ever emitted.
+                trace("http_probe_result token=$token index=${observations.size} result=${if (observation.contains("-> HTTP 200")) "http200" else "other"}")
             }
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
+                trace("http_probe_complete token=$token")
                 resultsView.text = observations.joinToString("\n")
                 closeSession()
                 cancelButton.text = "Zurück zu Geräte"
@@ -482,6 +534,7 @@ internal class BoseSetupProbeActivity : Activity() {
     }
 
     private fun closeSession() {
+        trace("session_close callbackRegistered=${activeCallback != null}")
         ++generation
         awaitingConsent = false
         cancelBackgroundCleanup()
@@ -490,7 +543,9 @@ internal class BoseSetupProbeActivity : Activity() {
         activeCallback?.let { callback ->
             try {
                 connectivity.unregisterNetworkCallback(callback)
+                trace("callback_unregistered")
             } catch (_: IllegalArgumentException) {
+                trace("callback_unregistered_already")
                 // Callback may already have been removed by Android.
             } catch (_: SecurityException) {
                 // Do not keep the UI in a connected state on permission revocation.
@@ -508,6 +563,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        trace("activity_resumed retry=$resumeWithFreshSearch")
         if (resumeWithFreshSearch) {
             resumeWithFreshSearch = false
             // Post from resumed UI: no request while the previous Activity is
@@ -529,6 +585,7 @@ internal class BoseSetupProbeActivity : Activity() {
     }
 
     override fun onDestroy() {
+        trace("activity_destroyed")
         closeSession()
         super.onDestroy()
     }
