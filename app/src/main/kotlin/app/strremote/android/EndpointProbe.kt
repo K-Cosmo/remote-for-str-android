@@ -6,7 +6,9 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 internal class EndpointProbe {
-    private val executor: ExecutorService = Executors.newCachedThreadPool()
+    // Bound concurrent HTTP checks. An mDNS burst must not create unbounded
+    // threads or starve unrelated speaker/device operations.
+    private val executor: ExecutorService = Executors.newFixedThreadPool(4)
 
     fun probe(candidate: SpeakerCandidate, callback: (SpeakerEndpoint?) -> Unit) {
         val preferred = candidate.advertisedPort.takeIf { it == 8888 || it == 17008 }
@@ -28,6 +30,10 @@ internal class EndpointProbe {
         key: String? = null,
         callback: (SpeakerEndpoint?) -> Unit
     ) {
+        if (executor.isShutdown) {
+            callback(null)
+            return
+        }
         executor.execute {
             val ports = buildList {
                 if (preferredPort == 8888 || preferredPort == 17008) add(preferredPort)
@@ -35,10 +41,14 @@ internal class EndpointProbe {
                 if (!contains(17008)) add(17008)
             }
 
-            val endpoint = ports.firstNotNullOfOrNull { port ->
-                val candidateEndpoint = SpeakerEndpoint(host, port, name, model, key)
-                if (isStrReachable(candidateEndpoint)) candidateEndpoint else null
-            }
+            // Always settle exactly once, including malformed/unsupported hosts.
+            // This prevents the list spinner from awaiting a missing callback.
+            val endpoint = runCatching {
+                ports.firstNotNullOfOrNull { port ->
+                    val candidateEndpoint = SpeakerEndpoint(host, port, name, model, key)
+                    if (isStrReachable(candidateEndpoint)) candidateEndpoint else null
+                }
+            }.getOrNull()
             callback(endpoint)
         }
     }
@@ -48,24 +58,23 @@ internal class EndpointProbe {
     }
 
     private fun isStrReachable(endpoint: SpeakerEndpoint): Boolean {
-        val url = URL(endpoint.baseUrl + "api/status")
-        val connection = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 1_500
-            readTimeout = 1_500
-            instanceFollowRedirects = false
-            useCaches = false
-            setRequestProperty("Accept", "application/xml,text/xml,*/*")
-            setRequestProperty("User-Agent", "STR-Remote-Android")
-        }
-
+        var connection: HttpURLConnection? = null
         return try {
-            val code = connection.responseCode
-            code in 200..399
+            val url = URL(endpoint.baseUrl + "api/status")
+            connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 1_500
+                readTimeout = 1_500
+                instanceFollowRedirects = false
+                useCaches = false
+                setRequestProperty("Accept", "application/xml,text/xml,*/*")
+                setRequestProperty("User-Agent", "STR-Remote-Android")
+            }
+            connection.responseCode in 200..299
         } catch (_: Exception) {
             false
         } finally {
-            connection.disconnect()
+            connection?.disconnect()
         }
     }
 }
