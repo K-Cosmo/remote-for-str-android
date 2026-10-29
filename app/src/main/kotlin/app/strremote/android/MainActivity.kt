@@ -94,7 +94,7 @@ class MainActivity : Activity() {
     private var discoveryGeneration = 0
     // A host is probed once per scan generation. Repeated mDNS announcements
     // may refresh its label, but must not restart the in-flight probe forever.
-    private val probedHostsThisScan = mutableSetOf<String>()
+    private val discoveryGuard = DiscoveryCycleGuard()
     private var remoteProbeGeneration = 0
     private var webViewNeedsReload = false
 
@@ -736,7 +736,7 @@ class MainActivity : Activity() {
         discoveryGeneration++
         discoveryActive = true
         discoveryTimedOut = false
-        probedHostsThisScan.clear()
+        discoveryGuard.newGeneration()
         hiddenSpeakerKeys.clear()
 
         rebuildPersistentRows()
@@ -826,7 +826,7 @@ class MainActivity : Activity() {
             updateList()
             // This service can announce repeatedly during a single scan.
             // Never restart a completed or still-in-flight STR HTTP probe.
-            if (probedHostsThisScan.add(candidate.host)) {
+            if (discoveryGuard.claimProbe(candidate.host)) {
                 probeCandidate(candidate, discoveryGeneration)
             }
         }
@@ -956,7 +956,10 @@ class MainActivity : Activity() {
                 )
             }
             discoveryTimedOut -> showStrUnreachable()
-            discoveredRows.any { !it.probeFinished } -> {
+            DiscoveryCycleGuard.shouldShowChecking(
+                discoveryActive, discoveryTimedOut,
+                discoveredRows.any { !it.probeFinished }
+            ) -> {
                 setDiscoveryState(
                     message = getString(R.string.checking_discovered),
                     showProgress = true,
