@@ -39,6 +39,7 @@ internal class BoseLanVerification(
     private val context: Context,
     private val expectedDeviceId: String,
     private val expectedSsid: String,
+    private val previousBoseNetwork: Network?,
     private val onUpdate: (Status) -> Unit
 ) {
     internal sealed class Status {
@@ -120,7 +121,7 @@ internal class BoseLanVerification(
     }
 
     private fun attachWifi(network: Network) {
-        if (stopped || verified || currentWifi == network) return
+        if (stopped || verified || currentWifi == network || network == previousBoseNetwork) return
         // Android returns the phone's regular Wi-Fi after its Bose setup
         // network request is released. Never inspect any cellular network.
         currentWifi = network
@@ -135,8 +136,15 @@ internal class BoseLanVerification(
                 }
             } catch (_: Exception) { }
         }
-        startNsd(network, scanGeneration)
-        startSsdp(network, scanGeneration)
+        val token = scanGeneration
+        // onAvailable can precede address provisioning. Give Android a short
+        // moment to finish installing the new WLAN's link properties.
+        handler.postDelayed({
+            if (!stopped && !verified && currentWifi == network && token == scanGeneration) {
+                startNsd(network, token)
+                startSsdp(network, token)
+            }
+        }, 700L)
     }
 
     private fun startNsd(network: Network, token: Int) {
