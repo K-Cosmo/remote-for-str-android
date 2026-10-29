@@ -684,7 +684,8 @@ internal class BoseSetupProbeActivity : Activity() {
             .setTitle("WLAN-Profil einmalig übertragen?")
             .setMessage(
                 "ACHTUNG: Dieser Test ändert die WLAN-Konfiguration des Bose-Lautsprechers. " +
-                    "Nur mit einem separaten, eingeschalteten WPA2-Test-WLAN fortfahren. " +
+                    "Die Test-Zugangsdaten werden per HTTP ohne TLS übertragen. " +
+                    "Deshalb NUR ein separates WPA2-Test-WLAN mit Einmalkennwort nutzen. " +
                     "Der Bose-Setup-Hotspot kann sofort verschwinden. " +
                     "Bei Timeout KEINEN zweiten POST senden; zuerst den Lautsprecher " +
                     "im Zielnetz/Router prüfen. Wirklich einmalig senden?"
