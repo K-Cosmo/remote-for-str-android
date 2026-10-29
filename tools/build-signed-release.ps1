@@ -144,7 +144,7 @@ try {
     & $gradlew --version
     if ($LASTEXITCODE -ne 0) { throw "Gradle --version failed ($LASTEXITCODE)." }
 
-    & $gradlew clean :app:assembleDebug :app:lintDebug :app:testDebugUnitTest :app:assembleRelease :app:lintRelease :app:testReleaseUnitTest --stacktrace
+    & $gradlew clean :app:assembleDebug :app:lintDebug :app:testDebugUnitTest :app:assembleRelease :app:lintRelease --stacktrace
     if ($LASTEXITCODE -ne 0) { throw "Final Gradle build failed ($LASTEXITCODE)." }
 
     $releaseDir = Join-Path $ProjectRoot "app\build\outputs\apk\release"
