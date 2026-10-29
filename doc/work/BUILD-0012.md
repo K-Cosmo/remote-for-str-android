@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A PARTIALLY VERIFIED ON SOUNDTouch 20 III / RETRY & CLEANUP PENDING
+**Status:** PHASE A PARTIALLY VERIFIED ON SOUNDTOUCH 20 III / RETRY AND CANCEL NETWORK RECOVERY CONFIRMED; WIZARD EXIT AND AUTO-RETURN PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -73,7 +73,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 
 - [x] T01 Record product/transport/Android-floor decision for SoundTouch 20 Series III.
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
-- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Initial connection and device HTTP evidence confirmed**: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry and cleanup/normal network recovery remain to be tested.
+- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Initial connection and device HTTP evidence confirmed**: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry and cancel/home-Wi-Fi recovery are confirmed. Wizard exit after Cancel and automatic recovery after completed probe require follow-up device validation.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
 - [ ] T06 Only if GO: implement credential submission with the safety guards above.
@@ -115,10 +115,16 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
 - User confirmed the Bose Setup SoftAP responds at `192.0.2.1:80/` with HTTP 200 (`text/html`), and the **Bose device-info API** at `192.0.2.1:8090/info` responds with HTTP 200 (`text/xml`). The root `:8090/` responds with HTTP 404 (`text/html`); **root 404 is not an API failure**. Two `192.168.1.1` candidates timed out. Evidence: [Phase A SoundTouch 20 observations](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - Reported issue: start setup-network discovery while Bose is not in SoftAP mode, then enter SoftAP mode; a retry does not find it until the whole flow is restarted.
 - Root cause remains a hypothesis pending repeat test. The original PoC disables its action button while waiting; additionally, the regular STR device-list **Erneut versuchen** runs mDNS/STR discovery, not the Bose SoftAP picker.
-- First retry revision added a 400 ms delayed request; the user reported the SoundTouch **was no longer found even on an otherwise normal attempt**. We removed the unverified delay and restored the immediate `requestNetwork()` call. **The user confirms first-time connection works again** and `/info` responds with 200/XML. In-place **Erneut versuchen** still unregisters the previous callback and makes a fresh request, but is not yet confirmed for a late-starting SoftAP. No automatic background looping.
-- A real-device regression test must demonstrate **retry without leaving the PoC** after the speaker enters setup mode. T03 stays open until this, cancellation and normal-network restoration pass.
+- First retry revision added a 400 ms delayed request; the user reported the SoundTouch **was no longer found even on an otherwise normal attempt**. We removed the unverified delay and restored the immediate `requestNetwork()` call. **The user confirms first-time connection works again** and `/info` responds with 200/XML. In-place **Erneut versuchen** unregisters the previous callback and makes a fresh request; **the tester confirms it works for a late-starting SoftAP**. No automatic background looping.
+- A real-device regression test confirmed **retry without leaving the PoC** after the speaker enters setup mode. Tester also confirmed that **Trennen / Abbrechen** restores Android's normal Wi-Fi, but exposed a UX defect: the button did not close the wizard. Code now calls `closeSession()` followed by `finish()`; this navigation change requires device validation. Verify normal Wi-Fi recovery after automatic test completion separately.
 - Post-change GET `/info` on Bose `:8090` returned **200 / text/xml** on the tested SoundTouch 20 III. Only response status/content-type were inspected, not its XML body.
 - Still no WLAN credential submission or configuration mutation in the PoC.
+
+## Phase A debug UX correction (2026-10-29)
+
+- The tester confirmed the temporary setup network is released by `Trennen / Abbrechen` and Android reconnects to its original home Wi-Fi. The original handler failed to close `BoseSetupProbeActivity`; the revised handler performs **`closeSession()` then `finish()`**, returning to the already open STR Remote PoC Devices screen. Return navigation has **not** yet been validated on hardware.
+- The tester's screenshot showed a crowded single paragraph and content beginning too close to the system status icons. The debug-only wizard now uses the same system-bar-inset pattern as `MainActivity`, plus grouped preparation steps, higher-contrast status/results sections and clearer spacing. The Android 10–16+ layout/rotation still needs device verification.
+- Changes are **debug-only**; no new Bose write calls, permissions, persistence, cloud access or release UI were introduced. The signed 0.2.1 release remains unchanged.
 
 ## Phase B protocol research — no write authorization (2026-10-29)
 
