@@ -14,7 +14,7 @@ import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 
 /**
- * Debug-only controlled B2 hardware attempt; never called by the production app.
+ * controlled B2 hardware attempt; called only after explicit user consent.
  * Exactly ONE POST attempt. No automatic retries, redirects, logging or persistence.
  * A positive API acknowledgement is NOT proof of joining the destination WLAN.
  */

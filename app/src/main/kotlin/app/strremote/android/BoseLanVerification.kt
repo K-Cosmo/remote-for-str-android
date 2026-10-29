@@ -28,7 +28,7 @@ import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 
 /**
- * Debug-only Bose LAN verification after credentials were submitted.
+ * Bose LAN verification after credentials were submitted.
  *
  * Reuses Android's (automatically restored) Wi-Fi Network. Uses bounded
  * SoundTouch mDNS discovery plus SSDP M-SEARCH, then checks the exact deviceID

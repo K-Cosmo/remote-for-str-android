@@ -45,7 +45,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * BUILD-0012 / T02 — debug-only, non-destructive SoundTouch 20 setup Wi-Fi probe.
+ * BUILD-0012 / T02 — model-scoped, non-destructive SoundTouch 20 setup Wi-Fi probe.
  *
  * Uses system-consented WifiNetworkSpecifier; does not bind the process to the
  * requested Network. GET probes remain read-only. A separate opt-in debug-only B2
