@@ -818,7 +818,8 @@ class MainActivity : Activity() {
                 lastReachable = existing?.lastReachable
                     ?: saved?.let { prefs.loadReachability(it.endpoint) },
                 pendingBose = existing?.pendingBose ?: false,
-                pendingBoseVerified = existing?.pendingBoseVerified ?: false
+                pendingBoseVerified = existing?.pendingBoseVerified ?: false,
+                pendingRoom = existing?.pendingRoom
             )
             updateList()
             // This service can announce repeatedly during a single scan.
