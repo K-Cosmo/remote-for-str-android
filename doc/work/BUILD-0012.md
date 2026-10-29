@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A PROTOTYPE IMPLEMENTED / REAL-DEVICE VERIFICATION PENDING
+**Status:** PHASE A PARTIALLY VERIFIED ON SOUNDTouch 20 III / RETRY & CLEANUP PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -73,7 +73,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 
 - [x] T01 Record product/transport/Android-floor decision for SoundTouch 20 Series III.
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
-- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Partial device HTTP evidence received**: `192.0.2.1:80/` HTTP 200; `192.0.2.1:8090/` HTTP 404; alternate `192.168.1.1` timed out. In-place retry and cleanup still need re-testing.
+- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Initial connection and device HTTP evidence confirmed**: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry and cleanup/normal network recovery remain to be tested.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
 - [ ] T06 Only if GO: implement credential submission with the safety guards above.
@@ -112,13 +112,21 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
 
 ## T03 partial device evidence and retry remediation (2026-10-29)
 
-- User confirmed Bose Setup SoftAP successfully responds at `192.0.2.1:80/` with HTTP 200 (`text/html`). Bose API server responds at `192.0.2.1:8090/` with HTTP 404 (`text/html`); **root 404 is not an API failure**. Two `192.168.1.1` candidates timed out. Evidence: [Phase A SoundTouch 20 observations](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
+- User confirmed the Bose Setup SoftAP responds at `192.0.2.1:80/` with HTTP 200 (`text/html`), and the **Bose device-info API** at `192.0.2.1:8090/info` responds with HTTP 200 (`text/xml`). The root `:8090/` responds with HTTP 404 (`text/html`); **root 404 is not an API failure**. Two `192.168.1.1` candidates timed out. Evidence: [Phase A SoundTouch 20 observations](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - Reported issue: start setup-network discovery while Bose is not in SoftAP mode, then enter SoftAP mode; a retry does not find it until the whole flow is restarted.
 - Root cause remains a hypothesis pending repeat test. The original PoC disables its action button while waiting; additionally, the regular STR device-list **Erneut versuchen** runs mDNS/STR discovery, not the Bose SoftAP picker.
-- First retry revision added a 400 ms delayed request; the user reported the SoundTouch **was no longer found even on an otherwise normal attempt**. We removed the unverified delay and restored the immediate `requestNetwork()` call from the previously successful PoC. In-place **Erneut versuchen** still unregisters the previous callback and makes a fresh request. This is a regression fix **pending real-device retest**, not proof of root cause. No automatic background looping.
+- First retry revision added a 400 ms delayed request; the user reported the SoundTouch **was no longer found even on an otherwise normal attempt**. We removed the unverified delay and restored the immediate `requestNetwork()` call. **The user confirms first-time connection works again** and `/info` responds with 200/XML. In-place **Erneut versuchen** still unregisters the previous callback and makes a fresh request, but is not yet confirmed for a late-starting SoftAP. No automatic background looping.
 - A real-device regression test must demonstrate **retry without leaving the PoC** after the speaker enters setup mode. T03 stays open until this, cancellation and normal-network restoration pass.
-- Post-change probes include GET `/info` on Bose `:8090`, status/content-type only, to distinguish the 404 root from a functional API route.
+- Post-change GET `/info` on Bose `:8090` returned **200 / text/xml** on the tested SoundTouch 20 III. Only response status/content-type were inspected, not its XML body.
 - Still no WLAN credential submission or configuration mutation in the PoC.
+
+## Phase B protocol research — no write authorization (2026-10-29)
+
+- Bose's own SoundTouch 20 III instructions confirm the alternate browser-based setup at `http://192.0.2.1/`: choose the home network, enter its password, and submit via the speaker's setup page. This is **official evidence that local Wi-Fi provisioning exists**, but not documentation of the underlying HTTP request payload.
+  https://support.bose.ca/article/soundtouch-20-series-iii-connecting-to-a-wi-fi-network
+- The community's SoundTouch setup investigation documents `POST /performWirelessSiteSurvey` and `POST /addWirelessProfile` on `:8090`, with an XML `AddWirelessProfile` payload. This is an **unverified community-derived contract** and has **not been called** on the test ST20 III. Do not assume its securityType values, firmware compatibility or credential-failure behavior without verifying the actual supported contract.
+  https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md
+- An HTTP 200 from read-only `GET /info` proves the local API is listening, **not** that either Wi-Fi setup POST is supported on this firmware. Phase B remains blocked until remaining T03 recovery/cancellation gates and explicit write-path investigation. No credentials are handled by the current PoC.
 
 ## Evidence template
 
