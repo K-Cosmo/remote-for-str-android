@@ -38,12 +38,18 @@ internal class BoseSetupProbeActivity : Activity() {
         const val NETWORK_REQUEST_TIMEOUT_MS = 30_000
         const val HTTP_TIMEOUT_MS = 1_800
         const val BACKGROUND_CLEANUP_DELAY_MS = 2_000L
+        // Give Android's Wi-Fi network factory time to release an earlier picker
+        // before registering a fresh request when the speaker becomes ready.
+        const val REQUEST_RESTART_SETTLE_MS = 400L
         const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+        data class LocalProbe(val host: String, val port: Int, val path: String)
         val LOCAL_PROBES = listOf(
-            "192.0.2.1" to 80,
-            "192.0.2.1" to 8090,
-            "192.168.1.1" to 80,
-            "192.168.1.1" to 8090
+            LocalProbe("192.0.2.1", 80, "/"),
+            LocalProbe("192.0.2.1", 8090, "/"),
+            // / on port 8090 may return 404 even when the Bose API works.
+            LocalProbe("192.0.2.1", 8090, "/info"),
+            LocalProbe("192.168.1.1", 80, "/"),
+            LocalProbe("192.168.1.1", 8090, "/")
         )
     }
 
@@ -64,6 +70,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private var awaitingConsent = false
     private var visible = false
     private var backgroundCleanup: Runnable? = null
+    private var scheduledNetworkRequest: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,7 +113,9 @@ internal class BoseSetupProbeActivity : Activity() {
                     "2. Optional die vollständige Bose-Setup-SSID eingeben. " +
                     "Ohne Eingabe zeigt Android passende Netze mit Präfix „Bose“ an.\n" +
                     "3. „Setup-WLAN anfordern“ wählen und die Android-Abfrage bestätigen. " +
-                    "Fehlt Internet, trotzdem mit dem Bose-Netz verbinden.",
+                    "Fehlt Internet, trotzdem mit dem Bose-Netz verbinden.\n" +
+                    "Ist der Lautsprecher erst später im Setup-Modus, Androids " +
+                    "Netzauswahl schließen und hier „Erneut versuchen“ tippen.",
                 15f,
                 Color.rgb(45, 63, 81)
             )
@@ -256,11 +265,15 @@ internal class BoseSetupProbeActivity : Activity() {
 
         val token = ++generation
         awaitingConsent = true
-        startButton.isEnabled = false
+        // Keep retry actionable without leaving this Activity. The previous
+        // request is unregistered by closeSession() and the new one is fresh.
+        startButton.text = "Erneut versuchen"
+        startButton.isEnabled = true
         resultsView.text = "Noch keine Probe-Ergebnisse."
         statusView.text =
-            "Warte auf Android-Nutzerbestätigung (max. 30 s). " +
-                "Das Bose-WLAN braucht keinen Internetzugang."
+            "Neue WLAN-Suche wird gestartet. Androids Abfrage bestätigen " +
+                "(max. 30 s). Ist die Box noch nicht bereit: " +
+                "Auswahl schließen, dann hier „Erneut versuchen“. "+ "Das Bose-WLAN braucht kein Internet."
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
@@ -278,8 +291,9 @@ internal class BoseSetupProbeActivity : Activity() {
                     if (token != generation) return@runOnUiThread
                     closeSession()
                     statusView.text =
-                        "Keine Verbindung: Setup-WLAN nicht gefunden, Freigabe " +
-                            "abgelehnt oder Android-Timeout."
+                        "Noch kein Bose-Setup-WLAN verfügbar oder Anfrage abgebrochen. " +
+                            "Sobald die WLAN-LED gelb leuchtet, hier „Erneut versuchen“ " +
+                            "wählen. Dies startet eine neue Android-Suche."
                 }
             }
 
@@ -288,34 +302,45 @@ internal class BoseSetupProbeActivity : Activity() {
                     if (token != generation) return@runOnUiThread
                     closeSession()
                     statusView.text =
-                        "Setup-WLAN getrennt. Bisherige HTTP-Ergebnisse bleiben angezeigt."
+                        "Setup-WLAN getrennt. Für eine neue Verbindung hier " +
+                            "„Erneut versuchen“ wählen. Messwerte bleiben angezeigt."
                 }
             }
         }
-        activeCallback = callback
-        try {
-            connectivity.requestNetwork(request, callback, NETWORK_REQUEST_TIMEOUT_MS)
-        } catch (e: SecurityException) {
-            closeSession()
-            statusView.text =
-                "Android hat die WLAN-Anforderung verweigert (SecurityException). " +
-                    "Bitte WLAN und die erteilten App-Berechtigungen prüfen."
-        } catch (e: IllegalArgumentException) {
-            closeSession()
-            statusView.text = "Netzwerk-Anforderung abgelehnt: ungültige Android-Konfiguration."
-        } catch (e: RuntimeException) {
-            closeSession()
-            statusView.text = "Netzwerk-Anforderung fehlgeschlagen (${e.javaClass.simpleName})."
+        // Android's system picker may retain a stale scan if the speaker had
+        // not entered setup mode yet. A retry must explicitly unregister the
+        // old callback and issue a BRAND NEW NetworkRequest, not rescan STR.
+        val issueFreshRequest = Runnable {
+            if (token != generation || isFinishing || isDestroyed) return@Runnable
+            scheduledNetworkRequest = null
+            activeCallback = callback
+            try {
+                connectivity.requestNetwork(request, callback, NETWORK_REQUEST_TIMEOUT_MS)
+            } catch (e: SecurityException) {
+                closeSession()
+                statusView.text =
+                    "Android hat die WLAN-Anforderung verweigert (SecurityException). " +
+                        "Bitte WLAN und die erteilten App-Berechtigungen prüfen."
+            } catch (e: IllegalArgumentException) {
+                closeSession()
+                statusView.text = "Netzwerk-Anforderung abgelehnt: ungültige Android-Konfiguration."
+            } catch (e: RuntimeException) {
+                closeSession()
+                statusView.text =
+                    "Netzwerk-Anforderung fehlgeschlagen (${e.javaClass.simpleName})."
+            }
         }
+        scheduledNetworkRequest = issueFreshRequest
+        handler.postDelayed(issueFreshRequest, REQUEST_RESTART_SETTLE_MS)
     }
 
     private fun probeReadOnly(network: Network, token: Int) {
         activeWorker?.interrupt()
         val worker = Thread({
             val observations = mutableListOf<String>()
-            for ((host, port) in LOCAL_PROBES) {
+            for (probe in LOCAL_PROBES) {
                 if (Thread.currentThread().isInterrupted) return@Thread
-                val target = "http://$host:$port/"
+                val target = "http://${probe.host}:${probe.port}${probe.path}"
                 var connection: HttpURLConnection? = null
                 val observation = try {
                     connection = network.openConnection(URL(target)) as HttpURLConnection
@@ -373,6 +398,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun closeSession() {
         ++generation
         awaitingConsent = false
+        scheduledNetworkRequest?.let(handler::removeCallbacks)
+        scheduledNetworkRequest = null
         cancelBackgroundCleanup()
         activeWorker?.interrupt()
         activeWorker = null
