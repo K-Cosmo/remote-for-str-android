@@ -379,12 +379,7 @@ class MainActivity : Activity() {
         speakerList.adapter = adapter
         speakerList.setOnItemClickListener { _, _, position, _ ->
             val row = adapter.getItem(position) ?: return@setOnItemClickListener
-            when {
-                row.pendingBose -> openStrWebsite()
-                row.endpoint != null -> loadEndpoint(row.endpoint)
-                row.saved != null -> probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
-                else -> probeCandidate(row.candidate, discoveryGeneration)
-            }
+            connectSpeakerRow(row)
         }
         discoveryPanel.addView(
             speakerList,
@@ -1488,13 +1483,17 @@ class MainActivity : Activity() {
     }
 
     private fun connectSpeakerRow(row: SpeakerRow) {
-        when {
-            row.pendingBose -> openStrWebsite()
-            row.saved != null ->
-                probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
-            row.endpoint != null ->
-                probeRemoteEndpoint(row.endpoint, settleBeforeProbe = false)
-            else ->
+        when (SpeakerTapPolicy.action(
+            pendingBose = row.pendingBose,
+            hasStrEndpoint = row.endpoint != null,
+            saved = row.saved != null
+        )) {
+            SpeakerTapAction.OPEN_STR_INSTALLATION -> openStrWebsite()
+            SpeakerTapAction.OPEN_STR_REMOTE -> row.endpoint?.let(::loadEndpoint)
+            SpeakerTapAction.PROBE_SAVED_STR -> row.saved?.let {
+                probeSavedSpeaker(it, discoveryGeneration, connectOnSuccess = true)
+            }
+            SpeakerTapAction.PROBE_DISCOVERED_STR ->
                 probeCandidate(row.candidate, discoveryGeneration)
         }
     }
