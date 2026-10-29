@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A PARTIALLY VERIFIED ON SOUNDTOUCH 20 III / RETRY AND CANCEL NETWORK RECOVERY CONFIRMED; WIZARD EXIT AND AUTO-RETURN PENDING
+**Status:** PHASE A CORE TRANSPORT/RETRY/NETWORK RECOVERY VERIFIED ON SOUNDTOUCH 20 III; REMAINING EVIDENCE AND PROVISIONING CONTRACT PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -73,7 +73,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 
 - [x] T01 Record product/transport/Android-floor decision for SoundTouch 20 Series III.
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
-- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Initial connection and device HTTP evidence confirmed**: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry and cancel/home-Wi-Fi recovery are confirmed. Wizard exit after Cancel and automatic recovery after completed probe require follow-up device validation.
+- [x] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. Confirmed by tester: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry, Cancel/return-to-Devices and automatic home-Wi-Fi recovery after the probe all verified.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
 - [ ] T06 Only if GO: implement credential submission with the safety guards above.
@@ -125,6 +125,13 @@ For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup 
 - The tester confirmed the temporary setup network is released by `Trennen / Abbrechen` and Android reconnects to its original home Wi-Fi. The original handler failed to close `BoseSetupProbeActivity`; the revised handler performs **`closeSession()` then `finish()`**, returning to the already open STR Remote PoC Devices screen. Return navigation has **not** yet been validated on hardware.
 - The tester's screenshot showed a crowded single paragraph and content beginning too close to the system status icons. The debug-only wizard now uses the same system-bar-inset pattern as `MainActivity`, plus grouped preparation steps, higher-contrast status/results sections and clearer spacing. The Android 10–16+ layout/rotation still needs device verification.
 - Changes are **debug-only**; no new Bose write calls, permissions, persistence, cloud access or release UI were introduced. The signed 0.2.1 release remains unchanged.
+
+## Phase A automatic release / UI terminology clarification
+
+- The read-only Phase A probe intentionally calls `closeSession()` immediately after all HTTP checks. This releases the temporary Bose network and allows Android to return to its regular Wi-Fi **before** the user taps Cancel. The tester observed exactly this expected behavior. The Cancel button is still needed to stop an unfinished attempt and leave the wizard.
+- The Cancel button now also calls `finish()`. Tester confirmed the device page is displayed afterwards.
+- `Bose-Setup-SSID` refers to the temporary Wi-Fi **broadcast by the speaker**, not the home-network SSID needed for later provisioning. The normal path requires no entry: Android displays candidate Bose networks for approval. The misleading optional textbox was moved behind the explicit advanced `Anderes Bose-Setup-WLAN verwenden` option; no generic SSID entry appears during normal setup. User-facing labels distinguish `Setup-WLAN suchen`, `Erneut versuchen` and `Zurück zu Geräte` after a completed read-only probe.
+- These latest UX changes need a dedicated debug-device screenshot smoke and CI verification. No credentials are sent or persisted; Phase B is gated on validating the Bose WLAN provisioning request and ensuring the requested network remains connected throughout submission.
 
 ## Phase B protocol research — no write authorization (2026-10-29)
 
