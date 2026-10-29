@@ -107,7 +107,6 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var selectedWifiView: TextView
     private lateinit var ssidLabel: TextView
     private lateinit var resultSpinner: ProgressBar
-    private lateinit var retryVerificationButton: Button
     private lateinit var strWebsiteButton: Button
     private var currentPage = 1
     private lateinit var pageScroll: ScrollView
@@ -302,7 +301,23 @@ internal class BoseSetupProbeActivity : Activity() {
                 renderModelInstructions()
             }
         }
-        preparationPage.addView(modelSelection)
+        val dropdownFrame = FrameLayout(this)
+        dropdownFrame.addView(modelSelection, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
+        // Custom Spinner background needs an explicit arrow so the selector
+        // remains recognizable even in the light custom wizard theme.
+        dropdownFrame.addView(TextView(this).apply {
+            text = "▾"
+            textSize = 25f
+            setTextColor(ink)
+            gravity = Gravity.CENTER
+            isClickable = false
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, FrameLayout.LayoutParams(
+            dp(50), dp(54), Gravity.END or Gravity.CENTER_VERTICAL
+        ))
+        preparationPage.addView(dropdownFrame)
         modelTestNotice = text("", 14f, muted).apply {
             setPadding(0, dp(10), 0, dp(14))
         }
@@ -569,13 +584,6 @@ internal class BoseSetupProbeActivity : Activity() {
             16f, ink
         )
         resultPage.addView(resultText)
-        retryVerificationButton = Button(this).apply {
-            text = "SoundTouch erneut suchen"
-            isAllCaps = false
-            visibility = View.GONE
-            setOnClickListener { beginLanVerification() }
-        }
-        resultPage.addView(retryVerificationButton)
         resultPage.addView(text(
             "Android stellt das normale WLAN wieder her. Wir prüfen die SoundTouch " +
                 "automatisch und zeigen danach das Ergebnis.",
@@ -587,8 +595,8 @@ internal class BoseSetupProbeActivity : Activity() {
         completionPage.addView(heading("Ergebnis der WLAN-Einrichtung"))
         completionStatusText = text("Die Prüfung ist abgeschlossen.", 16f, ink)
         completionPage.addView(completionStatusText)
-        // The resultText view is moved to the completion page only when
-        // the verification reaches a terminal state.
+        // The separate verification page owns the spinner. This summary
+        // is shown only after a terminal verification result.
         completionPage.addView(heading("Nächster Schritt: SoundTouch Reborn"))
         completionPage.addView(text(
             "Für die Steuerung mit STR Remote muss SoundTouch Reborn (STR) " +
@@ -751,7 +759,7 @@ internal class BoseSetupProbeActivity : Activity() {
             3 -> "Heim-WLAN auswählen"
             4 -> "WLAN-Passwort eingeben"
             5 -> "Verbindung wird überprüft"
-            else -> "Einrichtung abgeschlossen"
+            else -> "Ergebnis der Einrichtung"
         }
         if (page == 4) {
             chosenPasswordNetworkView.text = "WLAN: " + ssidField.text.toString()
@@ -1274,7 +1282,6 @@ internal class BoseSetupProbeActivity : Activity() {
         setupPhase = BoseSetupPhase.SENDING
         val token = generation
         resultSpinner.visibility = View.VISIBLE
-        retryVerificationButton.visibility = View.GONE
         resultText.text = "WLAN-Einstellungen werden übertragen …"
         statusView.text = "Bitte warten. Die SoundTouch stellt ihre WLAN-Verbindung um."
         showPage(BoseSetupFlow.VERIFY_PAGE)
@@ -1327,8 +1334,7 @@ internal class BoseSetupProbeActivity : Activity() {
         val ssid = pendingWifiSsid
         if (id.isNullOrEmpty() || ssid.isNullOrEmpty()) {
             resultSpinner.visibility = View.GONE
-            retryVerificationButton.visibility = View.GONE
-            resultText.text =
+                resultText.text =
                 "Eine automatische Prüfung ist bei diesem Lautsprecher noch nicht möglich. " +
                     "Die Übertragung und die Verbindung zum WLAN konnten nicht " +
                     "unabhängig bestätigt werden."
@@ -1337,7 +1343,6 @@ internal class BoseSetupProbeActivity : Activity() {
             return
         }
         resultSpinner.visibility = View.VISIBLE
-        retryVerificationButton.visibility = View.GONE
         resultText.text =
             "Wir warten auf die WLAN-Verbindung deines Smartphones und " +
                 "suchen dort deine SoundTouch …"
@@ -1360,8 +1365,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 is BoseLanVerification.Status.Found -> {
                     boseDeviceId?.let { PendingBoseStore(this).recordVerified(it, outcome.host) }
                     resultSpinner.visibility = View.GONE
-                    retryVerificationButton.visibility = View.GONE
-                    resultText.text =
+                                resultText.text =
                         if (outcome.wlanName != null) {
                             "Fertig! Die SoundTouch wurde in deinem WLAN gefunden. " +
                                 "Sie meldet als aktives WLAN: " + outcome.wlanName + "."
@@ -1376,7 +1380,6 @@ internal class BoseSetupProbeActivity : Activity() {
                     // The exact Bose identity is confirmed, but the selected
                     // network name does not match. Do not mark setup verified.
                     resultSpinner.visibility = View.GONE
-                    retryVerificationButton.visibility = View.VISIBLE
                     resultText.text =
                         "Deine SoundTouch wurde gefunden, ist aber laut Bose derzeit " +
                             "mit dem WLAN „" + outcome.wlanName + "“ verbunden. " +
@@ -1386,7 +1389,6 @@ internal class BoseSetupProbeActivity : Activity() {
                 }
                 BoseLanVerification.Status.NotFound -> {
                     resultSpinner.visibility = View.GONE
-                    retryVerificationButton.visibility = View.VISIBLE
                     resultText.text =
                         "Die SoundTouch wurde noch nicht im WLAN des Smartphones gefunden. " +
                             "Sie könnte noch verbinden oder in einem anderen WLAN sein. " +
