@@ -5,7 +5,7 @@
     <string name="searching">Searching for SoundTouch Reborn speakers…</string>
     <string name="found_devices">Found devices</string>
     <string name="add_new_device">Add new device</string>
-    <string name="setup_speaker_wifi">Set up speaker Wi-Fi</string>
+    <string name="setup_speaker_wifi">Configure a speaker’s Wi-Fi</string>
     <string name="manual_ip">Enter address manually</string>
     <string name="manual_title">Connect manually</string>
     <string name="manual_hint">192.168.1.42 or 192.168.1.42:17008</string>
