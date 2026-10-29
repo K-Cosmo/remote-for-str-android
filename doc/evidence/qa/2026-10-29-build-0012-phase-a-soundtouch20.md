@@ -19,6 +19,30 @@ The user confirms that a fresh Android Bose-setup connection flow works **again 
 
 No Bose Wi-Fi profile was written; no password, SSID, MAC, serial or XML body was collected in this record.
 
+## B1 read-only capability result — 2026-10-29
+
+**Observed by tester on the reference SoundTouch 20 Series III (original Bose firmware):**
+
+```text
+http://192.0.2.1:80/       → HTTP 200; Type: text/html
+http://192.0.2.1:8090/info → HTTP 200; Type: text/xml
+B1 GET /supportedURLs       → HTTP 200; valid XML
+/addWirelessProfile         → listed by device
+/performWirelessSiteSurvey  → listed by device
+/getActiveWirelessProfile   → listed by device
+```
+
+The debug probe parses only three literal whitelisted paths and does not export the XML response body. This confirms **firmware-advertised endpoint membership**, not the HTTP method, XML payload, response contract or a successful Wi-Fi profile transfer. No POST, SSID/password transmission, firmware change or factory reset occurred. Device firmware version remains unmeasured. The B1 observation does **not** close the separate intermittent retry reliability gate.
+
+Protocol comparison: Bose Corporation's official SoundTouch Web API **v1.1 (2026-04-01)** does not define these three routes; the AfterTouch community guide/Go source supply an unverified `POST /addWirelessProfile` candidate with `<AddWirelessProfile><profile ssid="..." password="..." securityType="wpa_or_wpa2" /></AddWirelessProfile>`. Treat this as a **community-derived hypothesis** until a controlled, explicitly approved single-POST hardware test. An HTTP timeout may be ambiguous; do not automatically resend credentials.
+
+Sources:
+- https://assets.bosecreative.com/m/496577402d128874/original/SoundTouch-Web-API.pdf
+- https://github.com/gesellix/Bose-SoundTouch/blob/main/pkg/service/setup/wifi_provision.go
+- https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md
+
+**Next open gate:** 3+3 retry/late-SoftAP tests with app-only Logcat; then safely stage a debug-only single-submit test using a separate test Wi-Fi. No Phase B2 transmission is authorized yet.
+
 ## Observed retry defect
 
 Test sequence:
