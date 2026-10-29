@@ -1,14 +1,16 @@
 package app.strremote.android
 
 import android.net.Network
-import java.io.ByteArrayInputStream
+import java.io.StringReader
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
 import org.xml.sax.InputSource
+import org.xml.sax.SAXException
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 
@@ -37,26 +39,48 @@ internal object BoseWirelessSiteSurvey {
     internal data class Result(val candidates: List<Candidate>, val status: String)
 
     fun scan(network: Network): Result {
+        // Two independently documented variants exist in the community:
+        // POST triggers a survey, while GET may return the available networks.
+        // Neither call transfers credentials. Probe GET only if POST yields no
+        // usable WLAN candidates; never perform an automatic profile write.
+        val posted = requestSurvey(network, "POST")
+        if (posted.candidates.isNotEmpty() || Thread.currentThread().isInterrupted) {
+            return posted
+        }
+        val fetched = requestSurvey(network, "GET")
+        if (fetched.candidates.isNotEmpty()) return fetched
+        return Result(
+            emptyList(),
+            "Bose WLAN-Suche ohne verwertbare Liste. " +
+                "POST: ${posted.status}; GET: ${fetched.status}. " +
+                "Test-SSID kann manuell eingegeben werden."
+        )
+    }
+
+    private fun requestSurvey(network: Network, method: String): Result {
         var connection: HttpURLConnection? = null
         return try {
             connection = network.openConnection(URL(ENDPOINT)) as HttpURLConnection
-            connection.requestMethod = "POST"
+            connection.requestMethod = method
             connection.instanceFollowRedirects = false
             connection.connectTimeout = 3_500
             connection.readTimeout = 7_000
             connection.useCaches = false
-            connection.doOutput = true
-            connection.setRequestProperty("Content-Type", "text/xml")
-            val payload = REQUEST_XML.toByteArray(Charsets.UTF_8)
-            connection.setFixedLengthStreamingMode(payload.size)
-            connection.outputStream.use { it.write(payload) }
+            if (method == "POST") {
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", "text/xml")
+                val payload = REQUEST_XML.toByteArray(Charsets.UTF_8)
+                connection.setFixedLengthStreamingMode(payload.size)
+                connection.outputStream.use { it.write(payload) }
+            }
+
             val code = connection.responseCode
             if (code != HttpURLConnection.HTTP_OK) {
-                Result(emptyList(), "WLAN-Suche: HTTP $code. Testnetz bei Bedarf manuell eingeben.")
+                Result(emptyList(), "HTTP $code")
             } else {
                 val type = connection.contentType.orEmpty().substringBefore(';').lowercase()
                 if (type != "text/xml" && type != "application/xml") {
-                    Result(emptyList(), "WLAN-Suche: Antwort ist kein XML. SSID manuell eingeben.")
+                    Result(emptyList(), "HTTP 200, kein XML (Content-Type)")
                 } else {
                     val bytes = connection.inputStream.use { input ->
                         val out = ByteArrayOutputStream()
@@ -75,9 +99,12 @@ internal object BoseWirelessSiteSurvey {
                     parseResponse(bytes)
                 }
             }
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+            Result(emptyList(), "abgebrochen")
         } catch (_: Exception) {
-            Result(emptyList(),
-                "WLAN-Suche nicht auswertbar. Bitte erneut suchen oder SSID manuell eingeben.")
+            // Do not include exception messages, addresses or response bodies.
+            Result(emptyList(), "Netzwerk-/Antwortfehler")
         } finally {
             connection?.disconnect()
         }
@@ -88,30 +115,49 @@ internal object BoseWirelessSiteSurvey {
             return Result(emptyList(), "WLAN-Suche: Antwortgröße ungültig.")
         }
         return try {
+            // Android does not support JAXP FEATURE_SECURE_PROCESSING. The
+            // previous parser rejected every otherwise-valid Android response
+            // during initialization (host-side JUnit tests did not catch it).
+            // Strict UTF-8, no DOCTYPE/entities and a rejecting entity resolver
+            // protect XML parsing without unsupported Android JAXP features.
+            val text = Charsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(xml)).toString()
+            if (text.contains("<!DOCTYPE", ignoreCase = true) ||
+                text.contains("<!ENTITY", ignoreCase = true) ||
+                text.any { it == '\u0000' }
+            ) {
+                return Result(emptyList(), "XML-DTD / ungültige Kodierung zurückgewiesen")
+            }
             val factory = DocumentBuilderFactory.newInstance().apply {
                 isNamespaceAware = false
-                isXIncludeAware = false
+                isValidating = false
                 isExpandEntityReferences = false
-                setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-                setFeature("http://xml.org/sax/features/external-general-entities", false)
-                setFeature("http://xml.org/sax/features/external-parameter-entities", false)
-                setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-                setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
             }
             val builder = factory.newDocumentBuilder()
+            builder.setEntityResolver { _, _ ->
+                throw SAXException("External entities forbidden")
+            }
             builder.setErrorHandler(object : DefaultHandler() {
                 override fun warning(e: SAXParseException) { throw e }
                 override fun error(e: SAXParseException) { throw e }
                 override fun fatalError(e: SAXParseException) { throw e }
             })
-            val root = builder.parse(InputSource(ByteArrayInputStream(xml))).documentElement
+            val root = builder.parse(InputSource(StringReader(text))).documentElement
+            if (root?.tagName == "status") {
+                return if (root.textContent.trim() == "/performWirelessSiteSurvey") {
+                    Result(emptyList(), "HTTP 200, Bose bestätigt Scan ohne WLAN-Liste")
+                } else {
+                    Result(emptyList(), "HTTP 200, Bose-Status ohne WLAN-Liste")
+                }
+            }
             if (root == null || root.tagName != "PerformWirelessSiteSurveyResponse") {
-                return Result(emptyList(),
-                    "WLAN-Suche: unbekanntes Bose-Antwortformat. Bitte SSID manuell eingeben.")
+                return Result(emptyList(), "HTTP 200, unbekannter XML-Antworttyp")
             }
             val error = root.getAttribute("error")
             if (error.isNotEmpty() && error != "none") {
-                return Result(emptyList(), "WLAN-Suche: Bose meldet einen Scan-Fehler.")
+                return Result(emptyList(), "HTTP 200, Bose meldet Scan-Fehler")
             }
             val bySsid = linkedMapOf<String, Candidate>()
             val items = root.getElementsByTagName("item")
@@ -146,11 +192,15 @@ internal object BoseWirelessSiteSurvey {
             ).take(40)
             Result(
                 candidates,
-                if (candidates.isEmpty()) "Bose hat keine WLANs gemeldet. SSID manuell eingeben."
+                if (candidates.isEmpty()) "HTTP 200, XML enthält keine WLAN-Einträge"
                 else "Bose hat ${candidates.size} WLAN(s) gemeldet. Testnetz auswählen."
             )
+        } catch (_: javax.xml.parsers.ParserConfigurationException) {
+            Result(emptyList(), "Android-XML-Parserkonfiguration fehlgeschlagen")
+        } catch (_: org.xml.sax.SAXException) {
+            Result(emptyList(), "HTTP 200, XML-Syntax / DTD nicht akzeptiert")
         } catch (_: Exception) {
-            Result(emptyList(), "WLAN-Suche: XML nicht auswertbar. SSID manuell eingeben.")
+            Result(emptyList(), "HTTP 200, XML-Verarbeitung fehlgeschlagen")
         }
     }
 }
