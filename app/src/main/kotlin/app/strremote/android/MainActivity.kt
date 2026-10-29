@@ -90,6 +90,9 @@ class MainActivity : Activity() {
     private var discoveryActive = false
     private var discoveryTimedOut = false
     private var discoveryGeneration = 0
+    // A host is probed once per scan generation. Repeated mDNS announcements
+    // may refresh its label, but must not restart the in-flight probe forever.
+    private val probedHostsThisScan = mutableSetOf<String>()
     private var remoteProbeGeneration = 0
     private var webViewNeedsReload = false
 
@@ -720,6 +723,7 @@ class MainActivity : Activity() {
         discoveryGeneration++
         discoveryActive = true
         discoveryTimedOut = false
+        probedHostsThisScan.clear()
         hiddenSpeakerKeys.clear()
 
         rebuildPersistentRows()
@@ -805,7 +809,9 @@ class MainActivity : Activity() {
                     ?: saved?.let { prefs.loadReachability(it.endpoint) }
             )
             updateList()
-            if (existing == null || existing.probeFinished) {
+            // This service can announce repeatedly during a single scan.
+            // Never restart a completed or still-in-flight STR HTTP probe.
+            if (probedHostsThisScan.add(candidate.host)) {
                 probeCandidate(candidate, discoveryGeneration)
             }
         }
@@ -841,27 +847,15 @@ class MainActivity : Activity() {
             return
         }
 
-        val discoveredRows = speakers.values.filter { it.discovered }
-        when {
-            speakers.values.any { it.endpoint != null } -> {
-                setDiscoveryState(
-                    message = getString(R.string.found_devices),
-                    showProgress = false,
-                    showRetry = false,
-                    showStrHelp = false
-                )
-            }
-            discoveredRows.isEmpty() -> showNoDevicesFound()
-            discoveredRows.all { it.probeFinished } -> showStrUnreachable()
-            else -> {
-                setDiscoveryState(
-                    message = getString(R.string.checking_discovered),
-                    showProgress = true,
-                    showRetry = false,
-                    showStrHelp = false
-                )
-            }
+        // The discovery deadline is a terminal UI state, even when one HTTP
+        // probe's callback never arrives (e.g. during a Bose network transition).
+        // A late valid result can still update the row; it must never leave a
+        // permanent "STR-Verbindung wird geprüft…" spinner.
+        val pendingKeys = speakers.filterValues { it.discovered && !it.probeFinished }.keys
+        pendingKeys.forEach { key ->
+            speakers[key]?.let { speakers[key] = it.copy(probeFinished = true) }
         }
+        updateList()
     }
 
     private fun probeCandidate(candidate: SpeakerCandidate, generation: Int) {
@@ -939,6 +933,7 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
+            discoveryTimedOut -> showStrUnreachable()
             discoveredRows.any { !it.probeFinished } -> {
                 setDiscoveryState(
                     message = getString(R.string.checking_discovered),
