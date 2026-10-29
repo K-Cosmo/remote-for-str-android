@@ -213,6 +213,13 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 
 **Decision:** B1 discovery PASS; B2 write **NOT YET AUTHORIZED**. Product 0.2.1 and its release artifact stay unchanged.
 
+## B2 offline request-encoding preparation — no write path (2026-10-29)
+
+- Added **debug-only** `BoseWirelessProfileXml.buildCandidate()`, which produces the AfterTouch community's proposed `AddWirelessProfile` XML string. It does **not** open a socket, issue POST, collect home Wi-Fi input, persist credentials or log XML.
+- For this initial *isolated WPA2 test* draft, SSID is limited to 1–32 printable ASCII characters and password to 8–63 printable ASCII characters. These are deliberate conservative **test-only** limits, not a claim about all SSIDs/security modes supported by Bose. Before a general wizard, revisit internationalized SSIDs, WPA variants and exact firmware requirements.
+- Escapes XML attribute metacharacters (`&`, `<`, `>`, quotes, apostrophes). Added host-side JUnit tests for expected candidate syntax, escaping and invalid test inputs; CI now invokes `:app:testDebugUnitTest`.
+- This prepares a separately consented, **single-shot** future write test but does not count as task T06 or authorize it. Device validation and retry reliability are still outstanding.
+
 ## Phase B protocol research — no write authorization (2026-10-29)
 
 - Bose's own SoundTouch 20 III instructions confirm the alternate browser-based setup at `http://192.0.2.1/`: choose the home network, enter its password, and submit via the speaker's setup page. This is **official evidence that local Wi-Fi provisioning exists**, but not documentation of the underlying HTTP request payload.

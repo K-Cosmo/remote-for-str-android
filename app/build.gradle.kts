@@ -33,3 +33,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 }
+
+// Host-side tests only; no additional runtime dependency in the release APK.
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}
