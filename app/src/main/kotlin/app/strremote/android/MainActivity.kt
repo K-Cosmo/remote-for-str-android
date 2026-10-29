@@ -58,6 +58,8 @@ class MainActivity : Activity() {
     }
 
     private lateinit var prefs: PreferencesStore
+    private val pendingBose by lazy { PendingBoseStore(this) }
+    private var returningFromBoseSetup = false
     private lateinit var discovery: StrDiscovery
     private lateinit var connectivityManager: ConnectivityManager
     private val probe = EndpointProbe()
@@ -90,6 +92,9 @@ class MainActivity : Activity() {
     private var discoveryActive = false
     private var discoveryTimedOut = false
     private var discoveryGeneration = 0
+    // A host is probed once per scan generation. Repeated mDNS announcements
+    // may refresh its label, but must not restart the in-flight probe forever.
+    private val discoveryGuard = DiscoveryCycleGuard()
     private var remoteProbeGeneration = 0
     private var webViewNeedsReload = false
 
@@ -156,7 +161,16 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if (wifiStateInitialized && !initialConnectionAttempted && hasLocalNetworkPermission()) {
+        if (returningFromBoseSetup) {
+            returningFromBoseSetup = false
+            // Wizard may have changed the speaker's network. Reload one bounded
+            // discovery generation; never restart it continuously on resume.
+            if (wifiStateInitialized) {
+                showDiscoveryPanel()
+                if (hasLocalNetworkPermission() && hasWifiTransport()) startDiscovery()
+                else if (!hasWifiTransport()) showWifiRequired()
+            }
+        } else if (wifiStateInitialized && !initialConnectionAttempted && hasLocalNetworkPermission()) {
             startInitialConnection()
         }
     }
@@ -359,17 +373,15 @@ class MainActivity : Activity() {
         )
 
         val speakerList = ListView(this).apply {
-            dividerHeight = 0
+            // Spacing belongs to the list, not to the individual card drawable.
+            divider = android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
+            dividerHeight = dp(10)
         }
         adapter = SpeakerAdapter()
         speakerList.adapter = adapter
         speakerList.setOnItemClickListener { _, _, position, _ ->
             val row = adapter.getItem(position) ?: return@setOnItemClickListener
-            when {
-                row.endpoint != null -> loadEndpoint(row.endpoint)
-                row.saved != null -> probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
-                else -> probeCandidate(row.candidate, discoveryGeneration)
-            }
+            connectSpeakerRow(row)
         }
         discoveryPanel.addView(
             speakerList,
@@ -416,6 +428,30 @@ class MainActivity : Activity() {
                 topMargin = dp(8)
             }
         )
+
+        // Android 10+ supports system-approved local Bose SoftAP setup.
+        // Android 8/9 retain the existing STR remote and discovery features.
+        if (Build.VERSION.SDK_INT >= 29) {
+            val addDeviceButton = Button(this).apply {
+                text = getString(R.string.setup_speaker_wifi)
+                isAllCaps = false
+                setOnClickListener {
+                    returningFromBoseSetup = true
+                    startActivity(
+                        Intent(this@MainActivity, BoseSetupProbeActivity::class.java)
+                    )
+                }
+            }
+            discoveryPanel.addView(
+                addDeviceButton,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(8)
+                }
+            )
+        }
 
         val manualButton = Button(this).apply {
             text = getString(R.string.manual_ip)
@@ -694,6 +730,7 @@ class MainActivity : Activity() {
         discoveryGeneration++
         discoveryActive = true
         discoveryTimedOut = false
+        discoveryGuard.newGeneration()
         hiddenSpeakerKeys.clear()
 
         rebuildPersistentRows()
@@ -776,10 +813,15 @@ class MainActivity : Activity() {
                 saved = saved,
                 discovered = true,
                 lastReachable = existing?.lastReachable
-                    ?: saved?.let { prefs.loadReachability(it.endpoint) }
+                    ?: saved?.let { prefs.loadReachability(it.endpoint) },
+                pendingBose = existing?.pendingBose ?: false,
+                pendingBoseVerified = existing?.pendingBoseVerified ?: false,
+                pendingRoom = existing?.pendingRoom
             )
             updateList()
-            if (existing == null || existing.probeFinished) {
+            // This service can announce repeatedly during a single scan.
+            // Never restart a completed or still-in-flight STR HTTP probe.
+            if (discoveryGuard.claimProbe(candidate.host)) {
                 probeCandidate(candidate, discoveryGeneration)
             }
         }
@@ -815,27 +857,15 @@ class MainActivity : Activity() {
             return
         }
 
-        val discoveredRows = speakers.values.filter { it.discovered }
-        when {
-            speakers.values.any { it.endpoint != null } -> {
-                setDiscoveryState(
-                    message = getString(R.string.found_devices),
-                    showProgress = false,
-                    showRetry = false,
-                    showStrHelp = false
-                )
-            }
-            discoveredRows.isEmpty() -> showNoDevicesFound()
-            discoveredRows.all { it.probeFinished } -> showStrUnreachable()
-            else -> {
-                setDiscoveryState(
-                    message = getString(R.string.checking_discovered),
-                    showProgress = true,
-                    showRetry = false,
-                    showStrHelp = false
-                )
-            }
+        // The discovery deadline is a terminal UI state, even when one HTTP
+        // probe's callback never arrives (e.g. during a Bose network transition).
+        // A late valid result can still update the row; it must never leave a
+        // permanent "STR-Verbindung wird geprüft…" spinner.
+        val pendingKeys = speakers.filterValues { it.discovered && !it.probeFinished }.keys
+        pendingKeys.forEach { key ->
+            speakers[key]?.let { speakers[key] = it.copy(probeFinished = true) }
         }
+        updateList()
     }
 
     private fun probeCandidate(candidate: SpeakerCandidate, generation: Int) {
@@ -875,8 +905,25 @@ class MainActivity : Activity() {
                 speakers[currentKey] = current.copy(
                     endpoint = endpoint,
                     probeFinished = true,
-                    lastReachable = if (current.saved != null) reachable else current.lastReachable
+                    lastReachable = if (current.saved != null) reachable else current.lastReachable,
+                    pendingBose = current.pendingBose && endpoint == null
                 )
+                if (endpoint != null) {
+                    // Keep any room assigned during Bose setup when STR appears,
+                    // but do not overwrite an already saved user's STR room.
+                    val pending = pendingBose.findMatchingStrDevice(
+                        candidate.key, candidate.host
+                    )
+                    if (pending?.room != null &&
+                        prefs.findSavedSpeaker(candidate.key, candidate.host) == null
+                    ) {
+                        prefs.saveSpeaker(SavedSpeaker(endpoint, pending.room))
+                        speakers[currentKey] = speakers[currentKey]?.copy(
+                            saved = SavedSpeaker(endpoint, pending.room)
+                        ) ?: return@runOnUiThread
+                    }
+                    pendingBose.removeMatchingStrDevice(candidate.key, candidate.host)
+                }
                 if (endpoint != null && current.saved != null) {
                     prefs.updateSavedEndpoint(endpoint)
                 }
@@ -901,7 +948,10 @@ class MainActivity : Activity() {
 
     private fun updateList() {
         adapter.replace(speakers.values.toList())
-        if (speakers.isEmpty()) return
+        if (speakers.isEmpty()) {
+            if (discoveryTimedOut) showNoDevicesFound()
+            return
+        }
 
         val discoveredRows = speakers.values.filter { it.discovered }
         when {
@@ -913,7 +963,20 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            discoveredRows.any { !it.probeFinished } -> {
+            discoveryTimedOut -> {
+                when {
+                    discoveredRows.isNotEmpty() -> showStrUnreachable()
+                    speakers.values.any { it.pendingBose } -> setDiscoveryState(
+                        message = getString(R.string.found_devices),
+                        showProgress = false, showRetry = true, showStrHelp = true
+                    )
+                    else -> showNoDevicesFound()
+                }
+            }
+            DiscoveryCycleGuard.shouldShowChecking(
+                discoveryActive, discoveryTimedOut,
+                discoveredRows.any { !it.probeFinished }
+            ) -> {
                 setDiscoveryState(
                     message = getString(R.string.checking_discovered),
                     showProgress = true,
@@ -929,8 +992,6 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            discoveryTimedOut && discoveredRows.isEmpty() -> showNoDevicesFound()
-            discoveryTimedOut -> showStrUnreachable()
             else -> {
                 setDiscoveryState(
                     message = getString(R.string.found_devices),
@@ -1294,6 +1355,38 @@ class MainActivity : Activity() {
             }
         }
 
+        run {
+            // A configured original-firmware Bose speaker is NOT an STR endpoint.
+            // Keep it as a separate, disabled-looking device until actual STR
+            // discovery + endpoint probing proves the web remote is present.
+            pendingBose.list().forEach { pending ->
+                if (speakers.values.any { row ->
+                    pending.host != null && (
+                        row.candidate.host.equals(pending.host, ignoreCase = true) ||
+                        row.saved?.endpoint?.host.equals(pending.host, ignoreCase = true) == true
+                    )
+                }) return@forEach
+                val key = "bose:" + pending.deviceId
+                speakers[key] = SpeakerRow(
+                    candidate = SpeakerCandidate(
+                        key = pending.deviceId,
+                        serviceName = pending.displayName,
+                        friendlyName = pending.displayName,
+                        host = pending.host.orEmpty(),
+                        advertisedPort = 8090,
+                        model = "Bose",
+                        version = null
+                    ),
+                    endpoint = null,
+                    probeFinished = true,
+                    discovered = false,
+                    pendingBose = true,
+                    pendingBoseVerified = pending.verifiedOnWifi,
+                    pendingRoom = pending.room
+                )
+            }
+        }
+
         adapter.replace(speakers.values.toList())
     }
 
@@ -1404,12 +1497,17 @@ class MainActivity : Activity() {
     }
 
     private fun connectSpeakerRow(row: SpeakerRow) {
-        when {
-            row.saved != null ->
-                probeSavedSpeaker(row.saved, discoveryGeneration, connectOnSuccess = true)
-            row.endpoint != null ->
-                probeRemoteEndpoint(row.endpoint, settleBeforeProbe = false)
-            else ->
+        when (SpeakerTapPolicy.action(
+            pendingBose = row.pendingBose,
+            hasStrEndpoint = row.endpoint != null,
+            saved = row.saved != null
+        )) {
+            SpeakerTapAction.OPEN_STR_INSTALLATION -> openStrWebsite()
+            SpeakerTapAction.OPEN_STR_REMOTE -> row.endpoint?.let(::loadEndpoint)
+            SpeakerTapAction.PROBE_SAVED_STR -> row.saved?.let {
+                probeSavedSpeaker(it, discoveryGeneration, connectOnSuccess = true)
+            }
+            SpeakerTapAction.PROBE_DISCOVERED_STR ->
                 probeCandidate(row.candidate, discoveryGeneration)
         }
     }
@@ -1420,12 +1518,22 @@ class MainActivity : Activity() {
         }
 
     private fun assignRoomForRow(row: SpeakerRow) {
+        if (row.pendingBose) {
+            showRoomPicker { room ->
+                pendingBose.setRoom(row.candidate.key, room)
+                val key = speakers.entries.firstOrNull { it.value.pendingBose &&
+                    it.value.candidate.key == row.candidate.key }?.key ?: return@showRoomPicker
+                speakers[key] = speakers[key]?.copy(pendingRoom = room) ?: return@showRoomPicker
+                updateList()
+            }
+            return
+        }
         val endpoint = resolveRoomEndpoint(row)
         if (endpoint == null) {
             Toast.makeText(this, R.string.save_requires_reachable, Toast.LENGTH_LONG).show()
             return
         }
-        showRoomPicker(endpoint)
+        showRoomPicker { room -> saveSpeakerWithRoom(endpoint, room) }
     }
 
     private fun confirmRemoveSavedSpeaker(row: SpeakerRow) {
@@ -1441,7 +1549,7 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun showRoomPicker(endpoint: SpeakerEndpoint) {
+    private fun showRoomPicker(onSelected: (RoomAssignment?) -> Unit) {
         val labels = arrayOf(
             getString(R.string.room_none),
             getString(R.string.room_living),
@@ -1452,32 +1560,29 @@ class MainActivity : Activity() {
             getString(R.string.room_garden),
             getString(R.string.room_custom)
         )
-
+        val presets = arrayOf(
+            RoomPreset.LIVING_ROOM, RoomPreset.BEDROOM, RoomPreset.KITCHEN,
+            RoomPreset.BATHROOM, RoomPreset.KIDS_ROOM, RoomPreset.GARDEN
+        )
         AlertDialog.Builder(this)
             .setTitle(R.string.room_title)
             .setItems(labels) { _, which ->
-                when (which) {
-                    0 -> saveSpeakerWithRoom(endpoint, null)
-                    1 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.LIVING_ROOM))
-                    2 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BEDROOM))
-                    3 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KITCHEN))
-                    4 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BATHROOM))
-                    5 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KIDS_ROOM))
-                    6 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.GARDEN))
-                    else -> showCustomRoomDialog(endpoint)
+                when {
+                    which == 0 -> onSelected(null)
+                    which in 1..6 -> onSelected(RoomAssignment(preset = presets[which - 1]))
+                    else -> showCustomRoomDialog(onSelected)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun showCustomRoomDialog(endpoint: SpeakerEndpoint) {
+    private fun showCustomRoomDialog(onSelected: (RoomAssignment?) -> Unit) {
         val input = EditText(this).apply {
             hint = getString(R.string.room_custom_hint)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setSingleLine(true)
         }
-
         AlertDialog.Builder(this)
             .setTitle(R.string.room_custom_title)
             .setView(input)
@@ -1486,7 +1591,7 @@ class MainActivity : Activity() {
                 if (room.isBlank()) {
                     Toast.makeText(this, R.string.room_custom_invalid, Toast.LENGTH_LONG).show()
                 } else {
-                    saveSpeakerWithRoom(endpoint, RoomAssignment(customName = room))
+                    onSelected(RoomAssignment(customName = room.take(60)))
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -1679,7 +1784,10 @@ class MainActivity : Activity() {
         val probeFinished: Boolean,
         val saved: SavedSpeaker? = null,
         val discovered: Boolean = true,
-        val lastReachable: Boolean? = null
+        val lastReachable: Boolean? = null,
+        val pendingBose: Boolean = false,
+        val pendingBoseVerified: Boolean = false,
+        val pendingRoom: RoomAssignment? = null
     )
 
     private data class SpeakerRowViewHolder(
@@ -1817,7 +1925,7 @@ class MainActivity : Activity() {
             }
 
             val row = rows[position]
-            val room = roomLabel(row.saved?.room)
+            val room = roomLabel(row.saved?.room ?: row.pendingRoom)
             val speakerTitle = if (room == null) {
                 row.candidate.friendlyName
             } else {
@@ -1827,6 +1935,12 @@ class MainActivity : Activity() {
             holder.title.text = speakerTitle
 
             holder.details.text = buildList {
+                if (row.pendingBose) {
+                    add(getString(
+                        if (row.pendingBoseVerified) R.string.bose_str_missing
+                        else R.string.bose_setup_unconfirmed
+                    ))
+                } else {
                 row.candidate.model?.let(::add)
 
                 if (row.saved != null) {
@@ -1850,26 +1964,37 @@ class MainActivity : Activity() {
                         )
                     )
                 }
+                }
             }.joinToString(" · ")
 
             holder.address.text = buildList {
                 row.candidate.version?.let { add(getString(R.string.version_format, it)) }
-                add(hostForDisplay(row.candidate.host))
+                if (row.candidate.host.isNotBlank()) {
+                    add(hostForDisplay(row.candidate.host))
+                }
             }.joinToString(" · ")
 
             val roomEndpoint = resolveRoomEndpoint(row)
             holder.roomButton.text = getString(R.string.room_action_label)
             holder.roomButton.contentDescription = getString(R.string.room_action_description)
-            holder.roomButton.isEnabled = roomEndpoint != null
-            holder.roomButton.alpha = if (roomEndpoint != null) 1f else 0.45f
+            // Pending Bose devices can have rooms without pretending STR works.
+            holder.roomButton.isEnabled = row.pendingBose || roomEndpoint != null
+            holder.roomButton.alpha = if (holder.roomButton.isEnabled) 1f else 0.45f
             holder.roomButton.setOnClickListener {
                 assignRoomForRow(row)
             }
 
-            holder.deleteButton.visibility = if (row.saved != null) View.VISIBLE else View.GONE
-            holder.deleteButton.contentDescription = getString(R.string.remove_saved_speaker)
+            holder.deleteButton.visibility =
+                if (row.saved != null || row.pendingBose) View.VISIBLE else View.GONE
+            holder.deleteButton.contentDescription = getString(
+                if (row.pendingBose) R.string.bose_remove_pending else R.string.remove_saved_speaker
+            )
             holder.deleteButton.setOnClickListener {
-                confirmRemoveSavedSpeaker(row)
+                if (row.pendingBose) {
+                    pendingBose.remove(row.candidate.key)
+                    speakers.entries.removeAll { it.value.pendingBose && it.value.candidate.key == row.candidate.key }
+                    updateList()
+                } else confirmRemoveSavedSpeaker(row)
             }
 
             holder.container.setOnClickListener {
@@ -1878,6 +2003,7 @@ class MainActivity : Activity() {
 
             val savedReachability = reachabilityForDisplay(row)
             val cardColors = when {
+                row.pendingBose -> "#F0F1F3" to "#B7BEC7"
                 row.saved != null && savedReachability == true ->
                     "#D8F8E4" to "#159447"
                 row.saved != null && savedReachability == false ->
@@ -1894,6 +2020,13 @@ class MainActivity : Activity() {
                 strokeColor = cardColors.second,
                 strokeWidthDp = if (row.saved != null || isCurrent(row)) 2 else 1
             )
+            holder.title.alpha = if (row.pendingBose) 0.6f else 1f
+            holder.details.alpha = if (row.pendingBose) 0.8f else 1f
+            holder.address.alpha = if (row.pendingBose) 0.7f else 1f
+            holder.container.contentDescription = if (row.pendingBose) {
+                speakerTitle + ". " + getString(R.string.bose_str_missing) + ". " +
+                    getString(R.string.bose_install_hint)
+            } else speakerTitle
 
             return view
         }

@@ -4,6 +4,8 @@
     <string name="devices">Geräte</string>
     <string name="searching">Suche nach SoundTouch-Reborn-Lautsprechern…</string>
     <string name="found_devices">Gefundene Geräte</string>
+    <string name="add_new_device">Neues Gerät hinzufügen</string>
+    <string name="setup_speaker_wifi">WLAN eines Lautsprechers einrichten</string>
     <string name="manual_ip">Adresse manuell eingeben</string>
     <string name="manual_title">Manuell verbinden</string>
     <string name="manual_hint">192.168.1.42 oder 192.168.1.42:17008</string>
@@ -12,6 +14,10 @@
     <string name="save">Speichern</string>
     <string name="retry">Erneut versuchen</string>
     <string name="str_help">SoundTouch Reborn öffnen</string>
+    <string name="bose_str_missing">STR fehlt · Antippen öffnet die STR-Webseite</string>
+    <string name="bose_setup_unconfirmed">Bose eingerichtet · WLAN-Verbindung noch nicht bestätigt · STR fehlt</string>
+    <string name="bose_install_hint">STR-Webseite im Browser öffnen</string>
+    <string name="bose_remove_pending">Bose-Eintrag entfernen</string>
     <string name="connecting_last">Verbinde mit der zuletzt verwendeten Box…</string>
     <string name="connecting_to">Verbinde mit %1$s…</string>
     <string name="checking_connection">STR-Verbindung wird geprüft…</string>
