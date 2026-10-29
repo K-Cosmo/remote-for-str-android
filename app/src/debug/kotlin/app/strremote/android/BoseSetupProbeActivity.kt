@@ -133,14 +133,14 @@ internal class BoseSetupProbeActivity : Activity() {
         )
         step(
             "2 · Bose-Setup-WLAN verbinden",
-            "SSID optional eingeben. Ohne Eingabe bietet Android passende Bose-Netze " +
-                "zur Auswahl an. Die Android-Verbindungsabfrage bestätigen."
+            "Auf „Setup-WLAN suchen“ tippen und das Bose-Netz in Android auswählen. " +
+                "Die Verbindungsanfrage anschließend bestätigen."
         )
         step(
             "3 · Verbindung prüfen",
-            "Die App testet ausschließlich lokale HTTP-Adressen. " +
-                "Ist die Box erst später bereit, die Android-Netzauswahl schließen " +
-                "und hier „Erneut versuchen“ wählen."
+            "Die App prüft die lokale Bose-API und gibt die temporäre WLAN-Verbindung " +
+                "danach automatisch frei. Wenn die Box erst später bereit ist, " +
+                "die Android-Auswahl schließen und „Erneut versuchen“ wählen."
         )
         column.addView(
             steps,
@@ -161,13 +161,43 @@ internal class BoseSetupProbeActivity : Activity() {
             )
         )
 
+        // Normal flow: Android presents the Bose setup Wi-Fi and the user
+        // chooses it. Exact SSID input is reserved for uncommon setups and
+        // must never look like a required home-network credential field.
+        val advancedDescription = paragraph(
+            "Nur für Geräte, deren Setup-WLAN nicht mit „Bose“ beginnt. " +
+                "Hier den exakten WLAN-Namen der Box eingeben – nicht den Heim-WLAN-Namen.",
+            13.5f,
+            muted
+        ).apply {
+            visibility = View.GONE
+        }
+
         ssidInput = EditText(this).apply {
-            hint = "Bose-Setup-SSID (optional)"
+            hint = "Exakter Name des Bose-Setup-WLANs"
             inputType = InputType.TYPE_CLASS_TEXT
             isSingleLine = true
             setTextColor(ink)
             setHintTextColor(muted)
+            visibility = View.GONE
         }
+        val advancedToggle = TextView(this).apply {
+            text = "Erweitert: Anderes Bose-Setup-WLAN verwenden"
+            textSize = 14f
+            setTextColor(accent)
+            minimumHeight = dp(48)
+            setPadding(0, dp(12), 0, dp(8))
+            setOnClickListener {
+                val expand = ssidInput.visibility != View.VISIBLE
+                advancedDescription.visibility = if (expand) View.VISIBLE else View.GONE
+                ssidInput.visibility = if (expand) View.VISIBLE else View.GONE
+                text = if (expand) "Erweiterte Option schließen"
+                       else "Erweitert: Anderes Bose-Setup-WLAN verwenden"
+                if (!expand) ssidInput.setText("")
+            }
+        }
+        column.addView(advancedToggle)
+        column.addView(advancedDescription)
         column.addView(
             ssidInput,
             LinearLayout.LayoutParams(
@@ -177,7 +207,7 @@ internal class BoseSetupProbeActivity : Activity() {
         )
 
         startButton = Button(this).apply {
-            text = "Setup-WLAN anfordern"
+            text = "Setup-WLAN suchen"
             isAllCaps = false
             minimumHeight = dp(48)
             setOnClickListener { startOrRequestPermission() }
@@ -328,7 +358,13 @@ internal class BoseSetupProbeActivity : Activity() {
     @android.annotation.TargetApi(29)
     private fun requestSetupNetwork() {
         closeSession()
-        val ssid = ssidInput.text.toString().trim()
+        cancelButton.text = "Trennen / Abbrechen"
+        // A collapsed advanced section must not silently reuse a stale SSID.
+        val ssid = if (ssidInput.visibility == View.VISIBLE) {
+            ssidInput.text.toString().trim()
+        } else {
+            ""
+        }
         if (ssid.toByteArray(Charsets.UTF_8).size > 32) {
             statusView.text = "SSID zu lang (maximal 32 UTF-8-Bytes)."
             return
@@ -452,9 +488,10 @@ internal class BoseSetupProbeActivity : Activity() {
                 if (token != generation) return@runOnUiThread
                 resultsView.text = observations.joinToString("\n")
                 closeSession()
+                cancelButton.text = "Zurück zu Geräte"
                 statusView.text =
-                    "Phase-A-Messung beendet. Temporäre Bose-Netzwerk-Anforderung " +
-                        "freigegeben. Ergebnisse bitte ohne private Kennungen dokumentieren."
+                    "Phase-A-Messung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
+                        "wurde automatisch freigegeben. Android kehrt zum Heim-WLAN zurück."
             }
         }, "BoseSetupReadOnlyProbe")
         activeWorker = worker
