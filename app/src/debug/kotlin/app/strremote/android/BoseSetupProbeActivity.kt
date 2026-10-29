@@ -141,8 +141,10 @@ internal class BoseSetupProbeActivity : Activity() {
             text = "Trennen / Abbrechen"
             isAllCaps = false
             setOnClickListener {
+                // Close the whole setup wizard after releasing the temporary
+                // Bose Wi-Fi request. MainActivity remains on the Devices page.
                 closeSession()
-                statusView.text = "Test abgebrochen. Temporäre Netzwerk-Anforderung freigegeben."
+                finish()
             }
         }
         column.addView(startButton)
