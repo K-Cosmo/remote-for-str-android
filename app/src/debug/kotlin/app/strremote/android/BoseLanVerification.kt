@@ -274,17 +274,8 @@ internal class BoseLanVerification(
     }
 
     internal companion object {
-        fun isPrivateIpv4(host: String): Boolean {
-            val parts = host.split('.')
-            if (parts.size != 4 || parts.any { it.isEmpty() || it.length > 3 ||
-                    it.any { ch -> !ch.isDigit() } }) return false
-            val n = parts.map { it.toIntOrNull() ?: return false }
-            if (n.any { it !in 0..255 }) return false
-            return n[0] == 10 ||
-                (n[0] == 172 && n[1] in 16..31) ||
-                (n[0] == 192 && n[1] == 168) ||
-                (n[0] == 169 && n[1] == 254)
-        }
+        fun isPrivateIpv4(host: String): Boolean =
+            BoseHostPolicy.isPrivateIpv4(host)
     }
 }
 
