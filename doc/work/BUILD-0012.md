@@ -73,8 +73,8 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 
 - [x] T01 Record product/transport/Android-floor decision for SoundTouch 20 Series III.
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
-- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection.
-- [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version).
+- [ ] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. **Partial device HTTP evidence received**: `192.0.2.1:80/` HTTP 200; `192.0.2.1:8090/` HTTP 404; alternate `192.168.1.1` timed out. In-place retry and cleanup still need re-testing.
+- [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
 - [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B.
 - [ ] T06 Only if GO: implement credential submission with the safety guards above.
 - [ ] T07 Test credentials transfer and LAN rediscovery on original firmware, including failures.
@@ -89,7 +89,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 - `app/src/debug/kotlin/app/strremote/android/BoseSetupProbeActivity.kt` provides a minimal German UI with optional exact SSID. Blank SSID selects an Android system-approved SSID beginning with `Bose`.
 - Android 10–12L: request `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` together (Android 12+ combined-request rule); Android 13+: request `NEARBY_WIFI_DEVICES`; Android API 37+: also request `ACCESS_LOCAL_NETWORK`. The debug manifest removes the production `NEARBY_WIFI_DEVICES` API cap **only for debug**. The user still explicitly approves the `WifiNetworkSpecifier` request.
 - The network request removes Internet capability and is bounded to 30 s; only `Network.openConnection` performs local HTTP. Neither default-network switching nor `bindProcessToNetwork` occurs.
-- Fixed candidate probes: HTTP `GET /` (status/headers only) to `192.0.2.1:80`, `192.0.2.1:8090`, `192.168.1.1:80`, `192.168.1.1:8090`. No body read, POST, password input, firmware update or reset.
+- Initial candidate probes: HTTP `GET /` (status/headers only) to `192.0.2.1:80`, `192.0.2.1:8090`, `192.168.1.1:80`, `192.168.1.1:8090`. After first device evidence, read-only `GET /info` on `192.0.2.1:8090` was added. Only HTTP status/content-type; no body read, POST, password input, firmware update or reset.
 - Explicit cancel, 30 s connection timeout, `onUnavailable`, `onLost`, Activity destruction and short background cleanup release the request. The pending Android system consent UI is not forcibly interrupted by `onStop`.
 - Known limitation: one untested debug-only implementation is **not** real-device evidence. Do not mark Phase A PASS or move on to provisioning until hardware validation.
 - Android documentation: https://developer.android.com/develop/connectivity/wifi/wifi-request and https://developer.android.com/develop/connectivity/wifi/wifi-permissions
@@ -109,6 +109,16 @@ adb install -r .\\app\\build\\outputs\\apk\\debug\\app-debug.apk
 The debug PoC installs as `app.strremote.android.poc` and is labelled **STR Remote PoC**, separately from the signed production **STR Remote** app. Start **STR Remote PoC → Geräte → Neues Gerät hinzufügen** (English: Devices → Add new device). This button is displayed only for the Android 10+ `.poc` package and opens the internal `BoseSetupProbeActivity`; it is hidden in release builds. A previously saved or active STR speaker can still send you directly to Remote, so tap **Geräte** first. There is no second launcher icon. Signed production STR Remote stays installed with its own data.
 
 For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup mode using **Preset 2 + Vol−** until the Wi-Fi LED is amber; do not perform a factory reset. Open the PoC, leave SSID blank to use the Android Bose-prefix picker (or type the exact Setup SSID), accept Android's join prompt, and capture only the local HTTP status/content-type results. The PoC automatically releases the network after inspection. Test **Cancel**, missing network and permission denial separately. Never publish home Wi-Fi credentials, SSIDs, MAC/serial identifiers or full HTTP page bodies.
+
+## T03 partial device evidence and retry remediation (2026-10-29)
+
+- User confirmed Bose Setup SoftAP successfully responds at `192.0.2.1:80/` with HTTP 200 (`text/html`). Bose API server responds at `192.0.2.1:8090/` with HTTP 404 (`text/html`); **root 404 is not an API failure**. Two `192.168.1.1` candidates timed out. Evidence: [Phase A SoundTouch 20 observations](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
+- Reported issue: start setup-network discovery while Bose is not in SoftAP mode, then enter SoftAP mode; a retry does not find it until the whole flow is restarted.
+- Root cause remains a hypothesis pending repeat test. The original PoC disables its action button while waiting; additionally, the regular STR device-list **Erneut versuchen** runs mDNS/STR discovery, not the Bose SoftAP picker.
+- PoC correction provides explicit in-place **Erneut versuchen** and issues a fresh `WifiNetworkSpecifier` network request with prior callback unregister, stale callback cancellation and a short teardown settle interval. No automatic background looping.
+- A real-device regression test must demonstrate **retry without leaving the PoC** after the speaker enters setup mode. T03 stays open until this, cancellation and normal-network restoration pass.
+- Post-change probes include GET `/info` on Bose `:8090`, status/content-type only, to distinguish the 404 root from a functional API route.
+- Still no WLAN credential submission or configuration mutation in the PoC.
 
 ## Evidence template
 
