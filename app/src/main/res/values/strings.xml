@@ -4,6 +4,8 @@
     <string name="devices">Devices</string>
     <string name="searching">Searching for SoundTouch Reborn speakers…</string>
     <string name="found_devices">Found devices</string>
+    <string name="add_new_device">Add new device</string>
+    <string name="setup_speaker_wifi">Configure a speaker’s Wi-Fi</string>
     <string name="manual_ip">Enter address manually</string>
     <string name="manual_title">Connect manually</string>
     <string name="manual_hint">192.168.1.42 or 192.168.1.42:17008</string>
@@ -12,6 +14,10 @@
     <string name="save">Save</string>
     <string name="retry">Try again</string>
     <string name="str_help">Open SoundTouch Reborn website</string>
+    <string name="bose_str_missing">STR not installed · Tap to open STR website</string>
+    <string name="bose_setup_unconfirmed">Bose configured · Wi-Fi connection not yet verified · STR missing</string>
+    <string name="bose_install_hint">Opens the STR website in your browser</string>
+    <string name="bose_remove_pending">Remove Bose setup entry</string>
     <string name="connecting_last">Connecting to the last speaker…</string>
     <string name="connecting_to">Connecting to %1$s…</string>
     <string name="checking_connection">Checking STR connection…</string>

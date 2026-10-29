@@ -1,9 +1,19 @@
 # Status
 
-**Development version:** 0.2.1
+**Development version:** 0.3.0
 **Latest public release:** 0.2.1
-**Status:** RELEASED / ACCEPTED
-**Date:** 2026-09-30
+**Status:** RELEASE CANDIDATE / SIGNED APK PENDING
+**Date:** 2026-10-29
+
+## 0.3.0 candidate — publication pending
+
+- The accepted BUILD-0012 Bose Wi-Fi setup wizard has been promoted to production source and manifest paths.
+- Version name/code: `0.3.0` / `11`; production application ID stays `app.strremote.android`.
+- Native STR remote and device-management support remain available on Android 8+, Bose setup wizard requires Android 10+.
+- SoundTouch 20 III is the only original Bose provisioning reference model with reported successful device tests; SoundTouch 10 remains experimental for this specific setup feature.
+- New Android network permissions are requested only for the feature and as constrained by API version.
+- **This is not yet a published release.** Gate remains: release-variant CI from final commit, signing with the 0.2.1 release certificate, signature and zipalign checks, installing the exact signed APK over 0.2.1 and running the production APK smoke test, then tagging and uploading APK + SHA-256 to GitHub.
+- The latest public release remains **0.2.1** until the signed artifact and publication gates are satisfied.
 
 ## 0.2.1 release
 

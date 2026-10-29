@@ -8,6 +8,8 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 
 **Current release:** 0.2.1
 
+**Next release candidate:** 0.3.0 — Bose Wi-Fi setup wizard; signed APK not yet published.
+
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest)
 
 ## Features
@@ -23,6 +25,8 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 - optional room assignment with built-in and custom room names;
 - clear current-speaker indication and a direct return path to the active remote;
 - manual host/IP entry as a fallback;
+- guided Bose SoundTouch Wi-Fi setup on Android 10+ before STR installation, with model-specific preparation, speaker-side WLAN selection and password entry;
+- separate Bose-only device rows while STR is not yet available, with room assignment and a direct STR installation link;
 - last-successful-speaker reconnect;
 - embedded STR phone remote;
 - German and English UI;
@@ -31,7 +35,7 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 
 ## Requirements and installation
 
-STR Remote requires **SoundTouch Reborn to already be installed and running on the speaker**.
+For remote control, STR Remote requires **SoundTouch Reborn to be installed and running on the speaker**. Starting with version 0.3.0, the Android app can first help configure Wi-Fi on a compatible SoundTouch using its original Bose firmware. Wi-Fi setup does not install STR.
 
 1. Install STR using the upstream project:
    - [STR website](https://st-reborn.de)
@@ -41,6 +45,15 @@ STR Remote requires **SoundTouch Reborn to already be installed and running on t
 4. Install the APK and grant the local-network permission when Android requests it.
 
 STR Remote does not install STR, modify speaker firmware or bundle the STR agent.
+
+## Bose Wi-Fi setup compatibility (0.3.0)
+
+- **SoundTouch 20 Series III**: provisioning flow hardware-tested on the reference original Bose firmware. Results may vary with other firmware revisions.
+- **SoundTouch 10**: model instructions and selectable test flow are present, but original Bose firmware provisioning **has not been validated** on hardware.
+- Other SoundTouch generations are **not claimed compatible** with this provisioning flow.
+- Requires Android 10+ for Android's system-approved Bose setup network picker; the STR remote itself remains usable on Android 8/9.
+
+**Important:** Bose's original provisioning endpoint uses **unencrypted HTTP** to transfer the Wi-Fi password over the temporary Bose setup network. Perform setup only in a trusted physical/network environment, and choose an isolated WPA2 network if you want to minimize credential exposure. Never reuse a sensitive password on an untrusted network. The app does not log or persist the entered password and does not automatically repeat a failed/uncertain transfer.
 
 ## Compatibility
 
