@@ -69,6 +69,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var startButton: Button
     private lateinit var cancelButton: Button
     private lateinit var b2StartButton: Button
+    private lateinit var pageScroll: ScrollView
     private lateinit var b2Panel: LinearLayout
     private lateinit var scanButton: Button
     private lateinit var networkListButton: Button
@@ -449,6 +450,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 insets
             }
         }
+        pageScroll = scroll
         setContentView(scroll)
     }
 
@@ -704,6 +706,11 @@ internal class BoseSetupProbeActivity : Activity() {
                     surveySupported = b1Report.supportsWirelessSiteSurvey
                     startButton.isEnabled = false
                     b2Panel.visibility = View.VISIBLE
+                    pageScroll.post {
+                        if (token == generation) {
+                            pageScroll.smoothScrollTo(0, b2Panel.top)
+                        }
+                    }
                     scanButton.isEnabled = surveySupported
                     surveyStatusView.text = if (surveySupported) {
                         "Suche nach WLANs in Reichweite des Bose-Lautsprechers beginnt …"
