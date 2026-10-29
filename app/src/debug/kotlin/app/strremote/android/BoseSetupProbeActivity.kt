@@ -521,7 +521,7 @@ internal class BoseSetupProbeActivity : Activity() {
     override fun onStop() {
         visible = false
         // Android's own network-consent UI can temporarily stop this Activity.
-        // Preserve the pending 30 s request; release connected networks in background.
+        // Preserve the pending 20 s request; release connected networks in background.
         if (!awaitingConsent && activeCallback != null) {
             scheduleBackgroundCleanup()
         }
