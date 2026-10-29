@@ -220,6 +220,21 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Escapes XML attribute metacharacters (`&`, `<`, `>`, quotes, apostrophes). Added host-side JUnit tests for expected candidate syntax, escaping and invalid test inputs; CI now invokes `:app:testDebugUnitTest`.
 - This was the first **offline-only** preparation milestone. It was followed by the D-028-authorized debug-only single-shot POST implementation. Actual device provisioning, recovery and production acceptance remain outstanding.
 
+## B2 on-device scan XML regression: Android JAXP incompatibility (2026-10-29)
+
+**Tester observation:** on the original-firmware SoundTouch 20 III, the B2 scan reports `WLAN-Suche: XML nicht auswertbar`. The old code folded all DOM parser initialization errors and malformed/unsupported Bose responses into the same message; no raw XML was captured, so the actual Bose response body is **unknown**.
+
+**Code-level cause found:** Android's `javax.xml.parsers.DocumentBuilderFactory` explicitly does **not support** `XMLConstants.FEATURE_SECURE_PROCESSING` on Android. Our B2 survey parser enabled it unconditionally, in addition to other potentially unsupported provider-specific options. A `ParserConfigurationException` would therefore be caught before any response DOM was evaluated. Local JDK unit tests / GitHub CI did not exercise this Android platform limitation. Source: https://developer.android.com/reference/javax/xml/parsers/DocumentBuilderFactory
+
+**Change (debug only):**
+
+- Replace unsupported parser setup in both the site-survey XML parser and future profile-acknowledgement parser with portable, non-validating DOM parsing plus strict UTF-8 decoding, explicit DOCTYPE/ENTITY rejection, external entity resolution denial and non-logging XML error handling. Keep bounded response sizes.
+- Continue the AfterTouch community-documented `POST /performWirelessSiteSurvey` request, but if it yields no usable networks, try one scoped `GET /performWirelessSiteSurvey` as read-only fallback based on the independently documented direct URL-query form. No credentials are involved, and **no** automatic `/addWirelessProfile` POST/retry is introduced.
+- Surface the sanitized results from **POST and GET separately** (HTTP code, unsupported media type, Bose scan acknowledgement without a list, recognized result list, XML syntax or parser initialization failure). Do not log/display raw response XML or network identifiers except SSIDs explicitly displayed in the on-device chooser.
+- Extend host-side tests for scan-status XML, expected successful responses and malicious/invalid input. Note that CI cannot replace an Android instrumented test; the real ST20 III scan remains to be retested.
+
+**Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
+
 ## B2 hardware-test UI improvement — Bose-visible WLAN selection (2026-10-29)
 
 **User feedback:** B2 should present nearby WLANs for selection; the previous SSID/password EditText fields were difficult to see and had no persistent labels. This was a real UX defect, not a limitation of the requirement.
