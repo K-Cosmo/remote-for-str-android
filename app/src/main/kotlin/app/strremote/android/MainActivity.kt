@@ -417,6 +417,32 @@ class MainActivity : Activity() {
             }
         )
 
+        // BUILD-0012 PoC is available only in the separate Android 10+ debug app.
+        // Keep production STR Remote 0.2.1 behavior and device UI unchanged.
+        if (Build.VERSION.SDK_INT >= 29 && packageName == "app.strremote.android.poc") {
+            val addDeviceButton = Button(this).apply {
+                text = getString(R.string.add_new_device)
+                isAllCaps = false
+                setOnClickListener {
+                    startActivity(
+                        Intent().setClassName(
+                            this@MainActivity,
+                            "app.strremote.android.BoseSetupProbeActivity"
+                        )
+                    )
+                }
+            }
+            discoveryPanel.addView(
+                addDeviceButton,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    topMargin = dp(8)
+                }
+            )
+        }
+
         val manualButton = Button(this).apply {
             text = getString(R.string.manual_ip)
             isAllCaps = false
