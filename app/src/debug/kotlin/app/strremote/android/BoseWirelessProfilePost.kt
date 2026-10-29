@@ -1,0 +1,102 @@
+package app.strremote.android
+
+import android.net.Network
+import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import javax.xml.XMLConstants
+import javax.xml.parsers.DocumentBuilderFactory
+import org.xml.sax.InputSource
+import java.io.ByteArrayInputStream
+
+/**
+ * Debug-only controlled B2 hardware attempt; never called by the production app.
+ * Exactly ONE POST attempt. No automatic retries, redirects, logging or persistence.
+ * A positive API acknowledgement is NOT proof of joining the destination WLAN.
+ */
+internal object BoseWirelessProfilePost {
+    private const val ENDPOINT = "http://192.0.2.1:8090/addWirelessProfile"
+    private const val HTTP_TIMEOUT_MS = 12_000
+    private const val MAX_RESPONSE_BYTES = 8 * 1024
+
+    fun submitOnce(network: Network, xmlBytes: ByteArray): String {
+        var connection: HttpURLConnection? = null
+        return try {
+            connection = network.openConnection(URL(ENDPOINT)) as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = HTTP_TIMEOUT_MS
+            connection.readTimeout = HTTP_TIMEOUT_MS
+            connection.useCaches = false
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "text/xml")
+            connection.setFixedLengthStreamingMode(xmlBytes.size)
+            connection.outputStream.use { stream ->
+                stream.write(xmlBytes)
+                stream.flush()
+            }
+
+            val code = connection.responseCode
+            if (code !in 200..299) {
+                "B2: HTTP $code. WLAN-Profil nicht bestätigt. Kein automatischer Wiederholungsversuch."
+            } else {
+                val mediaType = connection.contentType.orEmpty().substringBefore(';').lowercase()
+                if (mediaType != "text/xml" && mediaType != "application/xml") {
+                    "B2: HTTP $code, Antworttyp nicht XML. Annahme unbestimmt; keinen weiteren POST ausführen."
+                } else {
+                    val body = readBounded(connection)
+                    if (isExpectedAcknowledgement(body)) {
+                        "B2: HTTP $code, AddWirelessProfileResponse erkannt. " +
+                            "Nur API-Antwort; WLAN-Beitritt des Lautsprechers separat prüfen."
+                    } else {
+                        "B2: HTTP $code, aber keine erwartete XML-Bestätigung. " +
+                            "Annahme unbestimmt; keinen weiteren POST ausführen."
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // A timeout/lost SoftAP may mean the speaker accepted the credentials.
+            // Never log exceptions (some may include network identifiers).
+            "B2: POST-Ergebnis unbestimmt (Verbindung/Timeout/XML). " +
+                "Lautsprecher im Zielnetz prüfen; nicht blind erneut senden."
+        } finally {
+            connection?.disconnect()
+        }
+    }
+
+    private fun readBounded(connection: HttpURLConnection): ByteArray =
+        connection.inputStream.use { input ->
+            val out = ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                if (out.size() + count > MAX_RESPONSE_BYTES) {
+                    throw IllegalArgumentException("oversize response")
+                }
+                out.write(buffer, 0, count)
+            }
+            out.toByteArray()
+        }
+
+    internal fun isExpectedAcknowledgement(response: ByteArray): Boolean {
+        if (response.isEmpty() || response.size > MAX_RESPONSE_BYTES) return false
+        return try {
+            val factory = DocumentBuilderFactory.newInstance()
+            factory.isNamespaceAware = false
+            factory.isXIncludeAware = false
+            factory.isExpandEntityReferences = false
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false)
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+            val document = factory.newDocumentBuilder().parse(
+                InputSource(ByteArrayInputStream(response))
+            )
+            document.documentElement?.tagName == "AddWirelessProfileResponse"
+        } catch (_: Exception) {
+            false
+        }
+    }
+}

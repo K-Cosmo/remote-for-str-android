@@ -15,7 +15,7 @@ import java.net.URL
  * without emitting full XML or identifiable speaker/network details, and
  * returns a fixed-vocabulary summary of *advertised* Wi-Fi endpoints.
  *
- * This is NOT proof that POST /addWirelessProfile is accepted. No POST is made.
+ * This is NOT proof that POST /addWirelessProfile is accepted. No POST is made here.
  */
 internal object BoseSupportedUrlsProbe {
     private const val ENDPOINT = "http://192.0.2.1:8090/supportedURLs"
@@ -28,9 +28,17 @@ internal object BoseSupportedUrlsProbe {
         "/getActiveWirelessProfile"
     )
 
-    fun inspect(network: Network): String {
+    internal data class Report(
+        val summary: String,
+        val supportsAddWirelessProfile: Boolean
+    )
+
+    // Kept for the original read-only PoC call sites.
+    fun inspect(network: Network): String = inspectReport(network).summary
+
+    fun inspectReport(network: Network): Report {
         var connection: HttpURLConnection? = null
-        return try {
+        val summary = try {
             connection = network.openConnection(URL(ENDPOINT)) as HttpURLConnection
             connection.requestMethod = "GET"
             connection.instanceFollowRedirects = false
@@ -63,7 +71,8 @@ internal object BoseSupportedUrlsProbe {
                         collected.toByteArray()
                     }
                     val advertised = parseWhitelistedUrls(bytes)
-                    buildString {
+                    return Report(
+                        summary = buildString {
                         append("B1 GET /supportedURLs → HTTP 200, XML")
                         for (endpoint in interestingEndpoints) {
                             append("\n")
@@ -73,7 +82,9 @@ internal object BoseSupportedUrlsProbe {
                                    else "nicht aufgelistet")
                         }
                         append("\nNur eine Funktionsliste – kein Nachweis der Profilübertragung.")
-                    }
+                        },
+                        supportsAddWirelessProfile = "/addWirelessProfile" in advertised
+                    )
                 }
             }
         } catch (_: ResponseTooLargeException) {
@@ -86,6 +97,7 @@ internal object BoseSupportedUrlsProbe {
         } finally {
             connection?.disconnect()
         }
+        return Report(summary = summary, supportsAddWirelessProfile = false)
     }
 
     private fun parseWhitelistedUrls(xml: ByteArray): Set<String> {

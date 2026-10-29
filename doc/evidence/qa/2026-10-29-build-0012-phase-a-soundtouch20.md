@@ -1,7 +1,7 @@
 # BUILD-0012 — SoundTouch 20 Series III SoftAP Phase A observations
 
 **Date:** 2026-10-29
-**State:** PARTIAL PHASE A — API and network recovery confirmed, **intermittent retry regression reopened**, diagnostic revision pending real-device QA
+**State:** PHASE A/B1 observed, 3+3 retry reliability gate USER-CONFIRMED, B2 first hardware POST NOT YET PERFORMED
 **Reference hardware:** Bose SoundTouch 20 Series III / 355589-SM2 / original Bose firmware (per test owner)
 **App:** STR Remote PoC, separate debug package `app.strremote.android.poc`
 
@@ -41,7 +41,7 @@ Sources:
 - https://github.com/gesellix/Bose-SoundTouch/blob/main/pkg/service/setup/wifi_provision.go
 - https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md
 
-**Next open gate:** 3+3 retry/late-SoftAP tests with app-only Logcat; then safely stage a debug-only single-submit test using a separate test Wi-Fi. No Phase B2 transmission is authorized yet.
+**Reliability gate (2026-10-29):** User explicitly confirms passing all 3 normal initial-pickup plus 3 delayed-start/fresh-Activity retries. This is a tester report, not supplied per-run Logcat evidence or wide Android compatibility proof. The debug-only single-submit test is now prepared, not executed; no B2 device outcome yet.
 
 ## Observed retry defect
 
@@ -119,13 +119,19 @@ Review/redact before sharing, although the new debug logger deliberately contain
 ## Still open before Phase A acceptance
 
 - [x] Reconfirm previously successful connection when the Bose is **already** in setup mode after reverting deferred request (user-reported successful)
-- [ ] Reliability gate reopened: 3 delayed-start retry tests from the same wizard route, using a new network request and fresh Activity (earlier single test did pass; subsequent regression reported)
+- [x] Reliability gate: user reports 3 initial-connection and 3 delayed-start fresh-Activity retry passes (2026-10-29); per-run Logcat not attached.
 - [x] Verify explicit **Cancel** releases temporary network request and Android returns to the home Wi-Fi (tester confirmed)
 - [x] Verify **updated Cancel button exits the wizard and returns to Devices**; tester confirms
 - [x] Verify that automatic release after a **completed successful probe** returns the phone to its home Wi-Fi; tester directly observed this behavior
 - [ ] Record Android API level and original Bose firmware version, if available without writing settings
 - [x] Record status/content-type of read-only Bose `GET /info` on 8090: **HTTP 200; text/xml**
 - [ ] Confirm local build/lint/CI of the retry revision and device smoke
-- [ ] Validate Bose-specific WLAN-profile submission contract separately before any Phase B write
+- [ ] Verify Bose-specific WLAN-profile POST contract on the hardware with a separately consented single-shot B2 test using only an isolated WPA2 test network.
 
 The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API. Do not infer Wi-Fi provisioning support from an open TCP/HTTP port without validating the exact endpoint and contract.
+
+## B2 first hardware test — prepared, results pending (2026-10-29)
+
+- Debug-only `B2: WLAN-Hardwaretest vorbereiten` uses the established Wi-Fi picker and reads the existing Phase A/B1 endpoints. B1 must advertise `/addWirelessProfile` before the credential form is displayed.
+- Explicit confirmation precedes exactly one POST. No retries after timeout or onLost, no secrets in debug logs/storage, and no claim of LAN association based on HTTP 200 alone.
+- **Tester to record:** B2 result string (redacted), whether the Bose setup AP disappears, association on a separate WPA2 test router, reappearance of the same speaker's `/info` on destination LAN, Android Wi-Fi recovery. All outcomes **pending**.

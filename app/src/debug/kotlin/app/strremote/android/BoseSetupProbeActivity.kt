@@ -2,6 +2,7 @@ package app.strremote.android
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.Context
 import android.content.pm.PackageManager
@@ -20,6 +21,10 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.os.PatternMatcher
+import android.text.InputType
+import android.view.View
+import android.view.WindowManager
+import android.widget.EditText
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Button
@@ -33,8 +38,9 @@ import java.net.URL
  * BUILD-0012 / T02 — debug-only, non-destructive SoundTouch 20 setup Wi-Fi probe.
  *
  * Uses system-consented WifiNetworkSpecifier; does not bind the process to the
- * requested Network. All GETs are scoped to the returned Network. No credentials,
- * POST requests, WebView, Bose firmware writes or persistent results.
+ * requested Network. GET probes remain read-only. A separate opt-in debug-only B2
+ * hardware mode can perform one confirmed WLAN-profile POST; no credentials are
+ * saved or logged, and API acknowledgement alone is not considered provisioning success.
  */
 internal class BoseSetupProbeActivity : Activity() {
     private companion object {
@@ -42,6 +48,7 @@ internal class BoseSetupProbeActivity : Activity() {
         const val LOG_TAG = "StrBoseSetup"
         const val NETWORK_REQUEST_TIMEOUT_MS = 20_000
         const val EXTRA_RESTART_AND_SEARCH = "bose_poc.restart_and_search"
+        const val EXTRA_B2_MODE = "bose_poc.b2_mode"
         const val HTTP_TIMEOUT_MS = 1_800
         const val BACKGROUND_CLEANUP_DELAY_MS = 2_000L
         const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
@@ -61,6 +68,11 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private lateinit var startButton: Button
     private lateinit var cancelButton: Button
+    private lateinit var b2StartButton: Button
+    private lateinit var b2Panel: LinearLayout
+    private lateinit var ssidField: EditText
+    private lateinit var passwordField: EditText
+    private lateinit var submitButton: Button
     private lateinit var statusView: TextView
     private lateinit var resultsView: TextView
 
@@ -72,6 +84,12 @@ internal class BoseSetupProbeActivity : Activity() {
     private var backgroundCleanup: Runnable? = null
     private var hasStartedNetworkRequest = false
     private var resumeWithFreshSearch = false
+    private var b2Mode = false
+    private var b2Network: Network? = null
+    private var b2Verified = false
+    private var postAttempted = false
+    private var postInFlight = false
+    private var b2NetworkLostDuringPost = false
     private var requestStartedAtMs = 0L
     private val debugSessionId = Integer.toHexString(System.identityHashCode(this))
 
@@ -93,6 +111,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        b2Mode = intent.getBooleanExtra(EXTRA_B2_MODE, false)
         buildUi()
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
         trace("activity_created freshRetry=$resumeWithFreshSearch")
@@ -160,9 +179,9 @@ internal class BoseSetupProbeActivity : Activity() {
         )
         step(
             "3 · Bose-Schnittstellen prüfen",
-            "Die App prüft lesend die lokale Bose-API und die angebotenen " +
-                "WLAN-Einrichtungsfunktionen. Danach gibt sie die temporäre " +
-                "Verbindung automatisch frei."
+            "Standardmäßig nur lesende Prüfung mit automatischer Trennung. " +
+                "Im getrennt ausgewählten B2-Hardwaretest bleibt die Verbindung " +
+                "bis zur ausdrücklichen Bestätigung eines einzelnen POST bestehen."
         )
         column.addView(
             steps,
@@ -176,8 +195,9 @@ internal class BoseSetupProbeActivity : Activity() {
 
         column.addView(
             paragraph(
-                "Nur lesender Test. Keine WLAN-Passwörter, kein Werksreset, " +
-                    "keine Änderung der Bose-Firmware.",
+                "B1: Nur lesender Test. B2: Optionaler, ausdrücklich bestätigter " +
+                    "WLAN-Konfigurationsversuch mit einem separaten WPA2-Testnetz. " +
+                    "Kein Werksreset, keine Firmwareänderung.",
                 13.5f,
                 muted
             )
@@ -191,6 +211,22 @@ internal class BoseSetupProbeActivity : Activity() {
                 if (hasStartedNetworkRequest) {
                     restartWizardForFreshSearch()
                 } else {
+                    startOrRequestPermission()
+                }
+            }
+        }
+        b2StartButton = Button(this).apply {
+            text = "B2: WLAN-Hardwaretest vorbereiten"
+            isAllCaps = false
+            minimumHeight = dp(48)
+            isEnabled = !b2Mode
+            setOnClickListener {
+                if (!hasStartedNetworkRequest) {
+                    // Block screenshots and Android recents previews while the
+                    // debug-only activity may display test credentials.
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    b2Mode = true
+                    b2StartButton.isEnabled = false
                     startOrRequestPermission()
                 }
             }
@@ -211,6 +247,13 @@ internal class BoseSetupProbeActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = dp(8) }
+        )
+        column.addView(
+            b2StartButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         )
         column.addView(
             cancelButton,
@@ -251,6 +294,56 @@ internal class BoseSetupProbeActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { topMargin = dp(10) }
+        )
+
+        b2Panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = panelBackground()
+        }
+        b2Panel.addView(paragraph(
+            "B2 · Einmaliger Hardwaretest",
+            18f,
+            ink
+        ).apply { setTypeface(typeface, Typeface.BOLD) })
+        b2Panel.addView(paragraph(
+            "Nur separates WPA2-Personal-Testnetz verwenden. Der Lautsprecher " +
+                "kann dadurch sein bisheriges WLAN verlassen. Keine WPA3-only-Netze. " +
+                "Test-SSID: 1–32 druckbare ASCII-Zeichen; Kennwort: 8–63 Zeichen. " +
+                "Kein automatischer Retry, kein automatischer Erfolgsnachweis.",
+            13.5f,
+            muted
+        ))
+        ssidField = EditText(this).apply {
+            hint = "Test-WLAN-Name (SSID)"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            setSingleLine(true)
+            isSaveEnabled = false
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        }
+        passwordField = EditText(this).apply {
+            hint = "Test-WLAN-Kennwort"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setSingleLine(true)
+            isSaveEnabled = false
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        }
+        b2Panel.addView(ssidField)
+        b2Panel.addView(passwordField)
+        submitButton = Button(this).apply {
+            text = "Einmaligen POST bestätigen …"
+            isAllCaps = false
+            minimumHeight = dp(48)
+            setOnClickListener { confirmB2Post() }
+        }
+        b2Panel.addView(submitButton)
+        column.addView(
+            b2Panel,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
         )
 
         val scroll = ScrollView(this).apply {
@@ -305,6 +398,7 @@ internal class BoseSetupProbeActivity : Activity() {
         closeSession()
         val restart = Intent(this, BoseSetupProbeActivity::class.java).apply {
             putExtra(EXTRA_RESTART_AND_SEARCH, true)
+            putExtra(EXTRA_B2_MODE, b2Mode)
         }
         startActivity(restart)
         finish()
@@ -363,6 +457,8 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun requestSetupNetwork() {
         trace("request_prepare")
         closeSession()
+        if (b2Mode) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        b2StartButton.isEnabled = false
         cancelButton.text = "Trennen / Abbrechen"
 
         // No manual SSID entry: Android finds nearby "Bose..." setup networks.
@@ -435,10 +531,18 @@ internal class BoseSetupProbeActivity : Activity() {
                         return@runOnUiThread
                     }
                     trace("ui_onLost token=$token")
-                    closeSession()
-                    statusView.text =
-                        "Setup-WLAN getrennt. Für eine neue Verbindung hier " +
-                            "„Erneut versuchen“ wählen. Messwerte bleiben angezeigt."
+                    if (postInFlight) {
+                        b2NetworkLostDuringPost = true
+                        trace("b2_network_lost_during_post")
+                        statusView.text =
+                            "Bose-Setup-WLAN während des einmaligen POST getrennt. " +
+                                "Ergebnis wird ausgewertet; nicht erneut senden."
+                    } else {
+                        closeSession()
+                        statusView.text =
+                            "Setup-WLAN getrennt. Für eine neue Verbindung hier " +
+                                "„Erneut versuchen“ wählen. Messwerte bleiben angezeigt."
+                    }
                 }
             }
         }
@@ -505,28 +609,129 @@ internal class BoseSetupProbeActivity : Activity() {
             // of three known Wi-Fi-related API endpoints are surfaced; the
             // original XML body is discarded and cannot enter logs/UI.
             trace("b1_supported_urls_start token=$token")
-            observations.add(BoseSupportedUrlsProbe.inspect(network))
+            val b1Report = BoseSupportedUrlsProbe.inspectReport(network)
+            observations.add(b1Report.summary)
             trace("b1_supported_urls_finished token=$token")
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
                 trace("http_probe_complete token=$token")
                 resultsView.text = observations.joinToString("\n")
-                closeSession()
-                cancelButton.text = "Zurück zu Geräte"
-                statusView.text =
-                    "API- und B1-Funktionsprüfung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
-                        "wurde automatisch freigegeben. Android kehrt zum Heim-WLAN zurück."
+                if (b2Mode && b1Report.supportsAddWirelessProfile) {
+                    b2Network = network
+                    b2Verified = true
+                    startButton.isEnabled = false
+                    b2Panel.visibility = View.VISIBLE
+                    statusView.text =
+                        "B1 bestätigt /addWirelessProfile. Bose-WLAN bleibt verbunden. " +
+                            "Testnetz-Zugangsdaten eingeben und den einmaligen Schreibtest bestätigen. " +
+                            "Abbrechen trennt ohne Änderung."
+                    trace("b2_ready token=$token")
+                } else {
+                    closeSession()
+                    cancelButton.text = "Zurück zu Geräte"
+                    statusView.text = if (b2Mode) {
+                        "B2 gesperrt: /addWirelessProfile nicht sicher nachgewiesen. " +
+                            "Setup-WLAN freigegeben; kein POST."
+                    } else {
+                        "API- und B1-Funktionsprüfung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
+                            "wurde automatisch freigegeben. Android kehrt zum Heim-WLAN zurück."
+                    }
+                }
             }
         }, "BoseSetupReadOnlyProbe")
         activeWorker = worker
         worker.start()
     }
 
+    private fun confirmB2Post() {
+        if (!b2Mode || !b2Verified || b2Network == null ||
+            activeCallback == null || postAttempted || postInFlight
+        ) return
+        // Never expose the password, SSID, XML or network identifier in logs.
+        val valid = try {
+            BoseWirelessProfileXml.buildCandidate(
+                ssidField.text.toString(), passwordField.text.toString()
+            )
+            true
+        } catch (_: IllegalArgumentException) {
+            false
+        }
+        if (!valid) {
+            statusView.text =
+                "Ungültige Testdaten: SSID 1–32 ASCII-Zeichen, " +
+                    "WPA2-Kennwort 8–63 ASCII-Zeichen."
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("WLAN-Profil einmalig übertragen?")
+            .setMessage(
+                "ACHTUNG: Dieser Test ändert die WLAN-Konfiguration des Bose-Lautsprechers. " +
+                    "Nur mit einem separaten, eingeschalteten WPA2-Test-WLAN fortfahren. " +
+                    "Der Bose-Setup-Hotspot kann sofort verschwinden. " +
+                    "Bei Timeout KEINEN zweiten POST senden; zuerst den Lautsprecher " +
+                    "im Zielnetz/Router prüfen. Wirklich einmalig senden?"
+            )
+            .setNegativeButton("Nicht senden", null)
+            .setPositiveButton("Einmalig senden") { _, _ ->
+                val network = b2Network
+                if (network != null && b2Verified && !postAttempted && !postInFlight) {
+                    val payload = try {
+                        BoseWirelessProfileXml.buildCandidate(
+                            ssidField.text.toString(), passwordField.text.toString()
+                        ).toByteArray(Charsets.UTF_8)
+                    } catch (_: IllegalArgumentException) {
+                        statusView.text = "Testdaten ungültig; nichts gesendet."
+                        return@setPositiveButton
+                    }
+                    // Remove text as soon as the request is scheduled.
+                    ssidField.text?.clear()
+                    passwordField.text?.clear()
+                    b2Panel.visibility = View.GONE
+                    submitButton.isEnabled = false
+                    postAttempted = true
+                    postInFlight = true
+                    val token = generation
+                    statusView.text =
+                        "Einmaliger POST läuft. Bei Verbindungsabbruch Ergebnis abwarten."
+                    trace("b2_post_started token=$token")
+                    val worker = Thread({
+                        val result = try {
+                            BoseWirelessProfilePost.submitOnce(network, payload)
+                        } finally {
+                            payload.fill(0)
+                        }
+                        runOnUiThread {
+                            if (generation != token) return@runOnUiThread
+                            trace("b2_post_completed token=$token")
+                            val disconnected = b2NetworkLostDuringPost
+                            closeSession()
+                            resultsView.append("\n\n$result")
+                            if (disconnected) {
+                                resultsView.append("\nSetup-WLAN wurde während des POST getrennt.")
+                            }
+                            statusView.text =
+                                "Einzelversuch beendet, Setup-Netzwerk freigegeben. " +
+                                    "Android mit dem TEST-WLAN verbinden; im Router und über die " +
+                                    "Bose-/info-API prüfen, ob derselbe Lautsprecher dort erreichbar ist. " +
+                                    "Eine HTTP-Antwort allein ist KEIN Erfolgsnachweis. " +
+                                    "Bei unklarem Ergebnis NICHT erneut senden."
+                            cancelButton.text = "Zurück zu Geräte"
+                            startButton.isEnabled = false
+                        }
+                    }, "BoseSetupSingleProfilePost")
+                    activeWorker = worker
+                    worker.start()
+                }
+            }
+            .show()
+    }
+
     private fun scheduleBackgroundCleanup() {
-        if (visible) return
+        if (visible || postInFlight) return
         cancelBackgroundCleanup()
         val action = Runnable {
-            if (!visible && !awaitingConsent && activeCallback != null) {
+            if (!visible && !awaitingConsent && !postInFlight && activeCallback != null) {
                 closeSession()
                 statusView.text = "Test im Hintergrund beendet; Setup-Netzwerk freigegeben."
             }
@@ -559,6 +764,13 @@ internal class BoseSetupProbeActivity : Activity() {
             }
         }
         activeCallback = null
+        b2Network = null
+        b2Verified = false
+        postInFlight = false
+        b2NetworkLostDuringPost = false
+        if (::ssidField.isInitialized) ssidField.text?.clear()
+        if (::passwordField.isInitialized) passwordField.text?.clear()
+        if (::b2Panel.isInitialized) b2Panel.visibility = View.GONE
         if (::startButton.isInitialized) startButton.isEnabled = Build.VERSION.SDK_INT >= 29
     }
 
@@ -585,7 +797,7 @@ internal class BoseSetupProbeActivity : Activity() {
         visible = false
         // Android's own network-consent UI can temporarily stop this Activity.
         // Preserve the pending 20 s request; release connected networks in background.
-        if (!awaitingConsent && activeCallback != null) {
+        if (!awaitingConsent && !postInFlight && activeCallback != null) {
             scheduleBackgroundCleanup()
         }
         super.onStop()

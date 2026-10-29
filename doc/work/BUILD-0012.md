@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A API AND NETWORK RECOVERY VERIFIED; B1 READ-ONLY CAPABILITY LIST CONFIRMED ON REFERENCE DEVICE; B2 WRITE NOT AUTHORIZED; RETRY RELIABILITY NOT PROVEN
+**Status:** PHASE A + B1 DEVICE VERIFIED; 3+3 WIFI PICKER/RETRY GATE CONFIRMED BY TESTER; DEBUG-ONLY B2 SINGLE-POST READY FOR FIRST HARDWARE TEST (NOT YET RUN)
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -75,8 +75,8 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 - [x] T02 Implement a read-only `WifiNetworkSpecifier` prototype, behind an explicit debug-only entry. Local build/CI and device proof remain separate gates.
 - [x] T03 Real-device Phase A: setup SSID, Android consent, host/port response, graceful disconnection. Confirmed by tester: `192.0.2.1:80/` HTTP 200 (HTML), `192.0.2.1:8090/info` HTTP 200 (XML); root `:8090/` 404; alternate `192.168.1.1` timed out. In-place retry, Cancel/return-to-Devices and automatic home-Wi-Fi recovery after the probe all verified.
 - [ ] T04 Record sanitized observations (Bose firmware, IP/gateway, ports, result timings, Android API version). Partial HTTP result evidence: [2026-10-29-build-0012-phase-a-soundtouch20.md](../evidence/qa/2026-10-29-build-0012-phase-a-soundtouch20.md).
-- [ ] T05 Review actual Bose provisioning contract; decide **GO / BLOCKED** for Phase B. **B1 on-device capability check confirmed (2026-10-29)**: `GET /supportedURLs` returned HTTP 200/XML and advertised all three Wi-Fi routes. The official Bose Web API v1.1 does not specify the wireless-profile POST contract; a community-derived candidate needs controlled, explicit-consent validation. Reliability gate remains open.
-- [ ] T06 Only if GO: implement credential submission with the safety guards above.
+- [x] T05 Accept debug-only controlled hardware investigation on this reference speaker. B1 on-device endpoint list confirmed; original Bose API v1.1 lacks POST contract. Tester independently confirmed all 3 first-start + 3 late-SoftAP retry passes (reported 2026-10-29; per-run logs not attached). Community payload remains unverified, so **production provisioning is NOT approved**.
+- [ ] T06 Controlled credential submission proof: Debug-only single POST implementation prepared and CI-gated; actual isolated-test-network hardware outcome still PENDING. No automated POST retry, credentials persisted or release behavior change.
 - [ ] T07 Test credentials transfer and LAN rediscovery on original firmware, including failures.
 - [ ] T08 Design/implement the full 1–2–3 wizard, separate from STR installation.
 - [ ] T09 Complete quality gates, doc convergence, and explicit acceptance before any new release.
@@ -219,6 +219,21 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - For this initial *isolated WPA2 test* draft, SSID is limited to 1–32 printable ASCII characters and password to 8–63 printable ASCII characters. These are deliberate conservative **test-only** limits, not a claim about all SSIDs/security modes supported by Bose. Before a general wizard, revisit internationalized SSIDs, WPA variants and exact firmware requirements.
 - Escapes XML attribute metacharacters (`&`, `<`, `>`, quotes, apostrophes). Added host-side JUnit tests for expected candidate syntax, escaping and invalid test inputs; CI now invokes `:app:testDebugUnitTest`.
 - This prepares a separately consented, **single-shot** future write test but does not count as task T06 or authorize it. Device validation and retry reliability are still outstanding.
+
+## B2 gated hardware experiment — 3+3 user confirmation (2026-10-29)
+
+**User-reported test acceptance:** all 3 normal SoftAP first-start runs and all 3 late-SoftAP / fresh-Activity retry runs succeeded. This closes the **test-device Wi-Fi picker/retry reliability gate** by tester report; raw per-run Logcat, exact Android build and Bose firmware version are still not included. It is not a claim of broad compatibility across phone OS versions or Bose firmware.
+
+**Debug-only test entry:** Devices → add new device → `B2: WLAN-Hardwaretest vorbereiten`. Android's normal Bose network selection dialog still appears. The app performs Phase A + B1 GET probes first; **only a valid B1 capability result advertising /addWirelessProfile** keeps the Bose-scoped `Network` alive and exposes two volatile credential inputs. A separate modal confirmation explicitly warns about configuring the Bose speaker.
+
+- **Required prerequisites:** physically available original-firmware reference ST20 III, Bose setup AP active, a separate 2.4-GHz **WPA2-Personal** test WLAN configured and known to join, a second method (e.g. router client list) to establish destination-LAN presence. The test WLAN may temporarily replace the speaker's normal Wi-Fi connectivity; prepare a non-reset recovery route.
+- **Operation:** a **single** scoped `POST http://192.0.2.1:8090/addWirelessProfile` with AfterTouch-candidate XML. No survey POST, automatic retry, redirects, global network binding, credential logging or persistence. In-memory payload bytes are wiped after the attempt; password/SSID EditText cleared before the network call. `FLAG_SECURE` suppresses screenshots and Recents previews in B2.
+- **Response interpretation:** only status code + XML acknowledgement root are reported, never response text or credentials. The POST can succeed while the setup AP disconnects. A timeout, lost AP, or 2xx without expected XML is **indeterminate**, not permission to resend. Connection is released on completion/cancel, with background cleanup bounded by request timeout.
+- **Verification after POST:** reconnect Android to the separate test WLAN, inspect router association/client table and `GET http://<device-LAN-IP>:8090/info` for **the same physical speaker**; verify it stays accessible there. Report whether setup AP vanished and whether the phone recovered Wi-Fi. An HTTP acknowledgement or vanished AP alone is not success.
+- **Evidence to return, without secrets:** B1 supported endpoints, B2 HTTP/result classification, SoftAP disappearance yes/no, test LAN device association yes/no, same-device `/info` reachability yes/no, Android Wi-Fi restoration yes/no. Never paste passwords, actual SSIDs, MAC addresses or unredacted XML.
+- **STOP:** if device is unreachable or the B2 result is ambiguous, do not repeat the POST until state is independently checked. Do not merge to main or release from this experiment.
+
+**Next gate:** independently confirm the real-device test outcome and recovery from wrong credentials/failed association before progressing to a production wizard. Product 0.2.1 remains unchanged.
 
 ## Phase B protocol research — no write authorization (2026-10-29)
 
