@@ -68,11 +68,20 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private lateinit var startButton: Button
     private lateinit var cancelButton: Button
-    private lateinit var b2StartButton: Button
+    private lateinit var backButton: Button
+    private lateinit var nextButton: Button
+    private lateinit var preparationPage: LinearLayout
+    private lateinit var connectionPage: LinearLayout
+    private lateinit var resultPage: LinearLayout
+    private lateinit var stepLabel: TextView
+    private lateinit var pageTitle: TextView
+    private lateinit var resultText: TextView
+    private lateinit var detailsButton: Button
+    private lateinit var networkChoices: LinearLayout
+    private var currentPage = 1
     private lateinit var pageScroll: ScrollView
     private lateinit var b2Panel: LinearLayout
     private lateinit var scanButton: Button
-    private lateinit var networkListButton: Button
     private lateinit var surveyStatusView: TextView
     private lateinit var ssidField: EditText
     private lateinit var passwordField: EditText
@@ -88,7 +97,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private var backgroundCleanup: Runnable? = null
     private var hasStartedNetworkRequest = false
     private var resumeWithFreshSearch = false
-    private var b2Mode = false
+    private var b2Mode = true
     private var b2Network: Network? = null
     private var b2Verified = false
     private var surveySupported = false
@@ -118,340 +127,402 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b2Mode = intent.getBooleanExtra(EXTRA_B2_MODE, false)
-        buildUi()
+        b2Mode = true // Debug-only: the guided setup is now the default.
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
+        buildUi()
         trace("activity_created freshRetry=$resumeWithFreshSearch")
         if (Build.VERSION.SDK_INT < 29) {
             statusView.text = "Nicht verfügbar: Dieser PoC benötigt Android 10 oder neuer."
+            nextButton.isEnabled = false
             startButton.isEnabled = false
         }
     }
 
     private fun buildUi() {
         val ink = Color.rgb(23, 46, 67)
-        val muted = Color.rgb(54, 70, 86)
+        val muted = Color.rgb(66, 84, 101)
         val accent = Color.rgb(18, 69, 113)
-        val backgroundColor = Color.rgb(246, 248, 251)
 
-        fun panelBackground(): GradientDrawable = GradientDrawable().apply {
-            setColor(Color.WHITE)
-            cornerRadius = dp(12).toFloat()
-            setStroke(dp(1), Color.rgb(218, 226, 234))
-        }
+        fun card(stroke: Int = Color.rgb(216, 226, 236)): GradientDrawable =
+            GradientDrawable().apply {
+                setColor(Color.WHITE)
+                cornerRadius = dp(10).toFloat()
+                setStroke(dp(1), stroke)
+            }
 
-        fun inputBackground(): GradientDrawable = GradientDrawable().apply {
-            setColor(Color.WHITE)
-            cornerRadius = dp(8).toFloat()
-            setStroke(dp(2), Color.rgb(126, 148, 169))
-        }
-
-        fun paragraph(value: String, size: Float, color: Int): TextView =
+        fun text(value: String, size: Float = 15f, color: Int = muted): TextView =
             TextView(this).apply {
-                text = value
+                this.text = value
                 textSize = size
                 setTextColor(color)
-                includeFontPadding = false
-                setLineSpacing(0f, 1.13f)
-                setPadding(0, 0, 0, dp(10))
+                setLineSpacing(0f, 1.15f)
+                setPadding(0, 0, 0, dp(12))
             }
 
-        val column = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(18), dp(18), dp(24))
-            setBackgroundColor(backgroundColor)
-        }
-
-        column.addView(paragraph("Bose WLAN-Einrichtung", 22f, ink).apply {
+        fun heading(value: String) = text(value, 17f, ink).apply {
             setTypeface(typeface, Typeface.BOLD)
-        })
-        column.addView(
-            paragraph("SoundTouch 20 Series III · Originalfirmware", 14f, muted)
-        )
+        }
 
-        val steps = LinearLayout(this).apply {
+        fun panel(): LinearLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(14), dp(14), dp(6))
-            background = panelBackground()
-        }
-        fun step(title: String, detail: String) {
-            steps.addView(paragraph(title, 16f, ink).apply {
-                setTypeface(typeface, Typeface.BOLD)
-            })
-            steps.addView(paragraph(detail, 14.5f, muted))
-        }
-        step(
-            "1 · Lautsprecher vorbereiten",
-            "Einschalten, Preset 2 und Lautstärke − etwa fünf Sekunden gedrückt halten, " +
-                "bis die WLAN-LED gelb leuchtet."
-        )
-        step(
-            "2 · Bose-Setup-WLAN verbinden",
-            "Auf „Setup-WLAN suchen“ tippen und das Bose-Netz in Android auswählen. " +
-                "Die Verbindungsanfrage anschließend bestätigen."
-        )
-        step(
-            "3 · Bose-Schnittstellen prüfen",
-            "Standardmäßig nur lesende Prüfung mit automatischer Trennung. " +
-                "Im getrennt ausgewählten B2-Hardwaretest bleibt die Verbindung " +
-                "bis zur ausdrücklichen Bestätigung eines einzelnen POST bestehen."
-        )
-        column.addView(
-            steps,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = dp(12)
-            }
-        )
-
-        column.addView(
-            paragraph(
-                "B1: Nur lesender Test. B2: Optionaler, ausdrücklich bestätigter " +
-                    "WLAN-Konfigurationsversuch mit einem separaten WPA2-Testnetz. " +
-                    "Kein Werksreset, keine Firmwareänderung.",
-                13.5f,
-                muted
-            )
-        )
-
-        startButton = Button(this).apply {
-            text = "Setup-WLAN suchen"
-            isAllCaps = false
-            minimumHeight = dp(48)
-            setOnClickListener {
-                if (hasStartedNetworkRequest) {
-                    restartWizardForFreshSearch()
-                } else {
-                    startOrRequestPermission()
-                }
-            }
-        }
-        b2StartButton = Button(this).apply {
-            text = "B2: WLAN-Hardwaretest vorbereiten"
-            isAllCaps = false
-            minimumHeight = dp(48)
-            isEnabled = !b2Mode
-            setOnClickListener {
-                if (!hasStartedNetworkRequest) {
-                    // Block screenshots and Android recents previews while the
-                    // debug-only activity may display test credentials.
-                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    b2Mode = true
-                    b2StartButton.isEnabled = false
-                    startOrRequestPermission()
-                }
-            }
-        }
-        cancelButton = Button(this).apply {
-            text = "Trennen / Abbrechen"
-            isAllCaps = false
-            minimumHeight = dp(48)
-            setOnClickListener {
-                if (postInFlight) {
-                    AlertDialog.Builder(this@BoseSetupProbeActivity)
-                        .setTitle("Laufenden POST abbrechen?")
-                        .setMessage(
-                            "Ein Abbruch kann nicht rückgängig machen, was bereits " +
-                                "an Bose gesendet wurde. Ergebnis wäre unbestimmt. " +
-                                "Vor einem neuen Versuch zuerst den Lautsprecher " +
-                                "im Test-WLAN und im Bose-Setup-Modus prüfen."
-                        )
-                        .setNegativeButton("Weiter abwarten", null)
-                        .setPositiveButton("Trotzdem trennen") { _, _ ->
-                            closeSession()
-                            finish()
-                        }
-                        .show()
-                } else {
-                    // Return to Devices after releasing the Bose network.
-                    closeSession()
-                    finish()
-                }
-            }
-        }
-        column.addView(
-            startButton,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(8) }
-        )
-        column.addView(
-            b2StartButton,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
-        column.addView(
-            cancelButton,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        )
-
-        statusView = paragraph(
-            "Bereit. Die Verbindung erfolgt nur nach Android-Nutzerbestätigung.",
-            15f,
-            accent
-        ).apply {
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            background = panelBackground()
-        }
-        resultsView = paragraph(
-            "Hier erscheinen die Ergebnisse der lokalen HTTP-Prüfungen " +
-                "und der Bose-API-Funktionsliste.",
-            14f,
-            ink
-        ).apply {
-            setTextIsSelectable(true)
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            background = panelBackground()
-        }
-        column.addView(
-            statusView,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
-        )
-        column.addView(
-            resultsView,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(10) }
-        )
-
-        b2Panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
+            setPadding(dp(3), dp(14), dp(3), dp(14))
             visibility = View.GONE
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            background = panelBackground()
         }
-        b2Panel.addView(paragraph(
-            "B2 · Einmaliger Hardwaretest",
-            18f,
-            ink
-        ).apply { setTypeface(typeface, Typeface.BOLD) })
-        b2Panel.addView(paragraph(
-            "Nur separates WPA2-Personal-Testnetz verwenden. Der Lautsprecher " +
-                "kann dadurch sein bisheriges WLAN verlassen. Keine WPA3-only-Netze. " +
-                "Test-SSID: 1–32 druckbare ASCII-Zeichen; Kennwort: 8–63 Zeichen. " +
-                "Kein automatischer Retry, kein automatischer Erfolgsnachweis.",
-            13.5f,
-            muted
-        ))
-        b2Panel.addView(paragraph(
-            "Verfügbare WLANs (vom Bose-Lautsprecher erkannt)",
-            15.5f,
-            ink
-        ).apply { setTypeface(typeface, Typeface.BOLD) })
 
-        scanButton = Button(this).apply {
-            text = "WLANs suchen / Aktualisieren"
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.rgb(246, 248, 251))
+        }
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(16), dp(18), dp(8))
+        }
+        header.addView(text("SoundTouch einrichten", 14f, accent))
+        stepLabel = text("Schritt 1 von 3", 13f, accent).apply {
+            setTypeface(typeface, Typeface.BOLD)
+        }
+        header.addView(stepLabel)
+        pageTitle = heading("Lautsprecher vorbereiten").apply { textSize = 24f }
+        header.addView(pageTitle)
+        root.addView(header)
+
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), 0, dp(18), dp(18))
+        }
+        preparationPage = panel()
+        preparationPage.addView(text(
+            "Wir verbinden deine SoundTouch mit deinem WLAN. Bereite dazu zuerst die Box vor."
+        ))
+        val instructionCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = card()
+            setPadding(dp(16), dp(16), dp(16), dp(8))
+        }
+        instructionCard.addView(heading("Am SoundTouch 20 Series III"))
+        instructionCard.addView(text(
+            "1. Schalte den Lautsprecher ein.\n" +
+                "2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n" +
+                "3. Warte, bis die WLAN-Anzeige gelb leuchtet."
+        ))
+        preparationPage.addView(instructionCard)
+        preparationPage.addView(text(
+            "Die Box öffnet dann ein eigenes Bose-WLAN. Du musst dessen Namen nicht eingeben.",
+            14f
+        ).apply { setPadding(0, dp(16), 0, dp(12)) })
+        nextButton = Button(this).apply {
+            text = "Die WLAN-Anzeige leuchtet gelb"
             isAllCaps = false
-            minimumHeight = dp(48)
+            minHeight = dp(54)
+            setOnClickListener { showPage(2) }
+        }
+        preparationPage.addView(nextButton)
+        content.addView(preparationPage)
+
+        connectionPage = panel()
+        connectionPage.addView(text(
+            "Android öffnet gleich eine WLAN-Auswahl. Wähle dort das Bose-Setup-WLAN aus."
+        ))
+        val connectionCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = card()
+            setPadding(dp(16), dp(16), dp(16), dp(8))
+        }
+        connectionCard.addView(heading("So funktioniert es"))
+        connectionCard.addView(text(
+            "1. Tippe auf „Mit SoundTouch verbinden“.\n" +
+                "2. Wähle das Bose-WLAN im Android-Fenster aus.\n" +
+                "3. Bestätige die Verbindung, auch wenn sie kein Internet bietet."
+        ))
+        connectionPage.addView(connectionCard)
+        connectionPage.addView(text(
+            "Nach erfolgreicher Verbindung geht es automatisch weiter.",
+            14f
+        ).apply { setPadding(0, dp(14), 0, dp(10)) })
+        startButton = Button(this).apply {
+            text = "Mit SoundTouch verbinden"
+            isAllCaps = false
+            minHeight = dp(54)
+            setOnClickListener {
+                if (b2Verified && b2Network != null) showPage(3)
+                else if (hasStartedNetworkRequest) restartWizardForFreshSearch()
+                else startOrRequestPermission()
+            }
+        }
+        connectionPage.addView(startButton)
+        connectionPage.addView(text(
+            "Wenn die Box nicht angezeigt wird: Prüfe, ob die WLAN-Anzeige gelb leuchtet, " +
+                "und wähle „Erneut versuchen“.",
+            14f
+        ).apply { setPadding(0, dp(12), 0, 0) })
+        content.addView(connectionPage)
+
+        b2Panel = panel()
+        b2Panel.addView(text(
+            "Wähle das WLAN aus, in dem du die SoundTouch verwenden möchtest. " +
+                "Die Liste zeigt die Netze, die die Box selbst empfängt."
+        ))
+        b2Panel.addView(heading("Verfügbare WLANs"))
+        scanButton = Button(this).apply {
+            text = "WLANs erneut suchen"
+            isAllCaps = false
+            minHeight = dp(48)
             isEnabled = false
             setOnClickListener { runBoseSurvey() }
         }
-        networkListButton = Button(this).apply {
-            text = "Gefundene WLANs auswählen"
-            isAllCaps = false
-            minimumHeight = dp(48)
-            isEnabled = false
-            setOnClickListener { showSurveyNetworks() }
-        }
-        surveyStatusView = paragraph(
-            "Bose-WLANs werden abgefragt. Alternativ kann eine Test-SSID manuell eingegeben werden.",
-            14f,
-            muted
-        )
         b2Panel.addView(scanButton)
-        b2Panel.addView(networkListButton)
+        surveyStatusView = text("Suche nach WLANs …", 14f).apply {
+            setPadding(0, dp(10), 0, dp(8))
+        }
         b2Panel.addView(surveyStatusView)
-        b2Panel.addView(paragraph(
-            "WLAN-Name (SSID)",
-            15f,
-            ink
-        ).apply { setTypeface(typeface, Typeface.BOLD) })
+        networkChoices = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        b2Panel.addView(networkChoices)
+        b2Panel.addView(text(
+            "Dein WLAN fehlt? Gib seinen Namen einfach selbst ein.",
+            14f
+        ).apply { setPadding(0, dp(14), 0, dp(8)) })
+        b2Panel.addView(heading("WLAN-Name (SSID)"))
         ssidField = EditText(this).apply {
-            hint = "Test-WLAN auswählen oder SSID eintippen"
+            hint = "WLAN wählen oder Namen eingeben"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
             setSingleLine(true)
             textSize = 16f
             setTextColor(ink)
             setHintTextColor(muted)
-            background = inputBackground()
+            background = card(Color.rgb(126, 148, 169))
             setPadding(dp(12), dp(10), dp(12), dp(10))
             minHeight = dp(54)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
         }
         b2Panel.addView(ssidField)
-        b2Panel.addView(paragraph(
-            "WLAN-Passwort (WPA2-Testnetz)",
-            15f,
-            ink
-        ).apply {
-            setTypeface(typeface, Typeface.BOLD)
-            setPadding(0, dp(16), 0, dp(8))
+        b2Panel.addView(heading("WLAN-Passwort").apply {
+            setPadding(0, dp(18), 0, dp(10))
         })
         passwordField = EditText(this).apply {
-            hint = "Test-WLAN-Passwort eingeben"
+            hint = "Passwort für das ausgewählte WLAN"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
             setSingleLine(true)
             textSize = 16f
             setTextColor(ink)
             setHintTextColor(muted)
-            background = inputBackground()
+            background = card(Color.rgb(126, 148, 169))
             setPadding(dp(12), dp(10), dp(12), dp(10))
             minHeight = dp(54)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
         }
         b2Panel.addView(passwordField)
+        b2Panel.addView(text(
+            "Für den ersten Test nur ein separates WPA2-WLAN mit eigenem Passwort verwenden. " +
+                "Die Übertragung an Bose erfolgt ohne Verschlüsselung.",
+            13.5f
+        ).apply { setPadding(0, dp(12), 0, dp(8)) })
         submitButton = Button(this).apply {
-            text = "Einmaligen POST bestätigen …"
+            text = "WLAN auf SoundTouch übertragen"
             isAllCaps = false
-            minimumHeight = dp(48)
+            minHeight = dp(54)
             setOnClickListener { confirmB2Post() }
         }
         b2Panel.addView(submitButton)
-        column.addView(
-            b2Panel,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { topMargin = dp(12) }
-        )
+        content.addView(b2Panel)
 
-        val scroll = ScrollView(this).apply {
-            isFillViewport = true
-            addView(column)
-            // Android 15+ edge-to-edge: protect the title from the status bar
-            // and the last controls from navigation/gesture insets.
-            setOnApplyWindowInsetsListener { view, insets ->
-                if (Build.VERSION.SDK_INT >= 30) {
-                    val bars = insets.getInsets(WindowInsets.Type.systemBars())
-                    view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-                } else {
-                    @Suppress("DEPRECATION")
-                    view.setPadding(
-                        insets.systemWindowInsetLeft,
-                        insets.systemWindowInsetTop,
-                        insets.systemWindowInsetRight,
-                        insets.systemWindowInsetBottom
-                    )
-                }
-                insets
+        resultPage = panel()
+        resultPage.addView(heading("Verbindung überprüfen"))
+        resultText = text(
+            "Die SoundTouch versucht, sich mit dem ausgewählten WLAN zu verbinden.",
+            16f, ink
+        )
+        resultPage.addView(resultText)
+        val resultCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = card()
+            setPadding(dp(16), dp(16), dp(16), dp(8))
+        }
+        resultCard.addView(heading("So geht es weiter"))
+        resultCard.addView(text(
+            "1. Verbinde dein Smartphone wieder mit dem Ziel-WLAN.\n" +
+                "2. Prüfe im Router, ob die SoundTouch dort erscheint.\n" +
+                "3. Erst wenn sie erreichbar ist, ist die Einrichtung bestätigt."
+        ))
+        resultPage.addView(resultCard)
+        resultPage.addView(text(
+            "Bei unklarem Ergebnis bitte zuerst den Router prüfen und nicht blind erneut senden.",
+            14f
+        ).apply { setPadding(0, dp(14), 0, 0) })
+        content.addView(resultPage)
+
+        detailsButton = Button(this).apply {
+            text = "Technische Details anzeigen"
+            isAllCaps = false
+            setOnClickListener {
+                val expanding = resultsView.visibility != View.VISIBLE
+                resultsView.visibility = if (expanding) View.VISIBLE else View.GONE
+                text = if (expanding) "Technische Details ausblenden"
+                       else "Technische Details anzeigen"
             }
         }
-        pageScroll = scroll
-        setContentView(scroll)
+        content.addView(detailsButton)
+        resultsView = text("Diagnose noch nicht verfügbar.", 13f, ink).apply {
+            visibility = View.GONE
+            setTextIsSelectable(true)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = card()
+        }
+        content.addView(resultsView)
+
+        pageScroll = ScrollView(this).apply {
+            isFillViewport = true
+            addView(content)
+        }
+        root.addView(pageScroll, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
+        ))
+        statusView = text("", 14f, accent).apply {
+            visibility = View.GONE
+            setPadding(dp(18), dp(10), dp(18), dp(10))
+            background = card()
+        }
+        root.addView(statusView)
+
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(14), dp(8), dp(14), dp(14))
+        }
+        backButton = Button(this).apply {
+            text = "Zurück"
+            isAllCaps = false
+            setOnClickListener {
+                when (currentPage) {
+                    2 -> {
+                        closeSession()
+                        hasStartedNetworkRequest = false
+                        showPage(1)
+                    }
+                    3 -> showPage(2)
+                }
+            }
+        }
+        cancelButton = Button(this).apply {
+            text = "Einrichtung abbrechen"
+            isAllCaps = false
+            setOnClickListener {
+                if (postInFlight) {
+                    AlertDialog.Builder(this@BoseSetupProbeActivity)
+                        .setTitle("Einrichtung wirklich abbrechen?")
+                        .setMessage(
+                            "Die WLAN-Daten könnten bereits gesendet worden sein. " +
+                                "Bitte prüfe die Box vor einem weiteren Versuch."
+                        )
+                        .setNegativeButton("Weiter abwarten", null)
+                        .setPositiveButton("Trotzdem beenden") { _, _ ->
+                            closeSession()
+                            finish()
+                        }.show()
+                } else {
+                    closeSession()
+                    finish()
+                }
+            }
+        }
+        footer.addView(backButton, LinearLayout.LayoutParams(0, dp(54), 1f))
+        footer.addView(cancelButton, LinearLayout.LayoutParams(0, dp(54), 2f))
+        root.addView(footer)
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        root.setOnApplyWindowInsetsListener { view, insets ->
+            if (Build.VERSION.SDK_INT >= 30) {
+                val bars = insets.getInsets(WindowInsets.Type.systemBars())
+                view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            } else {
+                @Suppress("DEPRECATION")
+                view.setPadding(
+                    insets.systemWindowInsetLeft, insets.systemWindowInsetTop,
+                    insets.systemWindowInsetRight, insets.systemWindowInsetBottom
+                )
+            }
+            insets
+        }
+        setContentView(root)
+        showPage(if (resumeWithFreshSearch) 2 else 1)
+    }
+
+    private fun showPage(page: Int) {
+        currentPage = page
+        preparationPage.visibility = if (page == 1) View.VISIBLE else View.GONE
+        connectionPage.visibility = if (page == 2) View.VISIBLE else View.GONE
+        b2Panel.visibility = if (page == 3) View.VISIBLE else View.GONE
+        resultPage.visibility = if (page == 4) View.VISIBLE else View.GONE
+        stepLabel.text = if (page == 4) "Einrichtung – Abschluss"
+                         else "Schritt " + page + " von 3"
+        pageTitle.text = when (page) {
+            1 -> "Lautsprecher vorbereiten"
+            2 -> "Mit SoundTouch verbinden"
+            3 -> "Heim-WLAN auswählen"
+            else -> "WLAN-Verbindung prüfen"
+        }
+        statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
+        detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
+        backButton.visibility = if (page == 2 || page == 3) View.VISIBLE else View.GONE
+        cancelButton.text = if (page == 4) "Zur Geräteliste" else "Einrichtung abbrechen"
+        pageScroll.post { pageScroll.scrollTo(0, 0) }
+        trace("wizard_page_" + page)
+    }
+
+    private fun renderSurveyNetworks() {
+        networkChoices.removeAllViews()
+        val ink = Color.rgb(23, 46, 67)
+        val muted = Color.rgb(66, 84, 101)
+        val accent = Color.rgb(18, 69, 113)
+        for (candidate in surveyCandidates) {
+            val selected = candidate.ssid == ssidField.text.toString()
+            val signal = when {
+                candidate.signalDbm == null -> "Signal unbekannt"
+                candidate.signalDbm >= -55 -> "Stark"
+                candidate.signalDbm >= -70 -> "Mittel"
+                else -> "Schwach"
+            }
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(12), dp(14), dp(10))
+                background = GradientDrawable().apply {
+                    setColor(if (selected) Color.rgb(232, 242, 251) else Color.WHITE)
+                    cornerRadius = dp(10).toFloat()
+                    setStroke(dp(if (selected) 2 else 1),
+                        if (selected) accent else Color.rgb(218, 226, 234))
+                }
+                alpha = if (candidate.selectable) 1f else 0.52f
+                isClickable = candidate.selectable
+                isFocusable = candidate.selectable
+                contentDescription = candidate.ssid + ", " + signal +
+                    if (candidate.selectable) ", auswählen" else ", nicht unterstützt"
+                if (candidate.selectable) setOnClickListener {
+                    ssidField.setText(candidate.ssid)
+                    ssidField.setSelection(ssidField.text.length)
+                    surveyStatusView.text = "WLAN ausgewählt. Bitte das Passwort eingeben."
+                    renderSurveyNetworks()
+                }
+            }
+            row.addView(TextView(this).apply {
+                text = (if (selected) "✓  " else "") + candidate.ssid
+                textSize = 16f
+                setTypeface(typeface, Typeface.BOLD)
+                setTextColor(ink)
+                setSingleLine(true)
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            row.addView(TextView(this).apply {
+                text = if (candidate.selectable) signal + " · WPA2"
+                       else signal + " · Für diesen Test nicht unterstützt"
+                textSize = 13f
+                setTextColor(muted)
+                setPadding(0, dp(4), 0, 0)
+            })
+            networkChoices.addView(row, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(8) })
+        }
     }
 
     private fun dp(value: Int): Int =
@@ -482,7 +553,6 @@ internal class BoseSetupProbeActivity : Activity() {
         closeSession()
         val restart = Intent(this, BoseSetupProbeActivity::class.java).apply {
             putExtra(EXTRA_RESTART_AND_SEARCH, true)
-            putExtra(EXTRA_B2_MODE, b2Mode)
         }
         startActivity(restart)
         finish()
@@ -542,8 +612,7 @@ internal class BoseSetupProbeActivity : Activity() {
         trace("request_prepare")
         closeSession()
         if (b2Mode) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        b2StartButton.isEnabled = false
-        cancelButton.text = "Trennen / Abbrechen"
+        showPage(2)
 
         // No manual SSID entry: Android finds nearby "Bose..." setup networks.
         // A real user must still approve the local-only Wi-Fi connection.
@@ -566,11 +635,10 @@ internal class BoseSetupProbeActivity : Activity() {
         // No overlapping Android picker/network callbacks survive the restart.
         startButton.text = "Erneut versuchen"
         startButton.isEnabled = true
-        resultsView.text = "Noch keine Probe-Ergebnisse."
+        resultsView.text = "Die Verbindung wird vorbereitet …"
         statusView.text =
-            "Android sucht das Bose-Setup-WLAN (bis zu 20 Sekunden). " +
-                "Bitte die Systemabfrage bestätigen. Ist die Box noch nicht bereit, " +
-                "die Auswahl schließen und „Erneut versuchen“ wählen."
+            "Android sucht die SoundTouch. Wähle das Bose-WLAN im Systemfenster " +
+                "und bestätige die Verbindung."
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
@@ -584,7 +652,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     awaitingConsent = false
                     val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
-                        "Bose-WLAN nach ${seconds} s verbunden. Prüfe lokale HTTP-Endpunkte …"
+                        "Verbunden! Wir prüfen die SoundTouch und öffnen die WLAN-Auswahl …"
                     probeReadOnly(network, token)
                     scheduleBackgroundCleanup()
                 }
@@ -601,9 +669,8 @@ internal class BoseSetupProbeActivity : Activity() {
                     closeSession()
                     val seconds = (SystemClock.elapsedRealtime() - requestStartedAtMs) / 1000L
                     statusView.text =
-                        "Android hat innerhalb von ${seconds} s keine Verbindung bereitgestellt " +
-                            "oder die Auswahl wurde abgebrochen. " +
-                            "Wenn die Bose-WLAN-LED gelb leuchtet, „Erneut versuchen“ wählen."
+                        "Die SoundTouch wurde nicht gefunden. Prüfe, ob die WLAN-Anzeige " +
+                            "gelb leuchtet, und tippe auf „Erneut versuchen“."
                 }
             }
 
@@ -619,13 +686,15 @@ internal class BoseSetupProbeActivity : Activity() {
                         b2NetworkLostDuringPost = true
                         trace("b2_network_lost_during_post")
                         statusView.text =
-                            "Bose-Setup-WLAN während des einmaligen POST getrennt. " +
-                                "Ergebnis wird ausgewertet; nicht erneut senden."
+                            "Die SoundTouch wechselt möglicherweise gerade ins neue WLAN. " +
+                                "Bitte das Ergebnis abwarten."
                     } else {
                         closeSession()
+                        showPage(2)
+                        startButton.text = "Erneut versuchen"
                         statusView.text =
-                            "Setup-WLAN getrennt. Für eine neue Verbindung hier " +
-                                "„Erneut versuchen“ wählen. Messwerte bleiben angezeigt."
+                            "Verbindung zur SoundTouch verloren. Prüfe den Einrichtungsmodus " +
+                                "und versuche es erneut."
                     }
                 }
             }
@@ -704,35 +773,25 @@ internal class BoseSetupProbeActivity : Activity() {
                     b2Network = network
                     b2Verified = true
                     surveySupported = b1Report.supportsWirelessSiteSurvey
-                    startButton.isEnabled = false
-                    b2Panel.visibility = View.VISIBLE
-                    pageScroll.post {
-                        if (token == generation) {
-                            pageScroll.smoothScrollTo(0, b2Panel.top)
-                        }
-                    }
+                    startButton.text = "Weiter zur WLAN-Auswahl"
                     scanButton.isEnabled = surveySupported
                     surveyStatusView.text = if (surveySupported) {
-                        "Suche nach WLANs in Reichweite des Bose-Lautsprechers beginnt …"
+                        "Suche nach WLANs in Reichweite der SoundTouch …"
                     } else {
-                        "Bose meldet keine WLAN-Suchfunktion. SSID bitte manuell eingeben."
+                        "Keine WLAN-Liste verfügbar. Bitte den Namen manuell eingeben."
                     }
                     statusView.text =
-                        "B1 bestätigt /addWirelessProfile. Bose-WLAN bleibt verbunden. " +
-                            "WLAN aus der Liste auswählen oder Test-SSID manuell eingeben. " +
-                            "Abbrechen trennt ohne Änderung."
+                        "SoundTouch verbunden. Wähle jetzt ihr zukünftiges WLAN aus."
                     trace("b2_ready token=$token surveySupported=$surveySupported")
+                    showPage(3)
                     if (surveySupported) runBoseSurvey()
                 } else {
                     closeSession()
-                    cancelButton.text = "Zurück zu Geräte"
-                    statusView.text = if (b2Mode) {
-                        "B2 gesperrt: /addWirelessProfile nicht sicher nachgewiesen. " +
-                            "Setup-WLAN freigegeben; kein POST."
-                    } else {
-                        "API- und B1-Funktionsprüfung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
-                            "wurde automatisch freigegeben. Android kehrt zum Heim-WLAN zurück."
-                    }
+                    showPage(2)
+                    startButton.text = "Erneut versuchen"
+                    statusView.text =
+                        "Die SoundTouch konnte nicht für die WLAN-Einrichtung " +
+                            "vorbereitet werden. Bitte erneut verbinden."
                 }
             }
         }, "BoseSetupReadOnlyProbe")
@@ -749,7 +808,7 @@ internal class BoseSetupProbeActivity : Activity() {
         surveyInFlight = true
         surveyCandidates = emptyList()
         scanButton.isEnabled = false
-        networkListButton.isEnabled = false
+        networkChoices.removeAllViews()
         submitButton.isEnabled = false
         surveyStatusView.text = "Der Bose-Lautsprecher sucht verfügbare WLANs …"
         val token = generation
@@ -762,54 +821,19 @@ internal class BoseSetupProbeActivity : Activity() {
                 scanButton.isEnabled = true
                 submitButton.isEnabled = true
                 surveyCandidates = result.candidates
-                networkListButton.isEnabled = result.candidates.isNotEmpty()
-                surveyStatusView.text = result.status
-                trace("b2_site_survey_end token=$token count=${result.candidates.size}")
-                if (result.candidates.isNotEmpty() && visible && !isFinishing) {
-                    showSurveyNetworks()
+                surveyStatusView.text = if (result.candidates.isNotEmpty()) {
+                    result.candidates.size.toString() + " WLANs gefunden. Wähle dein Netzwerk."
+                } else {
+                    "Keine WLAN-Liste verfügbar. Du kannst die Suche wiederholen " +
+                        "oder den WLAN-Namen selbst eingeben."
                 }
+                resultsView.append("\n\nWLAN-Suche: " + result.status)
+                trace("b2_site_survey_end token=$token count=${result.candidates.size}")
+                renderSurveyNetworks()
             }
         }, "BoseWirelessSiteSurvey")
         activeWorker = worker
         worker.start()
-    }
-
-    private fun showSurveyNetworks() {
-        if (!b2Mode || !b2Verified || surveyCandidates.isEmpty() ||
-            surveyInFlight || postInFlight || postAttempted || isFinishing
-        ) return
-        // Network names are displayed solely in this on-device selection dialog;
-        // never write them to trace(), Logcat, persistent storage or evidence.
-        val choices = surveyCandidates.map { candidate ->
-            val reception = when {
-                candidate.signalDbm == null -> "Signal unbekannt"
-                candidate.signalDbm >= -55 -> "stark"
-                candidate.signalDbm >= -70 -> "mittel"
-                else -> "schwach"
-            }
-            if (candidate.selectable) {
-                "${candidate.ssid} · $reception"
-            } else {
-                "${candidate.ssid} · für WPA2-Test nicht unterstützt"
-            }
-        }.toTypedArray()
-        AlertDialog.Builder(this)
-            .setTitle("WLAN für den Bose-Lautsprecher auswählen")
-            .setItems(choices) { _, position ->
-                val candidate = surveyCandidates.getOrNull(position)
-                if (candidate != null && candidate.selectable) {
-                    ssidField.setText(candidate.ssid)
-                    ssidField.setSelection(ssidField.text.length)
-                    surveyStatusView.text =
-                        "Test-WLAN ausgewählt. Jetzt das zugehörige WPA2-Passwort eingeben."
-                } else {
-                    surveyStatusView.text =
-                        "Dieses WLAN ist für den WPA2-Hardwaretest nicht freigegeben. " +
-                            "Bitte ein WPA2-Test-WLAN wählen."
-                }
-            }
-            .setNegativeButton("Manuell eingeben", null)
-            .show()
     }
 
     private fun confirmB2Post() {
@@ -827,23 +851,22 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         if (!valid) {
             statusView.text =
-                "Ungültige Testdaten: SSID 1–32 ASCII-Zeichen, " +
-                    "WPA2-Kennwort 8–63 ASCII-Zeichen."
+                "Bitte WLAN-Name und Passwort überprüfen. Für diesen Test werden " +
+                    "einfache WPA2-Netzwerknamen und Passwörter ab 8 Zeichen unterstützt."
             return
         }
 
         AlertDialog.Builder(this)
-            .setTitle("WLAN-Profil einmalig übertragen?")
+            .setTitle("SoundTouch mit diesem WLAN verbinden?")
             .setMessage(
-                "ACHTUNG: Dieser Test ändert die WLAN-Konfiguration des Bose-Lautsprechers. " +
-                    "Die Test-Zugangsdaten werden per HTTP ohne TLS übertragen. " +
-                    "Deshalb NUR ein separates WPA2-Test-WLAN mit Einmalkennwort nutzen. " +
-                    "Der Bose-Setup-Hotspot kann sofort verschwinden. " +
-                    "Bei Timeout KEINEN zweiten POST senden; zuerst den Lautsprecher " +
-                    "im Zielnetz/Router prüfen. Wirklich einmalig senden?"
+                "Die SoundTouch erhält jetzt WLAN-Name und Passwort. " +
+                    "Ihr Bose-Setup-WLAN wird möglicherweise sofort verschwinden. " +
+                    "Da die Übertragung unverschlüsselt ist, bitte nur ein separates " +
+                    "Test-WLAN mit eigenem Passwort verwenden. " +
+                    "Bei einem Fehler zuerst den Router prüfen und nicht blind erneut senden."
             )
             .setNegativeButton("Nicht senden", null)
-            .setPositiveButton("Einmalig senden") { _, _ ->
+            .setPositiveButton("WLAN übertragen") { _, _ ->
                 val network = b2Network
                 if (network != null && b2Verified && !postAttempted && !postInFlight) {
                     val payload = try {
@@ -857,13 +880,12 @@ internal class BoseSetupProbeActivity : Activity() {
                     // Remove text as soon as the request is scheduled.
                     ssidField.text?.clear()
                     passwordField.text?.clear()
-                    b2Panel.visibility = View.GONE
                     submitButton.isEnabled = false
                     postAttempted = true
                     postInFlight = true
                     val token = generation
                     statusView.text =
-                        "Einmaliger POST läuft. Bei Verbindungsabbruch Ergebnis abwarten."
+                        "WLAN-Einstellungen werden an die SoundTouch übertragen …"
                     trace("b2_post_started token=$token")
                     val worker = Thread({
                         val result = try {
@@ -880,14 +902,20 @@ internal class BoseSetupProbeActivity : Activity() {
                             if (disconnected) {
                                 resultsView.append("\nSetup-WLAN wurde während des POST getrennt.")
                             }
+                            val acknowledged = result.contains("AddWirelessProfileResponse erkannt")
+                            resultText.text = if (acknowledged) {
+                                "Die SoundTouch hat die WLAN-Daten angenommen. " +
+                                    "Ob sie bereits mit dem neuen WLAN verbunden ist, " +
+                                    "musst du noch überprüfen."
+                            } else {
+                                "Die Übertragung konnte nicht sicher bestätigt werden. " +
+                                    "Möglicherweise ist die SoundTouch bereits ins neue " +
+                                    "WLAN gewechselt. Bitte zuerst den Router prüfen."
+                            }
                             statusView.text =
-                                "Einzelversuch beendet, Setup-Netzwerk freigegeben. " +
-                                    "Android mit dem TEST-WLAN verbinden; im Router und über die " +
-                                    "Bose-/info-API prüfen, ob derselbe Lautsprecher dort erreichbar ist. " +
-                                    "Eine HTTP-Antwort allein ist KEIN Erfolgsnachweis. " +
-                                    "Bei unklarem Ergebnis NICHT erneut senden."
-                            cancelButton.text = "Zurück zu Geräte"
+                                "Bose-Setup-Verbindung beendet. Prüfe die SoundTouch im Ziel-WLAN."
                             startButton.isEnabled = false
+                            showPage(4)
                         }
                     }, "BoseSetupSingleProfilePost")
                     activeWorker = worker
@@ -940,7 +968,7 @@ internal class BoseSetupProbeActivity : Activity() {
         surveyInFlight = false
         surveyCandidates = emptyList()
         if (::scanButton.isInitialized) scanButton.isEnabled = false
-        if (::networkListButton.isInitialized) networkListButton.isEnabled = false
+        if (::networkChoices.isInitialized) networkChoices.removeAllViews()
         postInFlight = false
         b2NetworkLostDuringPost = false
         if (::ssidField.isInitialized) ssidField.text?.clear()
