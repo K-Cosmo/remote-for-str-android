@@ -373,7 +373,9 @@ class MainActivity : Activity() {
         )
 
         val speakerList = ListView(this).apply {
-            dividerHeight = 0
+            // Spacing belongs to the list, not to the individual card drawable.
+            divider = android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
+            dividerHeight = dp(10)
         }
         adapter = SpeakerAdapter()
         speakerList.adapter = adapter
@@ -431,7 +433,7 @@ class MainActivity : Activity() {
         // Keep production STR Remote 0.2.1 behavior and device UI unchanged.
         if (Build.VERSION.SDK_INT >= 29 && packageName == "app.strremote.android.poc") {
             val addDeviceButton = Button(this).apply {
-                text = getString(R.string.add_new_device)
+                text = getString(R.string.setup_speaker_wifi)
                 isAllCaps = false
                 setOnClickListener {
                     returningFromBoseSetup = true
@@ -909,6 +911,19 @@ class MainActivity : Activity() {
                     pendingBose = current.pendingBose && endpoint == null
                 )
                 if (endpoint != null && packageName == "app.strremote.android.poc") {
+                    // Keep any room assigned during Bose setup when STR appears,
+                    // but do not overwrite an already saved user's STR room.
+                    val pending = pendingBose.findMatchingStrDevice(
+                        candidate.key, candidate.host
+                    )
+                    if (pending?.room != null &&
+                        prefs.findSavedSpeaker(candidate.key, candidate.host) == null
+                    ) {
+                        prefs.saveSpeaker(SavedSpeaker(endpoint, pending.room))
+                        speakers[currentKey] = speakers[currentKey]?.copy(
+                            saved = SavedSpeaker(endpoint, pending.room)
+                        ) ?: return@runOnUiThread
+                    }
                     pendingBose.removeMatchingStrDevice(candidate.key, candidate.host)
                 }
                 if (endpoint != null && current.saved != null) {
@@ -1368,7 +1383,8 @@ class MainActivity : Activity() {
                     probeFinished = true,
                     discovered = false,
                     pendingBose = true,
-                    pendingBoseVerified = pending.verifiedOnWifi
+                    pendingBoseVerified = pending.verifiedOnWifi,
+                    pendingRoom = pending.room
                 )
             }
         }
@@ -1504,12 +1520,22 @@ class MainActivity : Activity() {
         }
 
     private fun assignRoomForRow(row: SpeakerRow) {
+        if (row.pendingBose) {
+            showRoomPicker { room ->
+                pendingBose.setRoom(row.candidate.key, room)
+                val key = speakers.entries.firstOrNull { it.value.pendingBose &&
+                    it.value.candidate.key == row.candidate.key }?.key ?: return@showRoomPicker
+                speakers[key] = speakers[key]?.copy(pendingRoom = room) ?: return@showRoomPicker
+                updateList()
+            }
+            return
+        }
         val endpoint = resolveRoomEndpoint(row)
         if (endpoint == null) {
             Toast.makeText(this, R.string.save_requires_reachable, Toast.LENGTH_LONG).show()
             return
         }
-        showRoomPicker(endpoint)
+        showRoomPicker { room -> saveSpeakerWithRoom(endpoint, room) }
     }
 
     private fun confirmRemoveSavedSpeaker(row: SpeakerRow) {
@@ -1525,7 +1551,7 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun showRoomPicker(endpoint: SpeakerEndpoint) {
+    private fun showRoomPicker(onSelected: (RoomAssignment?) -> Unit) {
         val labels = arrayOf(
             getString(R.string.room_none),
             getString(R.string.room_living),
@@ -1536,32 +1562,29 @@ class MainActivity : Activity() {
             getString(R.string.room_garden),
             getString(R.string.room_custom)
         )
-
+        val presets = arrayOf(
+            RoomPreset.LIVING_ROOM, RoomPreset.BEDROOM, RoomPreset.KITCHEN,
+            RoomPreset.BATHROOM, RoomPreset.KIDS_ROOM, RoomPreset.GARDEN
+        )
         AlertDialog.Builder(this)
             .setTitle(R.string.room_title)
             .setItems(labels) { _, which ->
-                when (which) {
-                    0 -> saveSpeakerWithRoom(endpoint, null)
-                    1 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.LIVING_ROOM))
-                    2 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BEDROOM))
-                    3 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KITCHEN))
-                    4 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.BATHROOM))
-                    5 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.KIDS_ROOM))
-                    6 -> saveSpeakerWithRoom(endpoint, RoomAssignment(preset = RoomPreset.GARDEN))
-                    else -> showCustomRoomDialog(endpoint)
+                when {
+                    which == 0 -> onSelected(null)
+                    which in 1..6 -> onSelected(RoomAssignment(preset = presets[which - 1]))
+                    else -> showCustomRoomDialog(onSelected)
                 }
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun showCustomRoomDialog(endpoint: SpeakerEndpoint) {
+    private fun showCustomRoomDialog(onSelected: (RoomAssignment?) -> Unit) {
         val input = EditText(this).apply {
             hint = getString(R.string.room_custom_hint)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setSingleLine(true)
         }
-
         AlertDialog.Builder(this)
             .setTitle(R.string.room_custom_title)
             .setView(input)
@@ -1570,7 +1593,7 @@ class MainActivity : Activity() {
                 if (room.isBlank()) {
                     Toast.makeText(this, R.string.room_custom_invalid, Toast.LENGTH_LONG).show()
                 } else {
-                    saveSpeakerWithRoom(endpoint, RoomAssignment(customName = room))
+                    onSelected(RoomAssignment(customName = room.take(60)))
                 }
             }
             .setNegativeButton(R.string.cancel, null)
@@ -1765,7 +1788,8 @@ class MainActivity : Activity() {
         val discovered: Boolean = true,
         val lastReachable: Boolean? = null,
         val pendingBose: Boolean = false,
-        val pendingBoseVerified: Boolean = false
+        val pendingBoseVerified: Boolean = false,
+        val pendingRoom: RoomAssignment? = null
     )
 
     private data class SpeakerRowViewHolder(
@@ -1903,7 +1927,7 @@ class MainActivity : Activity() {
             }
 
             val row = rows[position]
-            val room = roomLabel(row.saved?.room)
+            val room = roomLabel(row.saved?.room ?: row.pendingRoom)
             val speakerTitle = if (room == null) {
                 row.candidate.friendlyName
             } else {
@@ -1955,7 +1979,8 @@ class MainActivity : Activity() {
             val roomEndpoint = resolveRoomEndpoint(row)
             holder.roomButton.text = getString(R.string.room_action_label)
             holder.roomButton.contentDescription = getString(R.string.room_action_description)
-            holder.roomButton.isEnabled = roomEndpoint != null && !row.pendingBose
+            // Pending Bose devices can have rooms without pretending STR works.
+            holder.roomButton.isEnabled = row.pendingBose || roomEndpoint != null
             holder.roomButton.alpha = if (holder.roomButton.isEnabled) 1f else 0.45f
             holder.roomButton.setOnClickListener {
                 assignRoomForRow(row)
