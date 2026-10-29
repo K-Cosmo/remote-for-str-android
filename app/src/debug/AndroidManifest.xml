@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Normal permission required for ConnectivityManager.requestNetwork().
+         Debug variant only: the release app does not request local setup networks. -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+
     <!-- Debug-only Wi-Fi provisioning proof: legacy Android 10–12L runtime access. -->
     <uses-permission
         android:name="android.permission.ACCESS_COARSE_LOCATION"
