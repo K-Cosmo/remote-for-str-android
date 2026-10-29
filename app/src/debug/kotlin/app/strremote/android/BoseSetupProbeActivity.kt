@@ -29,8 +29,9 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.RadioButton
-import android.widget.RadioGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.text.method.PasswordTransformationMethod
 import android.view.Gravity
 import android.view.ViewGroup
@@ -88,6 +89,11 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var backButton: Button
     private lateinit var nextButton: Button
     private lateinit var preparationPage: LinearLayout
+    private lateinit var passwordPage: LinearLayout
+    private lateinit var completionPage: LinearLayout
+    private lateinit var manualNextButton: Button
+    private lateinit var chosenPasswordNetworkView: TextView
+    private lateinit var passwordEye: ImageButton
     private lateinit var connectionPage: LinearLayout
     private lateinit var resultPage: LinearLayout
     private lateinit var stepLabel: TextView
@@ -112,6 +118,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var modelTestNotice: TextView
     private var selectedModel = BoseSetupModel.SOUND_TOUCH_20_III
     private var passwordVisible = false
+    private var setupPhase = BoseSetupPhase.PREPARING
     private lateinit var ssidField: EditText
     private lateinit var passwordField: EditText
     private lateinit var submitButton: Button
@@ -239,7 +246,7 @@ internal class BoseSetupProbeActivity : Activity() {
             setPadding(dp(18), dp(16), dp(18), dp(8))
         }
         header.addView(text("SoundTouch einrichten", 14f, accent))
-        stepLabel = text("Schritt 1 von 3", 13f, accent).apply {
+        stepLabel = text("Schritt 1 von 4", 13f, accent).apply {
             setTypeface(typeface, Typeface.BOLD)
         }
         header.addView(stepLabel)
@@ -256,26 +263,42 @@ internal class BoseSetupProbeActivity : Activity() {
             "Wähle zunächst dein SoundTouch-Modell. Danach zeigen wir dir die passenden Schritte."
         ))
         preparationPage.addView(heading("Lautsprecher-Modell"))
-        val modelSelection = RadioGroup(this).apply {
-            orientation = RadioGroup.VERTICAL
-            background = card()
-            setPadding(dp(10), dp(8), dp(10), dp(8))
+        val models = BoseSetupModel.entries
+        val modelSelection = Spinner(this).apply {
+            minimumHeight = dp(58)
+            background = card(Color.rgb(126, 148, 169))
+            contentDescription = "SoundTouch-Modell auswählen"
         }
-        BoseSetupModel.entries.forEach { model ->
-            val option = RadioButton(this).apply {
-                id = View.generateViewId()
-                text = model.selectionLabel
-                textSize = 16f
-                setTextColor(ink)
-                setPadding(dp(10), dp(10), dp(8), dp(10))
-                minHeight = dp(50)
-                isChecked = model == selectedModel
-                setOnClickListener {
-                    selectedModel = model
-                    renderModelInstructions()
+        val modelAdapter = object : ArrayAdapter<String>(
+            this, android.R.layout.simple_spinner_item,
+            models.map { it.selectionLabel }
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
+                (super.getView(position, convertView, parent) as TextView).apply {
+                    setTextColor(ink)
+                    textSize = 16f
+                    setPadding(dp(16), dp(12), dp(12), dp(12))
                 }
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View =
+                (super.getDropDownView(position, convertView, parent) as TextView).apply {
+                    setTextColor(ink)
+                    setBackgroundColor(Color.WHITE)
+                    textSize = 16f
+                    minHeight = dp(54)
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                }
+        }
+        modelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        modelSelection.adapter = modelAdapter
+        modelSelection.setSelection(models.indexOf(selectedModel).coerceAtLeast(0))
+        modelSelection.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+            override fun onItemSelected(
+                parent: AdapterView<*>?, view: View?, position: Int, id: Long
+            ) {
+                selectedModel = models[position]
+                renderModelInstructions()
             }
-            modelSelection.addView(option)
         }
         preparationPage.addView(modelSelection)
         modelTestNotice = text("", 14f, muted).apply {
@@ -428,6 +451,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 ssidField.text?.clear()
                 passwordField.text?.clear()
                 selectedWifiView.text = "WLAN-Name wird manuell eingegeben."
+                manualNextButton.visibility = View.VISIBLE
                 ssidLabel.visibility = View.VISIBLE
                 ssidField.visibility = View.VISIBLE
                 ssidField.requestFocus()
@@ -451,7 +475,31 @@ internal class BoseSetupProbeActivity : Activity() {
             visibility = View.GONE
         }
         b2Panel.addView(ssidField)
-        b2Panel.addView(heading("WLAN-Passwort").apply {
+        manualNextButton = Button(this).apply {
+            text = "Weiter zum Passwort"
+            isAllCaps = false
+            minHeight = dp(54)
+            visibility = View.GONE
+            setOnClickListener {
+                val name = ssidField.text.toString()
+                if (name.length in 1..32 && name.all { it.code in 0x20..0x7e }) {
+                    showPage(4)
+                } else {
+                    surveyStatusView.text =
+                        "Bitte einen WLAN-Namen mit 1–32 einfachen Zeichen eingeben."
+                }
+            }
+        }
+        b2Panel.addView(manualNextButton)
+        content.addView(b2Panel)
+
+        passwordPage = panel()
+        passwordPage.addView(text(
+            "Gib jetzt das Kennwort für das ausgewählte WLAN ein."
+        ))
+        chosenPasswordNetworkView = heading("WLAN")
+        passwordPage.addView(chosenPasswordNetworkView)
+        passwordPage.addView(heading("WLAN-Passwort").apply {
             setPadding(0, dp(18), 0, dp(10))
         })
         val passwordContainer = FrameLayout(this)
@@ -474,8 +522,10 @@ internal class BoseSetupProbeActivity : Activity() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         ))
-        val passwordEye = ImageButton(this).apply {
-            setImageResource(R.drawable.ic_str_visibility)
+        passwordEye = ImageButton(this).apply {
+            // The icon depicts the CURRENT state: crossed-out when concealed,
+            // open eye when visible. Accessible label describes the ACTION.
+            setImageResource(R.drawable.ic_str_visibility_off)
             contentDescription = "Passwort anzeigen"
             setBackgroundColor(Color.TRANSPARENT)
             scaleType = ImageView.ScaleType.CENTER_INSIDE
@@ -487,8 +537,8 @@ internal class BoseSetupProbeActivity : Activity() {
                 passwordField.transformationMethod =
                     if (passwordVisible) null else PasswordTransformationMethod.getInstance()
                 setImageResource(
-                    if (passwordVisible) R.drawable.ic_str_visibility_off
-                    else R.drawable.ic_str_visibility
+                    if (passwordVisible) R.drawable.ic_str_visibility
+                    else R.drawable.ic_str_visibility_off
                 )
                 contentDescription =
                     if (passwordVisible) "Passwort verbergen" else "Passwort anzeigen"
@@ -498,8 +548,8 @@ internal class BoseSetupProbeActivity : Activity() {
         passwordContainer.addView(passwordEye, FrameLayout.LayoutParams(
             dp(54), dp(54), Gravity.END or Gravity.CENTER_VERTICAL
         ))
-        b2Panel.addView(passwordContainer)
-        b2Panel.addView(text(
+        passwordPage.addView(passwordContainer)
+        passwordPage.addView(text(
             "Für den ersten Test nur ein separates WPA2-WLAN mit eigenem Passwort verwenden. " +
                 "Die Übertragung an Bose erfolgt ohne Verschlüsselung.",
             13.5f
@@ -510,8 +560,8 @@ internal class BoseSetupProbeActivity : Activity() {
             minHeight = dp(54)
             setOnClickListener { confirmB2Post() }
         }
-        b2Panel.addView(submitButton)
-        content.addView(b2Panel)
+        passwordPage.addView(submitButton)
+        content.addView(passwordPage)
 
         resultPage = panel()
         resultPage.addView(heading("Wir richten deine SoundTouch ein"))
@@ -536,16 +586,23 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         resultPage.addView(retryVerificationButton)
         resultPage.addView(text(
-            "Nach dem Senden kehrt Android normalerweise selbst zu deinem WLAN zurück. " +
-                "Die App sucht die SoundTouch anschließend in diesem Netzwerk. " +
-                "Bei unklarem Ergebnis wird das Passwort nicht erneut übertragen.",
+            "Android stellt das normale WLAN wieder her. Wir prüfen die SoundTouch " +
+                "automatisch und zeigen danach das Ergebnis.",
             14f
         ).apply { setPadding(0, dp(12), 0, 0) })
-        resultPage.addView(heading("Nächster Schritt: SoundTouch Reborn"))
-        resultPage.addView(text(
-            "Für die Steuerung mit STR Remote fehlt auf dem Lautsprecher " +
-                "noch SoundTouch Reborn (STR). Bis STR installiert ist, " +
-                "erscheint die SoundTouch in der Geräteliste grau.",
+        content.addView(resultPage)
+
+        completionPage = panel()
+        completionPage.addView(heading("Ergebnis der WLAN-Einrichtung"))
+        val resultSummary = text("Die Prüfung ist abgeschlossen.", 16f, ink)
+        completionPage.addView(resultSummary)
+        // The resultText view is moved to the completion page only when
+        // the verification reaches a terminal state.
+        completionPage.addView(heading("Nächster Schritt: SoundTouch Reborn"))
+        completionPage.addView(text(
+            "Für die Steuerung mit STR Remote muss SoundTouch Reborn (STR) " +
+                "noch auf dem Lautsprecher eingerichtet sein. " +
+                "Ohne STR bleibt das Gerät in der Liste grau.",
             14f
         ))
         strWebsiteButton = Button(this).apply {
@@ -561,8 +618,15 @@ internal class BoseSetupProbeActivity : Activity() {
                 }
             }
         }
-        resultPage.addView(strWebsiteButton)
-        content.addView(resultPage)
+        completionPage.addView(strWebsiteButton)
+        val completionRetry = Button(this).apply {
+            text = "SoundTouch erneut suchen"
+            isAllCaps = false
+            visibility = View.GONE
+            setOnClickListener { beginLanVerification() }
+        }
+        completionPage.addView(completionRetry)
+        content.addView(completionPage)
 
         detailsButton = Button(this).apply {
             text = "Technische Details anzeigen"
@@ -782,16 +846,12 @@ internal class BoseSetupProbeActivity : Activity() {
                     ssidField.setText(candidate.ssid)
                     ssidLabel.visibility = View.GONE
                     ssidField.visibility = View.GONE
+                    manualNextButton.visibility = View.GONE
                     selectedWifiView.text = "Ausgewählt: " + candidate.ssid
                     passwordField.text?.clear()
                     surveyStatusView.text = "Gib jetzt das Passwort für dieses WLAN ein."
                     dialog.dismiss()
-                    passwordField.requestFocus()
-                    pageScroll.post {
-                        pageScroll.smoothScrollTo(
-                            0, (b2Panel.top + passwordField.top - dp(50)).coerceAtLeast(0)
-                        )
-                    }
+                    showPage(4)
                 }
             }
             row.addView(TextView(this).apply {
