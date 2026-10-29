@@ -4,6 +4,9 @@
 
     <!-- Debug-only Wi-Fi provisioning proof: legacy Android 10–12L runtime access. -->
     <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:maxSdkVersion="32" />
+    <uses-permission
         android:name="android.permission.ACCESS_FINE_LOCATION"
         android:maxSdkVersion="32" />
 
