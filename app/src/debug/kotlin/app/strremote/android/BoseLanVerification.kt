@@ -56,11 +56,11 @@ internal class BoseLanVerification(
     private var nsdListener: NsdManager.DiscoveryListener? = null
     private var multicastLock: WifiManager.MulticastLock? = null
     private var currentWifi: Network? = null
-    private var stopped = true
-    private var verified = false
+    @Volatile private var stopped = true
+    @Volatile private var verified = false
     private var startedAt = 0L
-    private var scanGeneration = 0
-    private val attempts = mutableSetOf<String>()
+    @Volatile private var scanGeneration = 0
+    private val attempts = mutableMapOf<String, Long>()
 
     fun start() {
         stop()
@@ -238,7 +238,12 @@ internal class BoseLanVerification(
     private fun considerCandidate(network: Network, token: Int, host: String) {
         if (stopped || verified || token != scanGeneration || !isPrivateIpv4(host)) return
         synchronized(attempts) {
-            if (!attempts.add(host)) return
+            val now = android.os.SystemClock.elapsedRealtime()
+            // The speaker may advertise itself before /info becomes ready.
+            // Retry the same host after a short cooldown instead of permanently
+            // discarding the address for the entire session.
+            if (now - (attempts[host] ?: -5_000L) < 4_000L) return
+            attempts[host] = now
         }
         Thread({
             val actualId = BoseLanIdentity.getDeviceId(network, host)
