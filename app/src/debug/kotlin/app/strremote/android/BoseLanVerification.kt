@@ -46,6 +46,7 @@ internal class BoseLanVerification(
         object WaitingForWifi : Status()
         object Searching : Status()
         data class Found(val wlanName: String?) : Status()
+        data class OtherWifi(val wlanName: String) : Status()
         object NotFound : Status()
     }
 
@@ -261,11 +262,13 @@ internal class BoseLanVerification(
                     if (!stopped && !verified && token == scanGeneration) {
                         // When supported, Bose's active profile is stronger
                         // verification than reachability alone.
+                        verified = true
                         if (wlan == null || wlan == expectedSsid) {
-                            verified = true
                             onUpdate(Status.Found(wlan))
-                            stop()
+                        } else {
+                            onUpdate(Status.OtherWifi(wlan))
                         }
+                        stop()
                     }
                 }
             }
