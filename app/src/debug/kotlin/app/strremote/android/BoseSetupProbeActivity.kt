@@ -582,8 +582,10 @@ internal class BoseSetupProbeActivity : Activity() {
         statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
         detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
         backButton.visibility = if (page == 2 || page == 3) View.VISIBLE else View.GONE
-        cancelButton.text = if (page == 4) "Einrichtung läuft …" else "Einrichtung abbrechen"
-        cancelButton.isEnabled = page != 4
+        // During the transfer/check the footer remains an explicit cancel.
+        // Only the terminal result replaces it with the clear "Fertig" action.
+        cancelButton.text = if (page == 4) "Abbrechen" else "Einrichtung abbrechen"
+        cancelButton.isEnabled = true
         pageScroll.post { pageScroll.scrollTo(0, 0) }
         trace("wizard_page_" + page)
     }
