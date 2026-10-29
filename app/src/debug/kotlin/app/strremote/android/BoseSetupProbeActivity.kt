@@ -632,10 +632,11 @@ internal class BoseSetupProbeActivity : Activity() {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
             ).apply { bottomMargin = dp(7) })
         }
+        scroll.layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            minOf(dp(400), available.size * dp(76) + dp(24))
+        )
         dialog.show()
-        scroll.layoutParams = scroll.layoutParams.apply {
-            height = minOf(dp(400), available.size * dp(76) + dp(24))
-        }
     }
 
     private fun renderSurveyNetworks() {
