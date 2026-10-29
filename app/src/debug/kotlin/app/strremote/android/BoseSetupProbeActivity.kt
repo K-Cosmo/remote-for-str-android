@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -17,6 +19,7 @@ import android.os.Looper
 import android.os.PatternMatcher
 import android.text.InputType
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -78,51 +81,92 @@ internal class BoseSetupProbeActivity : Activity() {
     }
 
     private fun buildUi() {
-        val column = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(24))
-            setBackgroundColor(Color.rgb(246, 248, 251))
+        val ink = Color.rgb(23, 46, 67)
+        val muted = Color.rgb(54, 70, 86)
+        val accent = Color.rgb(18, 69, 113)
+        val backgroundColor = Color.rgb(246, 248, 251)
+
+        fun panelBackground(): GradientDrawable = GradientDrawable().apply {
+            setColor(Color.WHITE)
+            cornerRadius = dp(12).toFloat()
+            setStroke(dp(1), Color.rgb(218, 226, 234))
         }
-        fun paragraph(text: String, size: Float, color: Int): TextView =
+
+        fun paragraph(value: String, size: Float, color: Int): TextView =
             TextView(this).apply {
-                this.text = text
+                text = value
                 textSize = size
                 setTextColor(color)
-                setPadding(0, 0, 0, dp(12))
+                includeFontPadding = false
+                setLineSpacing(0f, 1.13f)
+                setPadding(0, 0, 0, dp(10))
             }
 
+        val column = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(24))
+            setBackgroundColor(backgroundColor)
+        }
+
+        column.addView(paragraph("Bose WLAN-Einrichtung", 22f, ink).apply {
+            setTypeface(typeface, Typeface.BOLD)
+        })
         column.addView(
-            paragraph("Bose Wi-Fi PoC · BUILD-0012", 23f, Color.rgb(21, 46, 70))
+            paragraph("SoundTouch 20 Series III · Originalfirmware", 14f, muted)
+        )
+
+        val steps = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(14), dp(14), dp(6))
+            background = panelBackground()
+        }
+        fun step(title: String, detail: String) {
+            steps.addView(paragraph(title, 16f, ink).apply {
+                setTypeface(typeface, Typeface.BOLD)
+            })
+            steps.addView(paragraph(detail, 14.5f, muted))
+        }
+        step(
+            "1 · Lautsprecher vorbereiten",
+            "Einschalten, Preset 2 und Lautstärke − etwa fünf Sekunden gedrückt halten, " +
+                "bis die WLAN-LED gelb leuchtet."
+        )
+        step(
+            "2 · Bose-Setup-WLAN verbinden",
+            "SSID optional eingeben. Ohne Eingabe bietet Android passende Bose-Netze " +
+                "zur Auswahl an. Die Android-Verbindungsabfrage bestätigen."
+        )
+        step(
+            "3 · Verbindung prüfen",
+            "Die App testet ausschließlich lokale HTTP-Adressen. " +
+                "Ist die Box erst später bereit, die Android-Netzauswahl schließen " +
+                "und hier „Erneut versuchen“ wählen."
         )
         column.addView(
-            paragraph(
-                "SoundTouch 20 Series III (355589-SM2) · Originalfirmware.\n" +
-                    "Nur lesender Test: keine Passwörter, kein Werksreset, kein WLAN-Profil.",
-                15f,
-                Color.rgb(45, 63, 81)
-            )
+            steps,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
         )
+
         column.addView(
             paragraph(
-                "1. Lautsprecher einschalten. Preset 2 + Lautstärke − ca. 5 Sekunden " +
-                    "gedrückt halten, bis die WLAN-LED gelb leuchtet.\n" +
-                    "2. Optional die vollständige Bose-Setup-SSID eingeben. " +
-                    "Ohne Eingabe zeigt Android passende Netze mit Präfix „Bose“ an.\n" +
-                    "3. „Setup-WLAN anfordern“ wählen und die Android-Abfrage bestätigen. " +
-                    "Fehlt Internet, trotzdem mit dem Bose-Netz verbinden.\n" +
-                    "Ist der Lautsprecher erst später im Setup-Modus, Androids " +
-                    "Netzauswahl schließen und hier „Erneut versuchen“ tippen.",
-                15f,
-                Color.rgb(45, 63, 81)
+                "Nur lesender Test. Keine WLAN-Passwörter, kein Werksreset, " +
+                    "keine Änderung der Bose-Firmware.",
+                13.5f,
+                muted
             )
         )
 
         ssidInput = EditText(this).apply {
-            hint = "Exakte Bose-SSID (optional)"
+            hint = "Bose-Setup-SSID (optional)"
             inputType = InputType.TYPE_CLASS_TEXT
             isSingleLine = true
-            setTextColor(Color.rgb(21, 46, 70))
-            setHintTextColor(Color.GRAY)
+            setTextColor(ink)
+            setHintTextColor(muted)
         }
         column.addView(
             ssidInput,
@@ -135,39 +179,87 @@ internal class BoseSetupProbeActivity : Activity() {
         startButton = Button(this).apply {
             text = "Setup-WLAN anfordern"
             isAllCaps = false
+            minimumHeight = dp(48)
             setOnClickListener { startOrRequestPermission() }
         }
         cancelButton = Button(this).apply {
             text = "Trennen / Abbrechen"
             isAllCaps = false
+            minimumHeight = dp(48)
             setOnClickListener {
-                // Close the whole setup wizard after releasing the temporary
-                // Bose Wi-Fi request. MainActivity remains on the Devices page.
+                // Return to the Devices screen after releasing the Bose network.
                 closeSession()
                 finish()
             }
         }
-        column.addView(startButton)
-        column.addView(cancelButton)
+        column.addView(
+            startButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(8) }
+        )
+        column.addView(
+            cancelButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
 
         statusView = paragraph(
-            "Bereit. Der PoC verbindet sich nicht ohne deine Android-Freigabe.",
-            16f,
-            Color.rgb(21, 70, 112)
-        )
+            "Bereit. Die Verbindung erfolgt nur nach Android-Nutzerbestätigung.",
+            15f,
+            accent
+        ).apply {
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = panelBackground()
+        }
         resultsView = paragraph(
-            "Nach erfolgreicher Verbindung werden nur HTTP-Status und Content-Type " +
-                "der lokalen Kandidaten angezeigt; kein Antwortinhalt wird gespeichert.",
+            "Hier erscheinen die Ergebnisse der lokalen HTTP-Prüfungen " +
+                "(Statuscode und Content-Type).",
             14f,
-            Color.rgb(45, 63, 81)
+            ink
+        ).apply {
+            setTextIsSelectable(true)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = panelBackground()
+        }
+        column.addView(
+            statusView,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(12) }
         )
-        resultsView.setTextIsSelectable(true)
-        column.addView(statusView)
-        column.addView(resultsView)
+        column.addView(
+            resultsView,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dp(10) }
+        )
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true
             addView(column)
+            // Android 15+ edge-to-edge: protect the title from the status bar
+            // and the last controls from navigation/gesture insets.
+            setOnApplyWindowInsetsListener { view, insets ->
+                if (Build.VERSION.SDK_INT >= 30) {
+                    val bars = insets.getInsets(WindowInsets.Type.systemBars())
+                    view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+                } else {
+                    @Suppress("DEPRECATION")
+                    view.setPadding(
+                        insets.systemWindowInsetLeft,
+                        insets.systemWindowInsetTop,
+                        insets.systemWindowInsetRight,
+                        insets.systemWindowInsetBottom
+                    )
+                }
+                insets
+            }
         }
         setContentView(scroll)
     }
