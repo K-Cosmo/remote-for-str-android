@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Debug-only Wi-Fi provisioning proof: legacy Android 10–12L runtime access. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="32" />
+
+    <!-- Debug APK needs the Wi-Fi request permission on Android 13+, including API 37. -->
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:remove="android:maxSdkVersion" />
+
+    <application>
+        <!-- Separate launcher, not bundled in release builds. -->
+        <activity
+            android:name=".BoseSetupProbeActivity"
+            android:exported="true"
+            android:label="Bose Wi-Fi PoC (Debug)">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
