@@ -1,7 +1,7 @@
 # BUILD-0012 — SoundTouch 20 Series III SoftAP Phase A observations
 
 **Date:** 2026-10-29
-**State:** PARTIAL PHASE A — setup API, retry, Cancel exit and normal Wi-Fi recovery confirmed by tester; protocol write contract still untested
+**State:** PARTIAL PHASE A — API and network recovery confirmed, **intermittent retry regression reopened**, diagnostic revision pending real-device QA
 **Reference hardware:** Bose SoundTouch 20 Series III / 355589-SM2 / original Bose firmware (per test owner)
 **App:** STR Remote PoC, separate debug package `app.strremote.android.poc`
 
@@ -54,10 +54,21 @@ Root cause is **not yet independently proven**. The current `MainActivity` Retry
 - The read-only status now explicitly explains automatic network release and the button becomes `Zurück zu Geräte` after the measurement. **The changed labels/advanced toggle passed GitHub CI for commit `69ecf083` (run `40905126968`), but still require a fresh screenshot/device smoke.**
 - In the later credential-provisioning phase, Android must keep the temporary Bose network until the **validated and user-confirmed submission** completes or fails; do not copy the Phase-A immediate-release point into the middle of a write operation.
 
+## Subsequent regression and bounded discovery revision (2026-10-29)
+
+The tester reports another **failure of "Erneut suchen"** (after a previously successful retest) and an unexpectedly slow search. The regression cannot be marked closed; the prior `[x]` reliability result documents **one observed success**, not repeated stability.
+
+- Eliminated the entire manual Bose-setup-SSID field and advanced toggle at tester request. `WifiNetworkSpecifier` remains a system-approved SSID prefix selection; no scanner added.
+- Removed `192.168.1.1` checks (known ~1.8 s timeout per probe) and the unused `:8090/` root check. Post-connect test uses only `192.0.2.1:80/` and `192.0.2.1:8090/info`, both confirmed HTTP 200 on this speaker. Prior port results remain preserved in the historical evidence table.
+- Changed Android's pending request timeout from 30 seconds to 20 seconds and added elapsed seconds to `onAvailable` / `onUnavailable` status, separating **OS Wi-Fi discovery/connection latency** from subsequent HTTP probe latency.
+- Replaced the unreliable same-Activity retry with a fresh Activity lifecycle: explicit retry unregisters the old callback, opens a new PoC Activity and immediately issues a new network request when resumed. This aims to emulate the previously successful complete wizard restart. The original immediate first-request behavior is retained. **Not yet validated on device**.
+- Proposed QA: 3 first-search passes with Bose SoftAP already active, 3 delayed-Bose startup passes that must recover using in-screen retry without manual navigation, check no duplicated system prompts, Cancel/return to home Wi-Fi and both HTTP 200 endpoints. Record whether failure is in the Android network picker or in HTTP. Do not claim Phase B ready before repeated reliability tests.
+- This revision requires fresh CI and user hardware verification; the result is a **hypothesis**, not a confirmed Android framework root cause.
+
 ## Still open before Phase A acceptance
 
 - [x] Reconfirm previously successful connection when the Bose is **already** in setup mode after reverting deferred request (user-reported successful)
-- [x] Re-test device appearing **after** initial failed/waiting attempt using the **Bose PoC retry in the same screen**; tester confirms it works
+- [ ] Reliability gate reopened: 3 delayed-start retry tests from the same wizard route, using a new network request and fresh Activity (earlier single test did pass; subsequent regression reported)
 - [x] Verify explicit **Cancel** releases temporary network request and Android returns to the home Wi-Fi (tester confirmed)
 - [x] Verify **updated Cancel button exits the wizard and returns to Devices**; tester confirms
 - [x] Verify that automatic release after a **completed successful probe** returns the phone to its home Wi-Fi; tester directly observed this behavior
