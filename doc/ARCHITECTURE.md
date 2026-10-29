@@ -55,3 +55,14 @@ The Android wrapper depends on STR's local contracts. STR does not depend on the
 ## Native shell geometry
 
 The native root owns Android system-bar insets. Toolbar/device-list spacing is component-local. The WebView fills the remaining content rectangle and the upstream STR web application owns layout inside that WebView.
+
+
+## Bose setup (0.3.0)
+
+- `BoseSetupProbeActivity`: Android 10+ four-step, model-aware setup wizard plus separate verification and result views.
+- `BoseWirelessSiteSurvey`, `BoseWirelessProfileXml`, `BoseWirelessProfilePost`, `BoseSupportedUrlsProbe`: bounded, network-scoped interactions with Bose original firmware. State-changing `addWirelessProfile` runs only once after the explicit user action, with no automatic retry.
+- `BoseLanVerification`: bounded same-device recognition after the system returns to the phone's normal Wi-Fi, using local discovery and Bose `/info`.
+- `PendingBoseStore`: local, independent original-firmware speaker records (device identity, optional verified IP, room). These are never saved STR endpoints.
+- `DiscoveryCycleGuard`, `SpeakerTapPolicy`: JVM-testable policies for finite probing and predictable behavior of STR-enabled versus Bose-only rows.
+
+The production APK shares the original `app.strremote.android` package ID to permit upgrades from 0.2.1. Android 8/9 continue to use the existing STR features, while the Bose setup activity is only reachable from Android 10+. Browser installation guidance opens the upstream STR website.

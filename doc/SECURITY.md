@@ -45,3 +45,16 @@ Security-related lint warnings are not globally disabled and the project uses no
 ## Change rule
 
 Any relaxation of WebView navigation, cleartext scope, permission scope, persistence sensitivity or local-network trust assumptions requires an explicit decision plus security/runtime evidence before acceptance.
+
+
+## Bose original-firmware Wi-Fi provisioning (0.3.0)
+
+The optional setup wizard on Android 10+ temporarily uses an Android system-consented Bose SoftAP `Network`, with Bose HTTP requests explicitly scoped to that `Network`. It does not change the app process's default routing or add a native WebView bridge.
+
+**Bose's original `/addWirelessProfile` API accepts SSID/password over plain HTTP on the temporary setup network.** There is no TLS confidentiality against an adversary able to observe or access that network. The wizard warns before the single explicit user-triggered transfer. Never describe this as encrypted or offer this feature as safe on a hostile/shared setup network. WPA2 compatibility is currently constrained; WPA3-only and unsupported radio/security modes must not be silently claimed supported.
+
+The app masks the password by default, provides an intentional reveal control, clears the password field after submission, does not log or persist the credential, and does not retry ambiguous writes. The user may take screenshots; an explicitly revealed password may be visible in them.
+
+Subsequent read-only LAN verification requires that the discovered device's Bose `deviceID` match the identity from setup mode. An optional active SSID check can strengthen this proof. A timeout does not mean the transfer failed. STR itself is only considered installed when its local status endpoint responds.
+
+Bose device identity, optional LAN IP, setup-verification state and room label are stored in app-private preferences solely to represent speakers awaiting STR; they are not STR login credentials.

@@ -2,6 +2,32 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.3.0 — CANDIDATE / NOT YET PUBLISHED
+
+### Product and security
+
+- [x] Bose Wi-Fi wizard promoted into the production source set, not just `src/debug`
+- [x] Android 10+ system-consented Bose setup WLAN; unchanged Android 8/9 STR remote availability
+- [x] one state-changing provisioning POST with no automatic retries and bounded LAN verification
+- [x] same-device verification before claims of WLAN join; Bose without STR is a distinct grey record
+- [x] SoundTouch 10 clearly marked unverified/experimental; SoundTouch 20 III remains the reference
+- [x] WLAN cleartext credential risk documented, password not persisted or logged
+- [x] versionName 0.3.0 / versionCode 11; same production package ID
+- [ ] release source committed, production Debug and Release CI green on exact source revision
+
+### Signature and publication
+
+- [ ] build clean production source with the original 0.2.1 signing keystore
+- [ ] signature certificate SHA-256 matches `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
+- [ ] APK Signature Scheme v2/v3 and 16 KiB zipalign verified
+- [ ] exact signed 0.3.0 APK installs **as an update** over existing 0.2.1 without uninstalling or losing saved STR devices/rooms
+- [ ] exact signed APK passes STR remote, offline/online device state, Bose wizard, room persistence, and Android permission regression tests
+- [ ] signed source commit fixed, annotated v0.3.0 tag created and its CI passed
+- [ ] public GitHub Release v0.3.0 has verified signed APK and matching SHA-256 asset, not draft/prerelease
+- [ ] latest-release links, README and STATUS updated to public 0.3.0, and acceptance evidence recorded
+
+---
+
 ## 0.2.1 — ACCEPTED
 
 ### Implementation/scope

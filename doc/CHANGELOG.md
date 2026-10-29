@@ -2,6 +2,23 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
+## 0.3.0 — Release candidate (not yet published)
+
+New feature — guided SoundTouch Wi-Fi setup before installing STR:
+
+- model-specific setup instructions and a four-step wizard (prepare, connect to Bose, choose WLAN, enter password);
+- Android 10+ system-approved connection to the original Bose setup WLAN without requiring Internet;
+- speaker-side site survey, accessible WLAN selection popup, manual SSID fallback, masked password with visibility toggle;
+- one explicit user-triggered provisioning attempt; never automatically repeat WLAN credential transfer;
+- animated transfer and bounded local-network verification; only identify success after the same Bose device responds on the phone's restored WLAN;
+- a separate terminal result with STR installation guidance/link and no premature Finish button;
+- grey Bose devices without STR shown separately in Devices, including persistent room assignment;
+- finite STR discovery, deduplicated per-host probes and bounded endpoint-check concurrency to prevent an indefinite spinner;
+- unchanged STR remote and Android 8/9 availability; Wi-Fi setup only on Android 10+;
+- selected original-firmware hardware support: SoundTouch 20 III tested; SoundTouch 10 remains an experimental option;
+- local-only speaker metadata; credentials never stored or logged. Bose's provisioning API uses cleartext HTTP on the temporary Bose network.
+- application `versionName=0.3.0`, `versionCode=11`; Gradle/AGP/JDK build baseline unchanged.
+
 ## 0.2.1 — 2026-09-30
 
 UX refinement:
