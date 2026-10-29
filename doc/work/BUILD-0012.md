@@ -220,6 +220,21 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Escapes XML attribute metacharacters (`&`, `<`, `>`, quotes, apostrophes). Added host-side JUnit tests for expected candidate syntax, escaping and invalid test inputs; CI now invokes `:app:testDebugUnitTest`.
 - This was the first **offline-only** preparation milestone. It was followed by the D-028-authorized debug-only single-shot POST implementation. Actual device provisioning, recovery and production acceptance remain outstanding.
 
+## B2 hardware-test UI improvement — Bose-visible WLAN selection (2026-10-29)
+
+**User feedback:** B2 should present nearby WLANs for selection; the previous SSID/password EditText fields were difficult to see and had no persistent labels. This was a real UX defect, not a limitation of the requirement.
+
+**Implementation (debug-only):**
+
+- After B1 confirms both `/addWirelessProfile` and, separately, `/performWirelessSiteSurvey`, the B2 wizard keeps the Android-approved Bose `Network` connected and automatically sends the community-documented **non-provisioning** `POST /performWirelessSiteSurvey` with `<PerformWirelessSiteSurvey timeout="5"/>`. This is a speaker-side scan, **not** Android `WifiManager.startScan()` and requires no new Android scan permission.
+- Parse only bounded 64 KiB `text/xml`/`application/xml` with root `PerformWirelessSiteSurveyResponse`, no DTD/entities, limited items and names. Community samples return `<item ssid="..." signalStrength="..." secure="..."><securityTypes><type>...</type></securityTypes></item>`. The actual ST20 III response format is **not yet hardware-verified**.
+- Display nearby SSIDs in a selectable Android list, deduplicate names, show approximate strength, and distinguish WPA2-compatible test networks from open/unknown/WPA3-only networks. Only WPA2-compatible, printable-ASCII test names populate the SSID field in the controlled B2 experiment; unsupported networks are visible but cannot be selected.
+- Add a **WLANs suchen / Aktualisieren** button and a **Gefundene WLANs auswählen** button; if Bose does not advertise the site-survey capability, the response is unrecognized, or no networks are found, keep a clearly labeled manual SSID fallback.
+- Both inputs now use permanently visible dark `WLAN-Name (SSID)` and `WLAN-Passwort (WPA2-Testnetz)` labels, explicit text/hint colors, white backgrounds, contrasting strokes and touch-friendly 54dp minimum height. The password remains masked.
+- No scan results/SSIDs, survey XML, credentials, or exception messages enter Logcat or persistent storage. No automatic `/addWirelessProfile` POST or POST retry was added; scan is a separate explicit read-of-nearby-networks operation that uses POST only because the speaker API requires it.
+- Source of protocol candidate (independent third-party examples): https://github.com/gesellix/Bose-SoundTouch/blob/main/docs/content/docs/guides/DEVICE-INITIAL-SETUP.md and https://github.com/thlucas1/homeassistantcomponent_soundtouchplus/wiki/SoundTouch-WebServices-API . Different community examples exist for the **profile POST** contract; this UI improvement must not be interpreted as its on-device verification.
+- Test gates: `:app:testDebugUnitTest`, `:app:lintDebug`, `:app:assembleDebug` plus real-device confirmation that B2 shows a list with WPA2 network selection, supports refresh/manual fallback, and still requires explicit consent for a single credential POST. The real-device B2 survey outcome remains **PENDING**.
+
 ## B2 gated hardware experiment — 3+3 user confirmation (2026-10-29)
 
 **User-reported test acceptance:** all 3 normal SoftAP first-start runs and all 3 late-SoftAP / fresh-Activity retry runs succeeded. This closes the **test-device Wi-Fi picker/retry reliability gate** by tester report; raw per-run Logcat, exact Android build and Bose firmware version are still not included. It is not a claim of broad compatibility across phone OS versions or Bose firmware.
