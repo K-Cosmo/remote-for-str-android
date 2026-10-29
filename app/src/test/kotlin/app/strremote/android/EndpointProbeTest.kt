@@ -15,7 +15,7 @@ class EndpointProbeTest {
         try {
             val done = CountDownLatch(1)
             val called = AtomicInteger()
-            probe.probeHost("%invalid-host%") { endpoint ->
+            probe.probeHost(":") { endpoint ->
                 assertNull(endpoint)
                 called.incrementAndGet()
                 done.countDown()
