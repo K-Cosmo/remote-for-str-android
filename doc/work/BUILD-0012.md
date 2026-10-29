@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A/B1 CONFIRMED; 3+3 CONNECTION/RETRY PASSED; B2 WIFI LIST AND PROFILE TRANSFER USER-CONFIRMED; THREE-PAGE DEBUG WIZARD IMPLEMENTED, ON-DEVICE UX QA PENDING
+**Status:** PHASE A/B1 CONFIRMED; 3+3 CONNECTION/RETRY PASSED; B2 WIFI LIST AND PROFILE TRANSFER USER-CONFIRMED; KISS WIZARD + AUTOMATIC LAN VERIFICATION IMPLEMENTED, ON-DEVICE QA PENDING
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -234,6 +234,25 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Extend host-side tests for scan-status XML, expected successful responses and malicious/invalid input. Note that CI cannot replace an Android instrumented test; the real ST20 III scan remains to be retested.
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
+
+## Wizard UX feedback: one tap, popup selection, automatic LAN verification (2026-10-29)
+
+**Tester report from the three-page wizard:** The inline multirow WLAN list is cumbersome; after selecting a network, the password field and transmit button can be out of view. A second transmission confirmation is redundant, and a disabled button with no spinner looks broken. The final screen's request to reconnect manually to a "Ziel-WLAN" is misleading because Android generally restores the phone's normal Wi-Fi when the temporary Bose request is released.
+
+**New debug-only implementation:**
+
+- Page 3 now shows a **compact Wi-Fi picker popup** after the speaker-side scan; no inline wall of network rows. The SSID is set on selection, the chosen network is displayed prominently, and the password field is immediately reachable. A separate manual-SSID control and repeat scan remain available. Unsupported security modes stay excluded from the conservative WPA2 test list.
+- One intentional press on **WLAN auf SoundTouch übertragen** sends the credentials. No redundant AlertDialog. Validation still runs first; the page warns in plain language about using an isolated WPA2 test SSID, because Bose's provisioning API transmits the test credentials over cleartext HTTP.
+- Immediately after the press, the wizard moves to a separate **indeterminate progress spinner**. It never sends two profile POSTs. A dropped Bose SoftAP or timeout is still ambiguous, not a reason to auto-retry.
+- Once the POST returns, the already-existing Bose SoftAP `Network` request is released. Android's regular Wi-Fi recovery is observed, not assumed. `ConnectivityManager.registerNetworkCallback` watches for a Wi-Fi transport; it does not look for devices through cellular data.
+- The app tries to find the **same original Bose speaker** on the phone's recovered Wi-Fi: it reads only the `deviceID` attribute of the setup AP's `GET /info` (memory only, no logs/persistence), discovers candidate SoundTouch devices by `_soundtouch._tcp.` mDNS or bounded SSDP M-SEARCH, and checks candidates with `GET <candidate>:8090/info` through the restored Android Wi-Fi `Network`. It requires exact deviceID equality and bounds candidate addresses to private/local IPv4; no subnet scan.
+- After the identity match, the optional `GET /getActiveWirelessProfile` supplies the speaker's active SSID when this firmware supports it. If the SSID is available, success requires it to equal the selected WLAN name. If it is unavailable, success requires same-device identity + reachability on the current phone Wi-Fi; the result text states which proof was obtained.
+- The automatic verification is bounded to 45 seconds. Statuses: waiting for Android Wi-Fi, discovering speaker, verified on this network, or not found. An **Erneut suchen** button restarts only the LAN search, never another credential submission. If the Bose setup `/info` identity could not be read, do not report automatic success.
+- The final view no longer tells the user to manually return to "Ziel-WLAN". If Android stays on cellular or a different Wi-Fi, the app truthfully reports no verified speaker after the bounded search. Cross-VLAN discovery, enterprise multicast restrictions and differing Bose firmware remain untested.
+- Preserve debug-only packaging, 0.2.1 baseline, no secrets in Logcat or permanent storage, `FLAG_SECURE` on the wizard, no new Android permissions.
+- Device verification still outstanding: after a real B2 transfer, does Android resume the usual Wi-Fi, does LAN discovery find the *same* speaker, does the active Bose SSID endpoint return a usable value, and is the spinner/result handling clear? The user has only confirmed the earlier B2 POST + survey, not this new automatic LAN verification.
+
+**References:** Bose `/info` deviceID and `/getActiveWirelessProfile`; documented mDNS `_soundtouch._tcp` and UPnP SSDP MediaRenderer discovery; Android network callbacks. The actual support of the active profile on the reference firmware is not yet measured.
 
 ## Guided three-page setup wizard — UI acceptance pending (2026-10-29)
 

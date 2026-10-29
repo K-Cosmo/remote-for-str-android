@@ -144,3 +144,9 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - **UX issue:** preceding single-page B2 PoC was too technical and the scanned WLAN list needed better formatting. Tester requested **3 steps as 3 pages**: prepare box, connect via Android, choose WLAN and transfer, with guided rather than API terminology.
 - New debug-only three-page wizard implemented with inline scan cards, eight initially shown entries and expandable list, hidden technical details, simple statuses, separate final verification page, and unchanged Android connection + Bose API submission logic.
 - **On-device checks still open:** page sizing on Pixel, back/cancel behavior, first connection/retry, auto-advance, WPA2 list selection, manual SSID, submit prompt, output verification wording and phone Wi-Fi recovery.
+
+## Three-page KISS refinements and automatic verification — device QA pending (2026-10-29)
+
+- Tester feedback: network list better suited to a popup than inline content; double confirmation undesirable; disabled submit button without visible progress is confusing; manual switch back to a generic "Ziel-WLAN" should be unnecessary when Android restores WLAN automatically.
+- New debug-only flow: popup SSID selection, one-tap POST, indeterminate progress indicator, restore Wi-Fi monitoring, bounded Bose mDNS/SSDP LAN discovery, original Bose identity comparison, and optional read-only active wireless profile check.
+- Real-device verification **PENDING** for the new automatic discovery, same-speaker identification, active WLAN name and final status. Prior report that standalone B2 survey/POST worked is not evidence that the new automated LAN check has passed.
