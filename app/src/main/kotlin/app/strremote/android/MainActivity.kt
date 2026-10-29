@@ -950,7 +950,16 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            discoveryTimedOut -> showStrUnreachable()
+            discoveryTimedOut -> {
+                when {
+                    discoveredRows.isNotEmpty() -> showStrUnreachable()
+                    speakers.values.any { it.pendingBose } -> setDiscoveryState(
+                        message = getString(R.string.found_devices),
+                        showProgress = false, showRetry = true, showStrHelp = true
+                    )
+                    else -> showNoDevicesFound()
+                }
+            }
             DiscoveryCycleGuard.shouldShowChecking(
                 discoveryActive, discoveryTimedOut,
                 discoveredRows.any { !it.probeFinished }
@@ -970,15 +979,6 @@ class MainActivity : Activity() {
                     showStrHelp = false
                 )
             }
-            discoveryTimedOut && discoveredRows.isEmpty() -> {
-                if (speakers.values.any { it.pendingBose }) {
-                    setDiscoveryState(
-                        message = getString(R.string.found_devices),
-                        showProgress = false, showRetry = true, showStrHelp = true
-                    )
-                } else showNoDevicesFound()
-            }
-            discoveryTimedOut -> showStrUnreachable()
             else -> {
                 setDiscoveryState(
                     message = getString(R.string.found_devices),
