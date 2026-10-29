@@ -514,7 +514,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 closeSession()
                 cancelButton.text = "Zurück zu Geräte"
                 statusView.text =
-                    "Phase-A-Messung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
+                    "API- und B1-Funktionsprüfung abgeschlossen. Die temporäre Bose-WLAN-Verbindung " +
                         "wurde automatisch freigegeben. Android kehrt zum Heim-WLAN zurück."
             }
         }, "BoseSetupReadOnlyProbe")
