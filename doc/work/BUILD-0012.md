@@ -1,6 +1,6 @@
 # BUILD-0012 — Bose Wi-Fi Provisioning PoC
 
-**Status:** PHASE A/B1 AND ORIGINAL B2 USER-CONFIRMED; 3-PAGE WIZARD WIFI-PICKER REGRESSION REPORTED; LIFECYCLE/TIMEOUT FIX IMPLEMENTED, DEVICE RETEST REQUIRED
+**Status:** BOSE WLAN PICKER REPORTED WORKING AGAIN; DISCOVERY SPINNER REGRESSION FIX + BOSE PENDING DEVICE UX IMPLEMENTED IN FEATURE BRANCH; DEVICE REGRESSION RETEST REQUIRED
 **Reference device:** Bose SoundTouch 20 Series III (model 355589-SM2), original Bose firmware
 **Source baseline:** accepted STR Remote 0.2.1; release tag and APK remain unchanged
 **Decision:** Bose setup Wi-Fi / SoftAP via Android `WifiNetworkSpecifier`, **not** Bluetooth
@@ -234,6 +234,30 @@ No wireless profile has been sent, and no home SSID/password or full XML respons
 - Extend host-side tests for scan-status XML, expected successful responses and malicious/invalid input. Note that CI cannot replace an Android instrumented test; the real ST20 III scan remains to be retested.
 
 **Next acceptance:** rebuild and install the updated debug APK locally, run B2 site survey, record only the resulting POST/GET status wording and whether a WPA2 test WLAN appears. Do **not** send profile credentials as part of this scan diagnosis.
+
+## BUILD-0012 integration regression and clean-code guardrails (2026-10-29)
+
+**User bug report:** after working on the Bose setup wizard, the existing Devices page could remain indefinitely at "Lautsprecher gefunden, STR-Verbindung wird geprüft…". The new wizard's system WLAN chooser is reported working again. User requests clear STR installation handoff, an attractive WLAN selection popup and a grey speaker row until STR is present.
+
+### Root-cause review and changes
+
+1. **Unbounded progress:** `handleDiscoveryTimeout` previously kept showing the "checking" progress spinner if even one STR endpoint probe had not returned; there was no later deadline. Now the 10-second discovery deadline always settles pending scan rows to a terminal state. A late successful STR HTTP probe may still update a row. No "stuck checking" once the scan expires.
+2. **Probe storms:** every repeated mDNS service announcement could restart an already completed probe, continually returning the row to `probeFinished=false`. New `DiscoveryCycleGuard` permits one probe per host **per generation** and an explicit reset only on the next discovery. A bounded `ThreadPoolExecutor` has four workers and 32 queued tasks; malformed hosts and rejected work always settle the callback. All reachable checks require HTTP 2xx on STR's `/api/status`; simply discovering Bose does not count as STR.
+3. **Device ownership and semantics:** production STR saved speakers remain separate from Bose setup-pending devices. A debug-only `PendingBoseStore` keeps just Bose ID, optional verified local IP and setup-verification flag, *not* credentials, SSID, XML or a pretend STR endpoint. The user sees a **grey Bose-only row** labeled "STR fehlt"; tapping it opens `https://st-reborn.de` in an external browser, not STR WebView. Removing the row removes only the Bose pending record. Once actual STR discovery and `/api/status` succeed for that same known host/ID, the pending record is removed and the speaker becomes a normal usable STR entry.
+4. **Wizard to devices handoff:** returning to the Devices page triggers one bounded refresh in the PoC app, and the last known Bose setup submission becomes visible even if the automatic LAN verification could not locate the speaker. Such unverified entries are clearly marked **not yet verified**, rather than as successfully configured.
+5. **KISS WLAN popup:** replace flattened `AlertDialog.setItems` text lines with accessible two-line card-like rows (SSID title and strength/security subtitle), selected-network highlight and bounded dialog height. Keep the single submit action and visible progress from the previously validated wizard.
+6. **STR handoff:** after sending Wi-Fi settings, the result page explains that SoundTouch Reborn still needs separate installation and provides a browser button to the existing official project website. No firmware installation from STR Remote is attempted.
+7. **Non-regression boundary:** `main` branch and accepted 0.2.1 release remain untouched. `MainActivity` in this feature branch only reads pending Bose records when `packageName == app.strremote.android.poc`; the ordinary STR row route is covered by `SpeakerTapPolicy`. The host-side tests cover duplicate discoveries, finite timeout policy, bad-host probe callback, pending-row routing and local-IP input filtering. The existing CI must continue compiling **both debug and release variants**.
+
+### Device and QA acceptance gates
+
+- Normal STR device in list: discovers, probes once per scan generation, opens the existing STR remote; saved speaker, offline status, room assignment and delete retain their behavior
+- Bose without STR: visibly grey and "STR fehlt"; row tap opens external browser; does not attempt STR playback, does not hang the progress state; can be removed from the list
+- During mDNS repeat/burst or no reachable STR endpoint: progress stops after the finite scan deadline; user sees actionable status instead of an indefinite spinner
+- Wizard steps 1–3: Android system Bose chooser still connects, popup is readable and scrollable, manual Wi-Fi entry works, exactly one credential POST, progress is displayed
+- After wizard: STR installation information appears, and returning to Devices shows pending Bose. If verification fails, the row explicitly states that Wi-Fi association was not yet verified. Device validation remains necessary; CI and host-side JVM tests **cannot prove** Android mDNS/NetworkSpecifier lifecycle stability
+
+**Release gate:** no merge to `main`, no Play Store rollout, no claim of the real-device regression being closed until the original STR and Bose-without-STR hardware scenarios pass.
 
 ## Critical regression: Android Wi-Fi chooser cancelled before selection / after selection (2026-10-29)
 

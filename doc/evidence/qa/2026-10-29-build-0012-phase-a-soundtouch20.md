@@ -157,3 +157,12 @@ The 404 on `/` does **not** indicate failure of port 8090 or the entire Bose API
 - The app still contains a 20-second `requestNetwork` timeout (elapsed since pressing Connect, **not** since the Bose network appears in the Android picker), and an aggressive 2-second `onStop` cleanup after `onAvailable`. These are concrete premature cancellation risks; precise runtime trigger cannot be claimed without callback event evidence.
 - Changed debug-only wizard to untimed `requestNetwork`, 45-second background cleanup for connected session, 1.5-second retry cooldown, and visible sanitized in-app diagnostics under technical details.
 - **Status: device retest pending; previous 3+3 reliability gate must be repeated.** Minimum tests: leave picker open >30 seconds without selection, select Bose with no Internet, retain Android-approved network during system dialog, fast and delayed retry, explicit cancellation, debug event evidence, no auto provisioning writes.
+
+## Additional integration regression — indefinite STR device check (2026-10-29)
+
+- Tester reports: Devices page loops on "Lautsprecher gefunden, STR-Verbindung wird geprüft…", while the Bose setup chooser works again.
+- Code review: repeated mDNS announcements retrigger STR endpoint probes within the same generation; after the ten-second discovery deadline the UI could still show "checking" if a callback remained pending. Neither had a finite terminal transition.
+- Branch remedy: one probe per host per discovery generation; 4 concurrent checks + bounded queue; every invalid/rejected probe settles, STR only via 2xx `/api/status`; 10-second deadline always settles the spinner.
+- Added separate debug-only Bose-without-STR registry, grey STR-missing rows opening external STR website, wizard link and formatted two-line WLAN popup.
+- Host-side regression tests introduced for discovery/timeout policy, tap routing, local Bose host validation and failed STR probe completion.
+- **Real-device status pending**: normal STR speaker still connects; Bose-only row displays grey and opens link; scan no longer hangs; wizard SSID picker and single POST remain usable. CI passing is necessary but not sufficient.
