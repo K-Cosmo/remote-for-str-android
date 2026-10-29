@@ -30,7 +30,8 @@ internal object BoseSupportedUrlsProbe {
 
     internal data class Report(
         val summary: String,
-        val supportsAddWirelessProfile: Boolean
+        val supportsAddWirelessProfile: Boolean,
+        val supportsWirelessSiteSurvey: Boolean
     )
 
     // Kept for the original read-only PoC call sites.
@@ -83,7 +84,8 @@ internal object BoseSupportedUrlsProbe {
                         }
                         append("\nNur eine Funktionsliste – kein Nachweis der Profilübertragung.")
                         },
-                        supportsAddWirelessProfile = "/addWirelessProfile" in advertised
+                        supportsAddWirelessProfile = "/addWirelessProfile" in advertised,
+                        supportsWirelessSiteSurvey = "/performWirelessSiteSurvey" in advertised
                     )
                 }
             }
@@ -97,7 +99,11 @@ internal object BoseSupportedUrlsProbe {
         } finally {
             connection?.disconnect()
         }
-        return Report(summary = summary, supportsAddWirelessProfile = false)
+        return Report(
+            summary = summary,
+            supportsAddWirelessProfile = false,
+            supportsWirelessSiteSurvey = false
+        )
     }
 
     private fun parseWhitelistedUrls(xml: ByteArray): Set<String> {
