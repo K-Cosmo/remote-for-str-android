@@ -977,6 +977,15 @@ internal class BoseSetupProbeActivity : Activity() {
                         }
                     statusView.text = "SoundTouch erfolgreich im WLAN gefunden."
                 }
+                is BoseLanVerification.Status.OtherWifi -> {
+                    resultSpinner.visibility = View.GONE
+                    retryVerificationButton.visibility = View.VISIBLE
+                    resultText.text =
+                        "Deine SoundTouch wurde gefunden, ist aber laut Bose derzeit " +
+                            "mit dem WLAN „" + outcome.wlanName + "“ verbunden. " +
+                            "Bitte prüfe, ob das gewünschte WLAN ausgewählt war."
+                    statusView.text = "SoundTouch gefunden, WLAN stimmt nicht überein."
+                }
                 BoseLanVerification.Status.NotFound -> {
                     resultSpinner.visibility = View.GONE
                     retryVerificationButton.visibility = View.VISIBLE
