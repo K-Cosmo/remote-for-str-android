@@ -83,7 +83,7 @@ Only after Phase A demonstrates the exact Bose endpoint and payload behavior on 
 
 ## T02 prototype implementation (2026-10-29)
 
-- Debug-only `app/src/debug/AndroidManifest.xml` declares appropriate runtime permissions and a separate debug launcher entry. The release variant contains no PoC Activity/launcher.
+- Debug-only `app/src/debug/AndroidManifest.xml` declares appropriate runtime permissions and the internal PoC Activity (not exported); the debug app has **one launcher** labelled `STR Remote PoC`. The release variant contains no PoC Activity.
 - Debug `applicationIdSuffix = \".poc\"` gives package `app.strremote.android.poc`, allowing co-installation alongside the signed `app.strremote.android` without changing its private settings or signing identity.
 - `app/src/debug/kotlin/app/strremote/android/BoseSetupProbeActivity.kt` provides a minimal German UI with optional exact SSID. Blank SSID selects an Android system-approved SSID beginning with `Bose`.
 - Android 10–12L: request `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` together (Android 12+ combined-request rule); Android 13+: request `NEARBY_WIFI_DEVICES`; Android API 37+: also request `ACCESS_LOCAL_NETWORK`. The debug manifest removes the production `NEARBY_WIFI_DEVICES` API cap **only for debug**. The user still explicitly approves the `WifiNetworkSpecifier` request.
@@ -105,7 +105,7 @@ adb devices
 adb install -r .\\app\\build\\outputs\\apk\\debug\\app-debug.apk
 ```
 
-The debug PoC installs as `app.strremote.android.poc`. Launch the **Bose Wi-Fi PoC (Debug)** icon; the normal **STR Remote** icon from the debug build is also present. Signed production STR Remote stays installed with its own data.
+The debug PoC installs as `app.strremote.android.poc` and is labelled **STR Remote PoC**, separately from the signed production **STR Remote** app. Start **STR Remote PoC → Geräte → Neues Gerät hinzufügen** (English: Devices → Add new device). This button is displayed only for the Android 10+ `.poc` package and opens the internal `BoseSetupProbeActivity`; it is hidden in release builds. A previously saved or active STR speaker can still send you directly to Remote, so tap **Geräte** first. There is no second launcher icon. Signed production STR Remote stays installed with its own data.
 
 For T03 use a SoundTouch 20 Series III with original Bose firmware: enter Setup mode using **Preset 2 + Vol−** until the Wi-Fi LED is amber; do not perform a factory reset. Open the PoC, leave SSID blank to use the Android Bose-prefix picker (or type the exact Setup SSID), accept Android's join prompt, and capture only the local HTTP status/content-type results. The PoC automatically releases the network after inspection. Test **Cancel**, missing network and permission denial separately. Never publish home Wi-Fi credentials, SSIDs, MAC/serial identifiers or full HTTP page bodies.
 
