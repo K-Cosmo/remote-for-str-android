@@ -302,6 +302,9 @@ internal class BoseSetupProbeActivity : Activity() {
             text = "WLAN-Name manuell eingeben"
             isAllCaps = false
             setOnClickListener {
+                ssidField.text?.clear()
+                passwordField.text?.clear()
+                selectedWifiView.text = "WLAN-Name wird manuell eingegeben."
                 ssidLabel.visibility = View.VISIBLE
                 ssidField.visibility = View.VISIBLE
                 ssidField.requestFocus()
