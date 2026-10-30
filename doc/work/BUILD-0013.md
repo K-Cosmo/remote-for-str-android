@@ -18,7 +18,7 @@ Status: **feature branch implemented; device UI acceptance pending**. Public rel
 
 ## Update-checker contract
 
-- Only `GET https://api.github.com/repos/K-Cosmo/str-remote-android/releases/latest`, fixed official public endpoint; no authentication token, no analytics endpoint.
+- Only `GET https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest`, fixed official public endpoint; no authentication token, no analytics endpoint.
 - HTTP I/O off the UI thread; 3.5-second connect/read timeouts and 64 KiB bounded JSON. On errors/network absence, continue normal STR workflow without an error pop-up.
 - Parse `vMAJOR.MINOR.PATCH` as a stable semantic version, numeric comparison to installed `PackageInfo.versionName`. No prereleases or malformed/untrusted tags, and only announce releases with a matching `STR-Remote-VERSION.apk` asset.
 - Limit successful checks to once per 24 h; if GitHub cannot be checked, allow retry on a later app start. No background service, notifications permission or polling while the app is closed.
@@ -142,6 +142,10 @@ User chose **Remote for STR** as final app name. The implementation branch now u
 
 Future signed APK: `Remote-for-STR-<version>.apk` via existing signing/release workflow. Update checker matches new and legacy release asset names, with host tests covering both. Android application ID and original signing certificate are intentionally unchanged to allow upgrades. No version bump or public release has occurred.
 
-**Repository rename not yet executed:** current repo remains `K-Cosmo/str-remote-android`, and valid API/source/issues links intentionally stay there. After a repository admin renames it to `K-Cosmo/remote-for-str`, update canonical GitHub endpoint strings (update API, release URLs and About/README/documentation), run CI, and verify the HTTPS updater against the actual renamed repository. Do not assume redirects apply to every client.
+**Repository rename COMPLETE:** actual repository is `K-Cosmo/remote-for-str-android` (verified via connected GitHub repository metadata and PR #5). The proposed `remote-for-str` slug was not chosen. The app's direct HTTPS Releases API URL, release-page links, About links and associated host test now point to the actual new repo; redirect handling remains disabled as before. CI and actual-device QA remain pending.
 
 **Acceptance still pending:** CI green on exact head; real phone screenshot of new launcher/Devices title; full English wizard/Info UI; release package/signature/versionCode and update-over-v0.3.0 tests. Preserve accepted `v0.3.0` release.
+
+### Repository URL cutover — verified 2026-10-30
+
+The user provided the actual renamed repository: `https://github.com/K-Cosmo/remote-for-str-android`. PR #5 survived the rename and remains open on `feature/update-checker-compact-str-header`. Coordinated one commit for update-checker HTTPS URL, release-page URL, About links, unit test and README. Updated normative status, planning, decisions and privacy docs to this canonical path. Do not confuse the published `v0.3.0` signed artifact names with a repository URL migration. A successful Android build proves compilation and tests, not device-level GitHub network reachability or English wizard UX.
