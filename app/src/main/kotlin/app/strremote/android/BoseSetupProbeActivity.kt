@@ -816,7 +816,10 @@ internal class BoseSetupProbeActivity : Activity() {
         modelInstructionTitle.text = "Am " + selectedModel.modelLabel
         modelInstructionHint.text = selectedModel.setupHint
         modelTestNotice.text =
-            if (selectedModel.protocolVerifiedOnDevice) {
+            if (selectedModel == BoseSetupModel.SOUND_TOUCH_10) {
+                "Mit einem separaten WPA2-Test-WLAN erfolgreich geprüft. " +
+                    "Andere WLAN-Konfigurationen und Firmwarestände sind nicht separat validiert."
+            } else if (selectedModel.protocolVerifiedOnDevice) {
                 "Die WLAN-Einrichtung wurde auf diesem Modell bereits erfolgreich getestet."
             } else {
                 "Testbetrieb: Die Bose-Tastenkombination ist dokumentiert. " +
