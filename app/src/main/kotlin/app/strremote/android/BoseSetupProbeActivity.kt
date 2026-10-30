@@ -292,7 +292,7 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         val modelAdapter = object : ArrayAdapter<String>(
             this, android.R.layout.simple_spinner_item,
-            models.map { it.selectionLabel }
+            models.map { getString(it.selectionLabelRes) }
         ) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
                 (super.getView(position, convertView, parent) as TextView).apply {
@@ -970,12 +970,12 @@ internal class BoseSetupProbeActivity : Activity() {
     private fun renderModelInstructions() {
         if (!::modelInstructionTitle.isInitialized) return
         val other = selectedModel == BoseSetupModel.OTHER_SOUND_TOUCH
-        modelInstructionTitle.text = "Am " + selectedModel.modelLabel
+        modelInstructionTitle.text = getString(R.string.bose_model_instruction_title, getString(selectedModel.modelLabelRes))
         modelInstructionSteps.text =
             "1. Schalte den Lautsprecher ein.\n" +
                 "2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n" +
                 "3. Warte, bis die WLAN-Anzeige dauerhaft gelb leuchtet."
-        modelInstructionHint.text = selectedModel.setupHint
+        modelInstructionHint.text = getString(selectedModel.setupHintRes)
         modelTestNotice.text =
             if (other) {
                 "Ungeprüftes Modell: Diese Schritte sind ein Versuch. " +
