@@ -133,7 +133,7 @@ try {
         throw "Working tree is not clean. Commit/stash/restore all changes before building a release artifact."
     }
 
-    Write-Host "== STR Remote $($appVersion.Name) final build =="
+    Write-Host "== Remote for STR $($appVersion.Name) final build =="
     Write-Host "Version code: $($appVersion.Code)"
     Write-Host "Git commit:   $gitHead"
     Write-Host "Project:      $ProjectRoot"
@@ -160,7 +160,7 @@ try {
     $distDir = Join-Path $ProjectRoot "dist"
     New-Item -ItemType Directory -Path $distDir -Force | Out-Null
 
-    $baseName = "STR-Remote-$($appVersion.Name)"
+    $baseName = "Remote-for-STR-$($appVersion.Name)"
     $alignedApk = Join-Path $distDir "$baseName-aligned-unsigned.apk"
     $signedApk = Join-Path $distDir "$baseName.apk"
     $hashFile = Join-Path $distDir "$baseName.apk.sha256.txt"
