@@ -179,8 +179,19 @@ try {
 
     Write-Host ""
     Write-Host "== Signature verification =="
-    $verificationOutput = & $apksigner verify --verbose --print-certs $signedApk 2>&1
-    $verifyExit = $LASTEXITCODE
+    # Windows PowerShell 5.1 turns native stderr warnings into NativeCommandError
+    # records when 2>&1 is used. With the script-wide Stop preference that can
+    # abort verification even if apksigner exits successfully (e.g. Java's
+    # restricted-native-access warning). Scope Continue to this one native
+    # invocation; never bypass the actual exit, cert or zipalign checks.
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        $verificationOutput = & $apksigner verify --verbose --print-certs $signedApk 2>&1
+        $verifyExit = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
     $verificationOutput | ForEach-Object { Write-Host $_ }
     if ($verifyExit -ne 0) { throw "apksigner verify failed ($verifyExit)." }
 
