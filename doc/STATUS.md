@@ -137,7 +137,7 @@ Post-0.2.0 documentation drift has been converged:
 - current architecture, compatibility, blocker, privacy, security and test documents describe the accepted 0.2.0 baseline;
 - historical build/spec/evidence records remain unchanged as dated snapshots.
 
-`0.2.1` is the current accepted public release.
+`0.3.0` is the current accepted public release (see release identity and acceptance evidence above).
 
 
 ## Pending BUILD-0013 development (not in v0.3.0)
