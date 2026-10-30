@@ -12,7 +12,7 @@ class AppUpdatePolicyTest {
         assertNotNull(release)
         assertEquals("0.3.1", release!!.version)
         assertEquals(
-            "https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.1",
+            "https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1",
             release.releaseUrl
         )
         assertNotNull(AppUpdatePolicy.newerThanInstalled("v1.0.0", "0.9.99"))

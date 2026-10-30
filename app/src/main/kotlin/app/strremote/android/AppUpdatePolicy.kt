@@ -3,7 +3,7 @@ package app.strremote.android
 /** Release names are strict public GitHub tags, not Android versionCode values. */
 internal data class AvailableAppUpdate(val tag: String, val version: String) {
     val releaseUrl: String
-        get() = "https://github.com/K-Cosmo/str-remote-android/releases/tag/$tag"
+        get() = "https://github.com/K-Cosmo/remote-for-str-android/releases/tag/$tag"
 }
 
 internal object AppUpdatePolicy {
