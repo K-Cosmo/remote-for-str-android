@@ -9,7 +9,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * BUILD-0012 / B1 — read-only capability inquiry against Bose's original API.
+ * Read-only capability inquiry against Bose's original API.
  *
  * Requests only GET /supportedURLs, limits memory to 64 KiB, parses in-memory
  * without emitting full XML or identifiable speaker/network details, and
@@ -34,7 +34,7 @@ internal object BoseSupportedUrlsProbe {
         val supportsWirelessSiteSurvey: Boolean
     )
 
-    // Kept for the original read-only PoC call sites.
+    // Compatibility entry point; inspectReport also supplies the capability flags.
     fun inspect(network: Network): String = inspectReport(network).summary
 
     fun inspectReport(network: Network): Report {
@@ -49,11 +49,11 @@ internal object BoseSupportedUrlsProbe {
 
             val code = connection.responseCode
             if (code != HttpURLConnection.HTTP_OK) {
-                "B1 /supportedURLs: HTTP $code – auf dieser Firmware nicht auswertbar"
+                "Bose-Funktionsprüfung: HTTP $code – auf dieser Firmware nicht auswertbar"
             } else {
                 val type = connection.contentType.orEmpty().substringBefore(';').lowercase()
                 if (type != "text/xml" && type != "application/xml") {
-                    "B1 /supportedURLs: HTTP 200, unerwarteter Antworttyp"
+                    "Bose-Funktionsprüfung: HTTP 200, unerwarteter Antworttyp"
                 } else {
                     val bytes = connection.inputStream.use { stream ->
                         val buffer = ByteArray(4096)
@@ -74,7 +74,7 @@ internal object BoseSupportedUrlsProbe {
                     val advertised = parseWhitelistedUrls(bytes)
                     return Report(
                         summary = buildString {
-                        append("B1 GET /supportedURLs → HTTP 200, XML")
+                        append("Bose-Funktionen abrufbar (HTTP 200, XML)")
                         for (endpoint in interestingEndpoints) {
                             append("\n")
                             append(endpoint)
@@ -90,12 +90,12 @@ internal object BoseSupportedUrlsProbe {
                 }
             }
         } catch (_: ResponseTooLargeException) {
-            "B1 /supportedURLs: Antwort über 64 KiB – abgebrochen"
+            "Bose-Funktionsprüfung: Antwort zu groß – abgebrochen"
         } catch (_: InterruptedException) {
-            "B1 /supportedURLs: Prüfung abgebrochen"
+            "Bose-Funktionsprüfung abgebrochen"
         } catch (_: Exception) {
             // Never log exception messages: they may contain device/network data.
-            "B1 /supportedURLs: nicht auswertbar (Netzwerk- oder XML-Fehler)"
+            "Bose-Funktionsprüfung nicht auswertbar (Netzwerk- oder XML-Fehler)"
         } finally {
             connection?.disconnect()
         }
