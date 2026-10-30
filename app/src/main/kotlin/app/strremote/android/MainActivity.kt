@@ -314,7 +314,7 @@ class MainActivity : Activity() {
         }
         toolbar.addView(
             aboutButton,
-            LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginStart = dp(6) }
+            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(6) }
         )
 
         root.addView(
