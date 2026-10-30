@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.content.Context
 import android.content.pm.PackageManager
@@ -714,6 +715,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 text = label
                 textSize = 16f
                 setTextColor(ink)
+                buttonTintList = ColorStateList.valueOf(accent)
                 minHeight = dp(50)
                 isChecked = false
             })
@@ -856,6 +858,9 @@ internal class BoseSetupProbeActivity : Activity() {
             insets
         }
         setContentView(root)
+        // Initial Spinner selection may be restored before the two optional
+        // feedback actions exist; synchronize their visibility after all views.
+        renderModelInstructions()
         showPage(if (resumeWithFreshSearch) 2 else 1)
     }
 
