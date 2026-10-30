@@ -55,6 +55,7 @@ class MainActivity : Activity() {
         const val WIFI_CALLBACK_INITIALIZATION_MS = 500L
         const val REMOTE_RETRY_SETTLE_MS = 600L
         const val STR_WEBSITE = "https://st-reborn.de"
+        const val UPDATE_CHECK_INTERVAL_MS = 24L * 60L * 60L * 1000L
     }
 
     private lateinit var prefs: PreferencesStore
@@ -157,6 +158,7 @@ class MainActivity : Activity() {
         registerBackCallback()
         configureWebView()
         registerWifiMonitor()
+        checkForAppUpdate()
     }
 
     override fun onResume() {
@@ -586,6 +588,13 @@ class MainActivity : Activity() {
                 currentEndpoint?.let { endpoint ->
                     prefs.saveReachability(endpoint, true)
                     updateSavedRowReachability(endpoint, reachable = true)
+                }
+                if (isAllowedSpeakerNavigation(Uri.parse(url))) {
+                    // STR's PWA top safe area is already handled by Android's
+                    // native header. Keep all STR interactive controls intact.
+                    view.evaluateJavascript(
+                        StrWebViewHeader.compactTopPaddingScript, null
+                    )
                 }
                 showWebView()
             }
@@ -1054,6 +1063,44 @@ class MainActivity : Activity() {
         discoveryWifiSettingsButton.visibility = View.GONE
         retryButton.visibility = if (showRetry) View.VISIBLE else View.GONE
         strHelpButton.visibility = if (showStrHelp) View.VISIBLE else View.GONE
+    }
+
+    private fun checkForAppUpdate() {
+        // Debug uses a separate .poc package and must not offer the production APK.
+        if (packageName != "app.strremote.android") return
+
+        val checkPrefs = getSharedPreferences("str_remote_update_check", MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val lastSuccess = checkPrefs.getLong("last_success_ms", 0L)
+        if (lastSuccess > 0L && now >= lastSuccess &&
+            now - lastSuccess < UPDATE_CHECK_INTERVAL_MS
+        ) return
+
+        @Suppress("DEPRECATION")
+        val installedVersion = try {
+            packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        } catch (_: Exception) {
+            return
+        }
+        Thread({
+            val result = AppUpdateChecker.fetch(installedVersion)
+            if (result != null) {
+                checkPrefs.edit().putLong("last_success_ms", System.currentTimeMillis()).apply()
+                result.available?.let { update ->
+                    runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.update_available_title)
+                            .setMessage(getString(R.string.update_available_message, update.version))
+                            .setPositiveButton(R.string.update_view_release) { _, _ ->
+                                openExternalUri(Uri.parse(update.releaseUrl))
+                            }
+                            .setNegativeButton(R.string.update_later, null)
+                            .show()
+                    }
+                }
+            }
+        }, "StrRemoteUpdateCheck").start()
     }
 
     private fun openStrWebsite() {
