@@ -1,9 +1,8 @@
 package app.strremote.android
 
-/** Only opt-in user feedback and non-identifying app/Android versions enter mail. */
-internal enum class BoseCommunityOutcome(val label: String) {
-    SUCCESS("Erfolgreich"),
-    FAILURE("Nicht erfolgreich")
+/** User-triggered email only, containing no device or network identifiers. */
+internal enum class BoseCommunityOutcome {
+    SUCCESS, FAILURE
 }
 
 internal data class BoseCommunityEmailDraft(
@@ -26,17 +25,24 @@ internal object BoseCommunityFeedback {
         modelInput: String,
         outcome: BoseCommunityOutcome?,
         appVersion: String,
-        androidVersion: String
+        androidVersion: String,
+        language: String = "de"
     ): BoseCommunityEmailDraft? {
         val model = modelInput.trim()
         if (!validModel(model) || outcome == null ||
             appVersion.length !in 1..40 || androidVersion.length !in 1..60
         ) return null
 
-        return BoseCommunityEmailDraft(
-            recipient = RECIPIENT,
-            subject = "SoundTouch WLAN-Feedback: $model – ${outcome.label}",
-            body = listOf(
+        val de = language.equals("de", ignoreCase = true)
+        val result = if (de) {
+            if (outcome == BoseCommunityOutcome.SUCCESS) "Erfolgreich"
+            else "Nicht erfolgreich"
+        } else {
+            if (outcome == BoseCommunityOutcome.SUCCESS) "Successful"
+            else "Unsuccessful"
+        }
+        val lines = if (de) {
+            listOf(
                 "SoundTouch WLAN-Ersteinrichtung – freiwillige Rückmeldung",
                 "",
                 "SoundTouch-Modell: $model",
@@ -47,7 +53,27 @@ internal object BoseCommunityFeedback {
                 "Die Angaben sind eine persönliche Rückmeldung, keine Modellfreigabe.",
                 "Bitte vor dem Senden prüfen und keine WLAN-Namen, Passwörter, " +
                     "IP-/MAC-Adressen oder Gerätekennungen ergänzen."
-            ).joinToString("\n")
+            )
+        } else {
+            listOf(
+                "SoundTouch Wi-Fi setup – voluntary feedback",
+                "",
+                "SoundTouch model: $model",
+                "Wi-Fi setup successful: ${if (outcome == BoseCommunityOutcome.SUCCESS) "Yes" else "No"}",
+                "STR Remote version: $appVersion",
+                "Android version: $androidVersion",
+                "",
+                "This is a personal report, not an official compatibility certification.",
+                "Please review before sending. Do not include Wi-Fi names, passwords, " +
+                    "IP/MAC addresses or device identifiers."
+            )
+        }
+
+        return BoseCommunityEmailDraft(
+            recipient = RECIPIENT,
+            subject = if (de) "SoundTouch WLAN-Feedback: $model – $result"
+                else "SoundTouch Wi-Fi feedback: $model – $result",
+            body = lines.joinToString("\n")
         )
     }
 }

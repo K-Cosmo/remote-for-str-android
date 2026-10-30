@@ -54,6 +54,20 @@ class BoseCommunityFeedbackTest {
         ))
     }
 
+    @Test fun englishLanguageProducesEnglishDraftAndOutcome() {
+        val mail = BoseCommunityFeedback.compose(
+            "SoundTouch 30 Series III", BoseCommunityOutcome.FAILURE,
+            "0.3.0", "16 (API 36)", "en"
+        )!!
+        assertEquals(
+            "SoundTouch Wi-Fi feedback: SoundTouch 30 Series III – Unsuccessful",
+            mail.subject
+        )
+        assertTrue(mail.body.contains("Wi-Fi setup successful: No"))
+        assertTrue(mail.body.contains("Android version: 16 (API 36)"))
+        assertFalse(mail.body.contains("WLAN-Einrichtung erfolgreich"))
+    }
+
     @Test fun fixedRecipientDoesNotRequireGitHubAccount() {
         assertEquals("str-remote-android@gmx.org", BoseCommunityFeedback.RECIPIENT)
     }

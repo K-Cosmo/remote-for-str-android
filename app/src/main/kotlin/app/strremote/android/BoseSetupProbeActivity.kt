@@ -1007,7 +1007,8 @@ internal class BoseSetupProbeActivity : Activity() {
         ) "$installedVersion (Debug)" else installedVersion
         val androidVersion = "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
         val draft = BoseCommunityFeedback.compose(
-            feedbackModelField.text.toString(), outcome, appVersion, androidVersion
+            feedbackModelField.text.toString(), outcome, appVersion, androidVersion,
+            resources.configuration.locales[0].language
         )
         if (draft == null) {
             feedbackErrorView.text =
