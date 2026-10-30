@@ -35,6 +35,10 @@ class BoseCommunityFeedbackTest {
         assertTrue(mail.body.contains("WLAN-Einrichtung erfolgreich: Ja"))
         assertTrue(mail.body.contains("STR Remote Version: 0.3.0 (Debug)"))
         assertTrue(mail.body.contains("Android-Version: 16 (API 36)"))
+        assertTrue(mail.body.startsWith("SoundTouch WLAN-Einrichtung – Community-Feedback\n\nLautsprecher\n"))
+        assertTrue(mail.body.contains("WLAN-Einrichtung erfolgreich: Ja\n\nSoftware\n"))
+        assertTrue(mail.body.contains("Android-Version: 16 (API 36)\n\nHinweis\n"))
+        assertEquals(3, "\n\n".toRegex().findAll(mail.body).count())
         assertFalse(mail.body.contains("SSID:"))
         assertFalse(mail.body.contains("deviceID"))
         assertFalse(mail.body.contains("192.168."))
@@ -67,6 +71,9 @@ class BoseCommunityFeedbackTest {
         )
         assertTrue(mail.body.contains("Wi-Fi setup successful: No"))
         assertTrue(mail.body.contains("Android version: 16 (API 36)"))
+        assertTrue(mail.body.startsWith("SoundTouch Wi-Fi setup – Community feedback\n\nSpeaker\n"))
+        assertTrue(mail.body.contains("Wi-Fi setup successful: No\n\nSoftware\n"))
+        assertTrue(mail.body.contains("Android version: 16 (API 36)\n\nNote\n"))
         assertFalse(mail.body.contains("WLAN-Einrichtung erfolgreich"))
     }
 
