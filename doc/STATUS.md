@@ -1,19 +1,35 @@
 # Status
 
 **Development version:** 0.3.0
-**Latest public release:** 0.2.1
-**Status:** RELEASE CANDIDATE / SIGNED APK PENDING
-**Date:** 2026-10-29
+**Latest public release:** 0.3.0
+**Status:** RELEASED / ACCEPTED
+**Date:** 2026-10-30
 
-## 0.3.0 candidate — publication pending
+## 0.3.0 release — ACCEPTED
 
-- The accepted BUILD-0012 Bose Wi-Fi setup wizard has been promoted to production source and manifest paths.
-- Version name/code: `0.3.0` / `11`; production application ID stays `app.strremote.android`.
-- Native STR remote and device-management support remain available on Android 8+, Bose setup wizard requires Android 10+.
-- SoundTouch 20 III is the only original Bose provisioning reference model with reported successful device tests; SoundTouch 10 remains experimental for this specific setup feature.
-- New Android network permissions are requested only for the feature and as constrained by API version.
-- **This is not yet a published release.** Gate remains: release-variant CI from final commit, signing with the 0.2.1 release certificate, signature and zipalign checks, installing the exact signed APK over 0.2.1 and running the production APK smoke test, then tagging and uploading APK + SHA-256 to GitHub.
-- The latest public release remains **0.2.1** until the signed artifact and publication gates are satisfied.
+BUILD-0012 Bose SoundTouch WLAN-Einrichtung is released and accepted.
+
+Release identity:
+
+- version: `0.3.0` / versionCode `11`; package `app.strremote.android`;
+- signed APK source commit: `5b351f04dc9f989eee48fc262764f3add8641573`;
+- annotated tag `v0.3.0`, tag object `a071b2b6a4cbb0c6b5fb528cbe33f088969365ed`, resolving to the exact source commit;
+- public [GitHub Release 0.3.0](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
+- signed APK `STR-Remote-0.3.0.apk`, size 1,156,741 bytes, SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`;
+- companion checksum asset `STR-Remote-0.3.0.apk.sha256.txt`;
+- original release-signing certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`.
+
+Acceptance:
+
+- exact release-source `main` CI: success, run [41108758228](https://github.com/K-Cosmo/str-remote-android/actions/runs/41108758228);
+- exact release-source `v0.3.0` tag CI: success, run [41111993535](https://github.com/K-Cosmo/str-remote-android/actions/runs/41111993535);
+- local signing script reported matching original signing certificate, signature verification and alignment checks;
+- user confirmed that the signed production APK passed the planned smartphone acceptance test;
+- public APK asset SHA-256 is an exact match to the locally signed SHA-256;
+- production STR control remains compatible with Android 8+, the new WLAN assistant requires Android 10+;
+- SoundTouch 20 III setup verified on the reference original firmware; SoundTouch 10 original-firmware WLAN setup remains experimental.
+
+See [release evidence](evidence/qa/2026-10-30-release-0.3.0.md) and [release gates](RELEASE_GATES.md).
 
 ## 0.2.1 release
 

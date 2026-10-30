@@ -2,7 +2,7 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## 0.3.0 — Release candidate (not yet published)
+## 0.3.0 — 2026-10-30
 
 New feature — guided SoundTouch Wi-Fi setup before installing STR:
 
