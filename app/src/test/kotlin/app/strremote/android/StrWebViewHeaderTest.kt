@@ -9,7 +9,7 @@ class StrWebViewHeaderTest {
         val script = StrWebViewHeader.compactTopPaddingScript
         assertTrue(script.contains("header.querySelector('#dev')"))
         assertTrue(script.contains("header.querySelector('#powerBtn')"))
-        assertTrue(script.contains("padding-top: 0 !important"))
+        assertTrue(script.contains("padding-top: 10px !important"))
         assertFalse(script.contains("display: none"))
         assertFalse(script.contains("innerHTML"))
     }
