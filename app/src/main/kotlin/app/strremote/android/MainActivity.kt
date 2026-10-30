@@ -68,6 +68,7 @@ class MainActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private lateinit var statusText: TextView
+    private lateinit var aboutButton: TextView
     private lateinit var deviceButton: Button
     private lateinit var discoveryPanel: LinearLayout
     private lateinit var discoveryProgress: ProgressBar
@@ -257,9 +258,38 @@ class MainActivity : Activity() {
             includeFontPadding = false
             setTypeface(typeface, Typeface.BOLD)
         }
-        titleColumn.addView(
+        val titleRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        titleRow.addView(
             title,
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        aboutButton = TextView(this).apply {
+            text = "ⓘ"
+            textSize = 21f
+            gravity = Gravity.CENTER
+            contentDescription = getString(R.string.about_action)
+            isClickable = true
+            isFocusable = true
+            setBackgroundResource(android.R.drawable.list_selector_background)
+            setOnClickListener { showAboutDialog() }
+        }
+        titleRow.addView(
+            aboutButton,
+            LinearLayout.LayoutParams(dp(48), dp(48))
+        )
+        titleColumn.addView(
+            titleRow,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         )
 
         statusText = TextView(this).apply {
@@ -302,19 +332,6 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 marginStart = dp(10)
             }
-        )
-
-        val aboutButton = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_menu_info_details)
-            contentDescription = getString(R.string.about_action)
-            setBackgroundResource(android.R.drawable.list_selector_background)
-            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
-            setPadding(dp(8), dp(8), dp(8), dp(8))
-            setOnClickListener { showAboutDialog() }
-        }
-        toolbar.addView(
-            aboutButton,
-            LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(6) }
         )
 
         root.addView(
@@ -1251,6 +1268,7 @@ class MainActivity : Activity() {
         }
 
         pageVisible = true
+        aboutButton.visibility = View.GONE
         deviceButton.text = getString(R.string.devices)
         deviceButton.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
@@ -1265,6 +1283,7 @@ class MainActivity : Activity() {
         showRetry: Boolean
     ) {
         pageVisible = true
+        aboutButton.visibility = View.GONE
         deviceButton.text = getString(R.string.devices)
         deviceButton.visibility = View.VISIBLE
         statusText.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
@@ -1381,6 +1400,7 @@ class MainActivity : Activity() {
 
     private fun showDiscoveryPanel() {
         pageVisible = false
+        aboutButton.visibility = View.VISIBLE
         deviceButton.text = getString(R.string.remote)
         deviceButton.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
         statusText.visibility = View.GONE
