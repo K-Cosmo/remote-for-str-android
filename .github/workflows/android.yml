@@ -24,6 +24,10 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v6.3.0
 
+      - name: Verify release certificate parser (legacy and Build Tools 37)
+        shell: pwsh
+        run: ./tools/test-apksigner-certificate.ps1
+
       - name: Verify wrapper and build
         run: |
           chmod +x ./gradlew
