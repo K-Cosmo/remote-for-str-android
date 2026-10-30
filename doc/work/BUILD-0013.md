@@ -127,3 +127,11 @@ Upstream STR maintainer review added to the normative [BACKLOG](../BACKLOG.md) a
 **New implementation in PR #5:** a 48dp-touch-target native toolbar info icon opens a scrollable, bilingual Android About dialog on both Remote and Devices views. It displays installed app version, explicitly states independent/unofficial community status and no affiliation/endorsement by Bose or STR, credits Bose and SoundTouch as Bose Corporation trademarks, and offers user-activated GitHub source/issues and an optional external email contact action. No external request on dialog open; no additional storage, runtime dependency, Android permission, or change of signed release identity. The app name remains provisional pending STR-020.
 
 **Acceptance still open:** verify icon touch target/content description, legible dialog and navigation on a physical phone (including small screen/large text), both DE and EN notice, all three external actions, back/close handling and no-email-client behavior. The English WLAN wizard remains separately unverified on device.
+
+## 2026-10-30: title-adjacent info affordance and app naming options
+
+**User feedback:** About page successfully appears on their phone. Move its entry point off the Remote view and place it directly after the app name in the Devices title, visually `STR Remote ⓘ` until renaming.
+
+**Implemented on PR #5:** a circled `ⓘ` text action with 48dp touch target and localized accessibility content description is positioned immediately after the toolbar title inside a horizontal title row. It is **visible only in the Devices/discovery panel**, hidden in active Remote/WebView and Remote-offline states. The existing bilingual About dialog and links are unchanged. Needs on-device screenshot and navigation QA.
+
+**Brand candidates:** `Remote for STR` (recommended) and `Remote 4 STR` (alternative). No final user choice yet; do not change the visible title, Android `applicationId`, signing certificate, repo URL, updater endpoint or release links until the chosen name is finalized. A GitHub repository rename is feasible after final decision, but must include source/configuration/update-check URL/link adjustments. Maintaining Android package identity preserves upgrade compatibility for the two existing users.
