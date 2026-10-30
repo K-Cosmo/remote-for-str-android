@@ -28,6 +28,7 @@ import android.text.InputType
 import android.view.View
 import android.view.WindowInsetsController
 import android.widget.EditText
+import android.widget.AutoCompleteTextView
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -97,7 +98,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var passwordPage: LinearLayout
     private lateinit var completionPage: LinearLayout
     private lateinit var feedbackPage: LinearLayout
-    private lateinit var feedbackModelField: EditText
+    private lateinit var feedbackModelField: AutoCompleteTextView
     private lateinit var feedbackOutcomeGroup: RadioGroup
     private lateinit var feedbackErrorView: TextView
     private lateinit var completionFeedbackButton: Button
@@ -681,10 +682,11 @@ internal class BoseSetupProbeActivity : Activity() {
         feedbackPage.addView(heading("Welches SoundTouch-Modell?").apply {
             setPadding(0, dp(10), 0, dp(7))
         })
-        feedbackModelField = EditText(this).apply {
-            hint = "z. B. SoundTouch 30 Series III"
+        feedbackModelField = AutoCompleteTextView(this).apply {
+            hint = "Modell suchen oder selbst eingeben"
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setSingleLine(true)
+            threshold = 1
             filters = arrayOf(InputFilter.LengthFilter(60))
             textSize = 16f
             setTextColor(ink)
@@ -692,8 +694,26 @@ internal class BoseSetupProbeActivity : Activity() {
             background = card(Color.rgb(126, 148, 169))
             setPadding(dp(12), dp(12), dp(12), dp(12))
             minHeight = dp(54)
+            dropDownHeight = dp(300)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            val models = BoseSoundTouchCatalog.modelSuggestions
+            setAdapter(object : ArrayAdapter<String>(
+                this@BoseSetupProbeActivity,
+                android.R.layout.simple_dropdown_item_1line,
+                models
+            ) {
+                override fun getView(
+                    position: Int, convertView: View?, parent: ViewGroup
+                ): View = (super.getView(position, convertView, parent) as TextView).apply {
+                    setTextColor(ink)
+                    textSize = 15f
+                    setPadding(dp(14), dp(12), dp(14), dp(12))
+                    minHeight = dp(48)
+                }
+            })
+            // Suggestions are convenient, never mandatory: rare model names
+            // can always be typed and submitted freely.
         }
         feedbackPage.addView(feedbackModelField)
         feedbackPage.addView(heading("War die WLAN-Einrichtung erfolgreich?").apply {
@@ -726,14 +746,15 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         feedbackPage.addView(feedbackErrorView)
         feedbackPage.addView(text(
-            "Freiwillig: Wir öffnen einen vorbereiteten GitHub-Issue-Entwurf. " +
-                "Du kannst alles vor dem öffentlichen Absenden prüfen; ein GitHub-Konto " +
-                "ist dafür erforderlich. Es werden weder WLAN-Daten noch " +
-                "Gerätekennungen automatisch übernommen.",
+            "Freiwillig: Wir öffnen dein E-Mail-Programm mit einem vorbereiteten " +
+                "Entwurf an str-remote-android@gmx.org. Neben Modell und Ergebnis " +
+                "enthält er die STR-Remote- und Android-Version. " +
+                "Du prüfst die Nachricht und versendest sie selbst. " +
+                "Keine WLAN-Daten oder Gerätekennungen werden übernommen.",
             13f
         ).apply { setPadding(0, dp(10), 0, dp(12)) })
         feedbackPage.addView(Button(this).apply {
-            text = "Feedback bei GitHub vorbereiten"
+            text = "Feedback als E-Mail vorbereiten"
             isAllCaps = false
             minHeight = dp(54)
             setOnClickListener { openCommunityFeedbackDraft() }
@@ -982,7 +1003,19 @@ internal class BoseSetupProbeActivity : Activity() {
             feedbackFailureId -> BoseCommunityOutcome.FAILURE
             else -> null
         }
-        val draft = BoseCommunityFeedback.compose(feedbackModelField.text.toString(), outcome)
+        @Suppress("DEPRECATION")
+        val installedVersion = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "unbekannt"
+        } catch (_: Exception) {
+            "unbekannt"
+        }
+        val appVersion = if (
+            applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        ) "$installedVersion (Debug)" else installedVersion
+        val androidVersion = "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+        val draft = BoseCommunityFeedback.compose(
+            feedbackModelField.text.toString(), outcome, appVersion, androidVersion
+        )
         if (draft == null) {
             feedbackErrorView.text =
                 "Bitte das Modell (2–60 Zeichen) und Ja oder Nein auswählen."
@@ -990,16 +1023,20 @@ internal class BoseSetupProbeActivity : Activity() {
             return
         }
         feedbackErrorView.visibility = View.GONE
-        // Explicit click only. GitHub pre-fills a draft; the user must review
-        // and submit it in the browser. No device identifiers or credentials.
-        val url = Uri.parse(BoseCommunityFeedback.ISSUE_PATH).buildUpon()
-            .appendQueryParameter("title", draft.title)
-            .appendQueryParameter("body", draft.body)
-            .build()
+        // No automatic sending, no account integration and no user/device
+        // identifiers beyond the explicitly requested app/Android versions.
+        val mailIntent = Intent(
+            Intent.ACTION_SENDTO, Uri.parse("mailto:${BoseCommunityFeedback.RECIPIENT}")
+        ).apply {
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(draft.recipient))
+            putExtra(Intent.EXTRA_SUBJECT, draft.subject)
+            putExtra(Intent.EXTRA_TEXT, draft.body)
+        }
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, url))
+            startActivity(Intent.createChooser(mailIntent, "E-Mail-Programm auswählen"))
         } catch (_: Exception) {
-            feedbackErrorView.text = "GitHub konnte nicht im Browser geöffnet werden."
+            feedbackErrorView.text =
+                "Kein E-Mail-Programm gefunden. Bitte einen Mailclient einrichten."
             feedbackErrorView.visibility = View.VISIBLE
         }
     }
