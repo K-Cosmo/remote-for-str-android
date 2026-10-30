@@ -39,6 +39,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ScrollView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ProgressBar
@@ -301,6 +302,19 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 marginStart = dp(10)
             }
+        )
+
+        val aboutButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_info_details)
+            contentDescription = getString(R.string.about_action)
+            setBackgroundResource(android.R.drawable.list_selector_background)
+            scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            setOnClickListener { showAboutDialog() }
+        }
+        toolbar.addView(
+            aboutButton,
+            LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginStart = dp(6) }
         )
 
         root.addView(
@@ -1063,6 +1077,78 @@ class MainActivity : Activity() {
         discoveryWifiSettingsButton.visibility = View.GONE
         retryButton.visibility = if (showRetry) View.VISIBLE else View.GONE
         strHelpButton.visibility = if (showStrHelp) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * Native, always-accessible project identity and support information.
+     * No network request occurs until the user taps an external link.
+     * The currently displayed name is provisional; keep it separate from
+     * applicationId and the signing identity during future rebranding.
+     */
+    private fun showAboutDialog() {
+        @Suppress("DEPRECATION")
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+        } catch (_: Exception) {
+            "?"
+        }
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+        }
+
+        fun paragraph(value: String, emphasized: Boolean = false) {
+            layout.addView(TextView(this).apply {
+                text = value
+                textSize = 15f
+                if (emphasized) setTypeface(typeface, Typeface.BOLD)
+                setPadding(0, 0, 0, dp(14))
+            })
+        }
+
+        fun linkButton(label: Int, action: () -> Unit) {
+            layout.addView(Button(this).apply {
+                text = getString(label)
+                isAllCaps = false
+                setOnClickListener { action() }
+            }, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ))
+        }
+
+        paragraph(getString(R.string.about_version_format, version), emphasized = true)
+        paragraph(getString(R.string.about_community_notice))
+        paragraph(getString(R.string.about_trademark_notice))
+        paragraph(getString(R.string.about_support_heading), emphasized = true)
+
+        linkButton(R.string.about_source_link) {
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/str-remote-android"))
+        }
+        linkButton(R.string.about_issues_link) {
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/str-remote-android/issues"))
+        }
+        linkButton(R.string.about_email_link) {
+            val uri = Uri.parse(
+                "mailto:str-remote-android@gmx.org?subject=" +
+                    Uri.encode(getString(R.string.about_email_subject))
+            )
+            try {
+                startActivity(Intent(Intent.ACTION_SENDTO, uri))
+            } catch (_: Exception) {
+                Toast.makeText(this, R.string.about_no_email_client, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        val scrollView = ScrollView(this).apply {
+            isFillViewport = false
+            addView(layout)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.about_title)
+            .setView(scrollView)
+            .setPositiveButton(R.string.about_close, null)
+            .show()
     }
 
     private fun checkForAppUpdate() {
