@@ -12,6 +12,7 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -673,14 +674,12 @@ internal class BoseSetupProbeActivity : Activity() {
         content.addView(completionPage)
 
         feedbackPage = panel()
-        feedbackPage.addView(heading("Erfahrung mit deinem SoundTouch teilen"))
         feedbackPage.addView(text(
-            "Diese Modellvariante wurde bisher nicht geprüft. " +
-                "Deine Rückmeldung hilft, weitere SoundTouch-Modelle schrittweise zu testen.",
-            15f
+            "Hilf uns, weitere SoundTouch-Modelle zu prüfen.", 15f
         ))
-        feedbackPage.addView(heading("Welches SoundTouch-Modell?").apply {
-            setPadding(0, dp(10), 0, dp(7))
+        feedbackPage.addView(heading("SoundTouch-Modell").apply {
+            textSize = 17f
+            setPadding(0, dp(8), 0, dp(4))
         })
         feedbackModelField = AutoCompleteTextView(this).apply {
             hint = "Modell suchen oder selbst eingeben"
@@ -694,7 +693,9 @@ internal class BoseSetupProbeActivity : Activity() {
             background = card(Color.rgb(126, 148, 169))
             setPadding(dp(12), dp(12), dp(12), dp(12))
             minHeight = dp(54)
-            dropDownHeight = dp(300)
+            dropDownHeight = dp(190)
+            setDropDownBackgroundDrawable(ColorDrawable(Color.WHITE))
+            dropDownVerticalOffset = dp(4)
             isSaveEnabled = false
             importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
             val models = BoseSoundTouchCatalog.modelSuggestions
@@ -707,17 +708,22 @@ internal class BoseSetupProbeActivity : Activity() {
                     position: Int, convertView: View?, parent: ViewGroup
                 ): View = (super.getView(position, convertView, parent) as TextView).apply {
                     setTextColor(ink)
+                    setBackgroundColor(Color.WHITE)
                     textSize = 15f
-                    setPadding(dp(14), dp(12), dp(14), dp(12))
-                    minHeight = dp(48)
+                    setPadding(dp(12), dp(8), dp(12), dp(8))
+                    minHeight = dp(44)
                 }
+                override fun getDropDownView(
+                    position: Int, convertView: View?, parent: ViewGroup
+                ): View = getView(position, convertView, parent)
             })
             // Suggestions are convenient, never mandatory: rare model names
             // can always be typed and submitted freely.
         }
         feedbackPage.addView(feedbackModelField)
-        feedbackPage.addView(heading("War die WLAN-Einrichtung erfolgreich?").apply {
-            setPadding(0, dp(14), 0, dp(7))
+        feedbackPage.addView(heading("WLAN-Einrichtung erfolgreich?").apply {
+            textSize = 17f
+            setPadding(0, dp(8), 0, dp(4))
         })
         feedbackOutcomeGroup = RadioGroup(this).apply {
             orientation = RadioGroup.VERTICAL
@@ -736,7 +742,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 textSize = 16f
                 setTextColor(ink)
                 buttonTintList = ColorStateList.valueOf(accent)
-                minHeight = dp(50)
+                minHeight = dp(42)
                 isChecked = false
             })
         }
@@ -746,13 +752,11 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         feedbackPage.addView(feedbackErrorView)
         feedbackPage.addView(text(
-            "Freiwillig: Wir öffnen dein E-Mail-Programm mit einem vorbereiteten " +
-                "Entwurf an str-remote-android@gmx.org. Neben Modell und Ergebnis " +
-                "enthält er die STR-Remote- und Android-Version. " +
-                "Du prüfst die Nachricht und versendest sie selbst. " +
-                "Keine WLAN-Daten oder Gerätekennungen werden übernommen.",
+            "Freiwillig: Dein Mailprogramm öffnet einen Entwurf an " +
+                "str-remote-android@gmx.org mit Modell, Ergebnis, App- und " +
+                "Android-Version. Prüfe ihn vor dem Senden. Keine WLAN-Daten.",
             13f
-        ).apply { setPadding(0, dp(10), 0, dp(12)) })
+        ).apply { setPadding(0, dp(6), 0, dp(6)) })
         feedbackPage.addView(Button(this).apply {
             text = "Feedback als E-Mail vorbereiten"
             isAllCaps = false
@@ -910,8 +914,14 @@ internal class BoseSetupProbeActivity : Activity() {
             chosenPasswordNetworkView.text = "WLAN: " + ssidField.text.toString()
             setPasswordVisible(false)
         }
-        statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
-        detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
+        statusView.visibility = if (page == 1 || page == BoseSetupFlow.FEEDBACK_PAGE)
+            View.GONE else View.VISIBLE
+        detailsButton.visibility = if (page == 1 || page == BoseSetupFlow.FEEDBACK_PAGE)
+            View.GONE else View.VISIBLE
+        if (page == BoseSetupFlow.FEEDBACK_PAGE) {
+            resultsView.visibility = View.GONE
+            detailsButton.text = "Technische Details anzeigen"
+        }
         backButton.visibility =
             if (page in 2..4 ||
                 (page == BoseSetupFlow.FEEDBACK_PAGE &&
