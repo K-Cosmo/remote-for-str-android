@@ -3,6 +3,7 @@
 **Source build:** 0.1.2-dev  
 **Evidence class:** real Android Studio build + real-device screenshots + focused Logcat  
 **Acceptance effect:** verifies the visual convergence and moves the MVP to release-candidate hardening
+**Redaction:** The address `192.0.2.29` is an RFC 5737 TEST-NET-1 documentation placeholder; the originally captured private LAN address was removed in the current revision. Historical Git commits may still contain the original value.  
 
 ## Build evidence
 
@@ -24,7 +25,7 @@ The supplied 0.1.2-dev screenshot shows:
 - one concise discovery heading (`Gefundene Geräte`);
 - one readable speaker row for `ST09`;
 - model `SoundTouch 10`;
-- local address `REDACTED_LOCAL_IP`;
+- local address `192.0.2.29`;
 - STR `v0.9.86`;
 - no duplicate mDNS explanation or competing connection-status text;
 - manual-address fallback remains available at the bottom.
@@ -35,7 +36,7 @@ This verifies the fixes for F-004 and F-005 on the tested device.
 
 The supplied connected-state screenshot shows:
 
-- the active endpoint line `ST09 · REDACTED_LOCAL_IP:8888` below the native toolbar;
+- the active endpoint line `ST09 · 192.0.2.29:8888` below the native toolbar;
 - the upstream STR UI loaded successfully;
 - the WebView spans the full available native content width with no wrapper gutter;
 - the upstream STR bottom navigation remains intact;
