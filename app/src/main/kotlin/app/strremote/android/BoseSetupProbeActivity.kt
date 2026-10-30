@@ -1017,7 +1017,7 @@ internal class BoseSetupProbeActivity : Activity() {
         // No automatic sending, no account integration and no user/device
         // identifiers beyond the explicitly requested app/Android versions.
         val mailIntent = Intent(
-            Intent.ACTION_SENDTO, Uri.parse("mailto:${BoseCommunityFeedback.RECIPIENT}")
+            Intent.ACTION_SENDTO, Uri.parse(BoseCommunityFeedback.mailtoUri(draft))
         ).apply {
             putExtra(Intent.EXTRA_EMAIL, arrayOf(draft.recipient))
             putExtra(Intent.EXTRA_SUBJECT, draft.subject)
