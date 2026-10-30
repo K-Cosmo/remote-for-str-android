@@ -36,7 +36,7 @@ Further maintainer observations:
 
 **Brand cutover acceptance:** verify launcher text, Devices title `Remote for STR ⓘ`, hidden info action on Remote, DE/EN permissions/setup/update dialogs, email version label, exact signed APK naming, original app ID/signature, and update-over-v0.3.0 behavior. Repository rename and direct-URL code cutover are implemented on the branch; confirm the final release checker and links in CI/QA. Avoid changing historical release evidence or re-signing old releases.
 
-**STR-024 evidence privacy:** current branch redacts the actual private LAN endpoint in both affected 2026-09-26 QA Markdown files using reserved RFC 5737 example addresses. Git commit history still contains previous content; no force-push/history rewrite was done. Decide separately whether an invasive history purge is warranted before public promotion.
+**STR-024 history purge:** refer to [Git history cleanup](GIT_HISTORY_CLEANUP.md) for the destructive, coordinated rewrite; current working-file redaction alone is insufficient. Branch retirement and release-tag/provenance reconciliation remain open.
 
 The separate proposed **Play Store/F-Droid** distributions remain later candidates. This upstream listing and community workflow does not require them.
 
