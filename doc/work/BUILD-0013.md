@@ -99,3 +99,11 @@ Status: candidate, **not** in published 0.3.0. Do not merge PR #5 or cut 0.3.1 u
 - [ ] Release version is bumped to 0.3.1 or next appropriate version **only after UI acceptance**, built, signed with existing certificate, tested as update and published through release gates
 
 Development must remain separate from public `main` until acceptance.
+
+## 2026-10-30: Conversation handoff and mailto prefill regression
+
+Reported on physical Android device: Android successfully presents an installed email application and populates the fixed recipient, but **subject and body are blank**. The original implementation passed them only as `Intent.EXTRA_SUBJECT` and `Intent.EXTRA_TEXT`; these may be ignored by the selected mail app. Preserve Android `ACTION_SENDTO` (`mailto:`, only mail clients) and supply the UTF-8 percent-encoded `subject` and `body` in the `mailto:` data URI as specified by RFC 6068, alongside all three existing extras. Encode line breaks as CRLF, never log draft content, and keep the send action user-controlled.
+
+Regression tests: deterministic localized DE/EN draft composition, RFC 6068 URI encoding/decoding with Unicode and multiline text, consent/no-network-identifier boundaries. **Still pending:** exact phone/email-client smoke test for correctly filled recipient/subject/body and cancel/no-app path. No claim that mail was sent or that all clients are compatible.
+
+Upstream STR maintainer review added to the normative [BACKLOG](../BACKLOG.md) and [PLANNED](../PLANNED.md): a distinct name from the existing iOS `STR Remote`, a visible unofficial community/brand info notice and fully understandable English Wi-Fi wizard are required before upstream Community Apps listing. The pending CSS-selector coupling, an address in QA evidence, upstream Show-and-tell thread and federated support links are also tracked. The suggested working name `Reborn Companion` is not adopted until decided. No changes to the published `v0.3.0` artifact.
