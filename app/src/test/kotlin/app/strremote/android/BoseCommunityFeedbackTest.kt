@@ -9,41 +9,52 @@ import org.junit.Test
 
 class BoseCommunityFeedbackTest {
     @Test fun onlyExplicitModelAndOutcomeProduceDraft() {
-        assertNull(BoseCommunityFeedback.compose("", BoseCommunityOutcome.SUCCESS))
-        assertNull(BoseCommunityFeedback.compose("SoundTouch 30", null))
-        assertNotNull(BoseCommunityFeedback.compose("SoundTouch 30 III", BoseCommunityOutcome.SUCCESS))
-        assertNotNull(BoseCommunityFeedback.compose("SoundTouch 300", BoseCommunityOutcome.FAILURE))
+        assertNull(BoseCommunityFeedback.compose("", BoseCommunityOutcome.SUCCESS, "0.3.0", "16 (API 36)"))
+        assertNull(BoseCommunityFeedback.compose("SoundTouch 30", null, "0.3.0", "16 (API 36)"))
+        assertNotNull(BoseCommunityFeedback.compose(
+            "SoundTouch 30 III", BoseCommunityOutcome.SUCCESS, "0.3.0", "16 (API 36)"
+        ))
+        assertNotNull(BoseCommunityFeedback.compose(
+            "SoundTouch 300", BoseCommunityOutcome.FAILURE, "0.3.0", "16 (API 36)"
+        ))
     }
 
-    @Test fun draftsContainNoAutomaticPrivateNetworkData() {
-        val success = BoseCommunityFeedback.compose(
-            " SoundTouch Portable ", BoseCommunityOutcome.SUCCESS
+    @Test fun mailIncludesVersionsAndNoAutomaticNetworkIdentifiers() {
+        val mail = BoseCommunityFeedback.compose(
+            " SoundTouch Portable ", BoseCommunityOutcome.SUCCESS,
+            "0.3.0 (Debug)", "16 (API 36)"
         )!!
-        assertEquals("SoundTouch WLAN-Einrichtung: SoundTouch Portable – Erfolgreich", success.title)
-        assertTrue(success.body.contains("SoundTouch Portable"))
-        assertTrue(success.body.contains("Erfolgreich"))
-        assertTrue(success.body.contains("selbst angegeben"))
-        assertFalse(success.body.contains("SSID:"))
-        assertFalse(success.body.contains("deviceID"))
+        assertEquals("str-remote-android@gmx.org", mail.recipient)
+        assertEquals(
+            "SoundTouch WLAN-Feedback: SoundTouch Portable – Erfolgreich",
+            mail.subject
+        )
+        assertTrue(mail.body.contains("SoundTouch Portable"))
+        assertTrue(mail.body.contains("WLAN-Einrichtung erfolgreich: Ja"))
+        assertTrue(mail.body.contains("STR Remote Version: 0.3.0 (Debug)"))
+        assertTrue(mail.body.contains("Android-Version: 16 (API 36)"))
+        assertFalse(mail.body.contains("SSID:"))
+        assertFalse(mail.body.contains("deviceID"))
+        assertFalse(mail.body.contains("192.168."))
         val failure = BoseCommunityFeedback.compose(
-            "SoundTouch 30", BoseCommunityOutcome.FAILURE
+            "SoundTouch 30", BoseCommunityOutcome.FAILURE, "0.3.0", "15 (API 35)"
         )!!
-        assertTrue(failure.body.contains("Nicht erfolgreich"))
-        assertFalse(failure.body.contains("Erfolgreich\n"))
+        assertTrue(failure.body.contains("WLAN-Einrichtung erfolgreich: Nein"))
+        assertFalse(failure.body.contains("WLAN-Einrichtung erfolgreich: Ja"))
     }
 
-    @Test fun rejectMultilineAndOversizedModelLabels() {
+    @Test fun rejectMultilineOversizedAndUnsafeLabels() {
         assertFalse(BoseCommunityFeedback.validModel("SoundTouch 30\nKennwort"))
         assertFalse(BoseCommunityFeedback.validModel("A".repeat(61)))
         assertFalse(BoseCommunityFeedback.validModel("a"))
         assertFalse(BoseCommunityFeedback.validModel("SoundTouch <script>"))
         assertTrue(BoseCommunityFeedback.validModel("SoundTouch 30 Series III"))
+        assertNull(BoseCommunityFeedback.compose(
+            "SoundTouch 30", BoseCommunityOutcome.SUCCESS, "", "16"
+        ))
     }
 
-    @Test fun issueDraftUsesFixedOfficialGitHubLocation() {
-        assertEquals(
-            "https://github.com/K-Cosmo/str-remote-android/issues/new",
-            BoseCommunityFeedback.ISSUE_PATH
-        )
+    @Test fun fixedRecipientDoesNotRequireGitHubAccount() {
+        assertEquals("str-remote-android@gmx.org", BoseCommunityFeedback.RECIPIENT)
     }
 }
