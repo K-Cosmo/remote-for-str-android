@@ -26,7 +26,7 @@ The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the 
 | ID | Item | Priority | State |
 |---|---|---:|---|
 | STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #5; final QA, upstream CSS contract pending |
-| STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | IMPLEMENTED in PR #5; end-to-end DE/EN device QA pending |
+| STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | **English WLAN wizard phone QA PASS (2026-10-30)**; model dropdown and feedback layout device tested. Negative-case/regression release QA outstanding |
 | STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | VERIFIED on tested client; extra paragraph styling not preserved on user's device — cosmetic, DEFERRED; no-mail-app path QA pending |
 | STR-020 | Public product name **Remote for STR**; UI, docs and future artifacts; preserve Android package ID and original signer | P0 | IMPLEMENTED in PR #5; GitHub repo renamed to `K-Cosmo/remote-for-str-android` and canonical URLs migrated; final CI + device/release QA pending |
 | STR-021 | Visible bilingual Info/About: independent unofficial community app, no Bose/STR affiliation, trademark notice and README | P0 | User verified About screen opens; UI adjusted so circled info sits next to title on Devices only; updated placement and EN phone QA pending |

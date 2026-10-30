@@ -2,7 +2,7 @@
 
 ## Development brand (PR #5 — NOT RELEASED)
 
-The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The new branding, English wizard and full real-device release gates are not yet accepted.
+The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The user confirmed English Wi-Fi wizard device QA (2026-10-30). New branding and other release-specific gates are not fully accepted.
 
 **Development version:** 0.3.0
 **Latest public release:** 0.3.0
