@@ -36,3 +36,7 @@ Do not introduce analytics, accounts, hosted backends, Bose branding assets, unn
 User-visible UI changes must preserve the supported German/English experience. Security/privacy/permission scope changes require explicit documentation and evidence.
 
 Release APKs are built only from a clean committed source tree with the existing release-signing process.
+
+## Sanitizing evidence before commit
+
+Never paste home/work LAN endpoints, Wi-Fi SSIDs or passwords, MAC/serial numbers, access tokens or personal directory paths into issues, screenshots, docs or test fixtures. Prefer RFC 5737 example IPv4 addresses. Keep actual model/firmware details only when needed for technical evidence. The documentation CI checks new private IPv4 literals, with a narrow exception for the documented Bose setup address; it cannot detect every type of secret or remove old Git history. See `SECURITY.md` and `GIT_HISTORY_CLEANUP.md`.

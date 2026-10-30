@@ -74,3 +74,7 @@ The unknown model option uses the same single-attempt Bose WLAN transfer as the 
 Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed Remote for STR version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
 
 The offline model suggestion catalog reflects Bose's SoundTouch app support list; it is not a verified compatibility matrix for original-firmware WLAN provisioning. The outgoing draft excludes WLAN SSID/password, IP/MAC, device ID, diagnostics and other automatically collected identifiers. Users are advised not to add such information manually.
+
+## Public QA evidence and Git history
+
+Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`.

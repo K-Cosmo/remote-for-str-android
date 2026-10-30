@@ -28,13 +28,14 @@
 - `FINDINGS.md` / `BLOCKERS.md` — findings and current blockers
 - `PLANNED.md` / `BACKLOG.md` — future work
 - `CHANGELOG.md` — canonical implemented-change history
+- `GIT_HISTORY_CLEANUP.md` — controlled destructive Git-history ref rewrite, backups and obsolete branch retirement
 
 ## Historical records
 
 The following locations are evidence/process history, not current-state policy:
 
 - `work/` — build-scoped execution records
-- `evidence/qa/` — dated QA/build/release evidence
+- `evidence/qa/` — dated QA/build/release evidence (including the 2026-10-30 privacy/documentation audit)
 - `/specs/` — development specifications/plans/tasks for completed or active work
 - `/.specify/` — process orchestration only
 
