@@ -13,7 +13,9 @@ internal object BoseSetupFlow {
     const val PASSWORD_PAGE = 4
     const val VERIFY_PAGE = 5
     const val COMPLETE_PAGE = 6
+    const val FEEDBACK_PAGE = 7
 
     fun mayFinish(phase: BoseSetupPhase, page: Int): Boolean =
-        phase == BoseSetupPhase.TERMINAL && page == COMPLETE_PAGE
+        phase == BoseSetupPhase.TERMINAL &&
+            (page == COMPLETE_PAGE || page == FEEDBACK_PAGE)
 }

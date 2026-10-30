@@ -22,5 +22,10 @@ class BoseSetupPhaseTest {
             BoseSetupPhase.TERMINAL, BoseSetupFlow.COMPLETE_PAGE))
         assertEquals(4, BoseSetupFlow.STEP_COUNT)
         assertEquals(4, BoseSetupFlow.PASSWORD_PAGE)
+        assertEquals(7, BoseSetupFlow.FEEDBACK_PAGE)
+        assertTrue(BoseSetupFlow.mayFinish(
+            BoseSetupPhase.TERMINAL, BoseSetupFlow.FEEDBACK_PAGE))
+        assertFalse(BoseSetupFlow.mayFinish(
+            BoseSetupPhase.VERIFYING, BoseSetupFlow.FEEDBACK_PAGE))
     }
 }
