@@ -73,6 +73,7 @@ class BoseCommunityFeedbackTest {
     @Test fun fixedRecipientDoesNotRequireGitHubAccount() {
         assertEquals("str-remote-android@gmx.org", BoseCommunityFeedback.RECIPIENT)
     }
+
     @Test fun mailtoUriRoundTripsGermanSubjectAndMultilineBody() {
         val draft = BoseCommunityFeedback.compose(
             "SoundTouch 30 Series III", BoseCommunityOutcome.FAILURE,
@@ -88,7 +89,7 @@ class BoseCommunityFeedbackTest {
         val subject = URLDecoder.decode(subjectEncoded, StandardCharsets.UTF_8.name())
         val body = URLDecoder.decode(bodyEncoded, StandardCharsets.UTF_8.name())
         assertEquals(draft.subject, subject)
-        assertEquals(draft.body.replace("\\n", "\\r\\n"), body)
+        assertEquals(draft.body.replace("\n", "\r\n"), body)
     }
 
     @Test fun mailtoUriRoundTripsEnglishDraftWithoutNetworkIdentifiers() {
