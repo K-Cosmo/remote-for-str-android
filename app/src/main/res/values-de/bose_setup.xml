@@ -151,7 +151,7 @@
     <string name="bose_model_10_name">SoundTouch 10</string>
     <string name="bose_model_10_option">SoundTouch 10 · geprüft</string>
     <string name="bose_model_10_hint">Die SoundTouch 10 besitzt kein Textdisplay. Achte auf die dauerhaft gelbe WLAN-LED.</string>
-    <string name="bose_model_other_name">anderen SoundTouch-Modell</string>
+    <string name="bose_model_other_name">ein anderes SoundTouch-Modell</string>
     <string name="bose_model_other_option">Anderes SoundTouch-Modell</string>
     <string name="bose_model_other_hint">Preset 2 + Leiser ist hier ungeprüft. Fahre nur fort, wenn ein Bose-Setup-WLAN erscheint.</string>
     <string name="bose_model_instruction_title">Für %1$s</string>
