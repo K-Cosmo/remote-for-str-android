@@ -1,10 +1,10 @@
 # Privacy
 
-STR Remote does not operate a server, create user accounts, collect analytics or transmit telemetry.
+Remote for STR does not operate a server, create user accounts, collect analytics or transmit telemetry.
 
-The app accesses the local network to discover and connect to SoundTouch Reborn speakers. The embedded STR web application may perform its own network requests required by STR features; STR Remote does not collect those requests.
+The app accesses the local network to discover and connect to SoundTouch Reborn speakers. The embedded STR web application may perform its own network requests required by STR features; Remote for STR does not collect those requests.
 
-STR Remote stores local data in Android app-private preferences. Current 0.2.0 data can include:
+Remote for STR stores local data in Android app-private preferences. Current 0.2.0 data can include:
 
 - the last successful speaker endpoint;
 - explicitly saved speaker host/port/display/model/discovery metadata;
@@ -13,14 +13,14 @@ STR Remote stores local data in Android app-private preferences. Current 0.2.0 d
 
 A custom room name is stored exactly as local user-entered text. Room/UI metadata is presentation-only and is not used for speaker authentication, WebView security or playback behavior.
 
-Saved-speaker, room and UI-preference data is not uploaded or cloud-synced by STR Remote.
+Saved-speaker, room and UI-preference data is not uploaded or cloud-synced by Remote for STR.
 
-Removing application data or uninstalling STR Remote removes this app-private metadata.
+Removing application data or uninstalling Remote for STR removes this app-private metadata.
 
 
 ## Bose Wi-Fi setup in 0.3.0
 
-The optional setup assistant uses the phone's Android-approved connection to the temporary Bose setup Wi-Fi. The selected SSID and password are passed directly from this app to the speaker's **original Bose firmware** over local, unencrypted HTTP. They are not sent to STR Remote servers or analytics services; STR Remote runs no such servers. The Wi-Fi password is kept only for the active attempt and is not written to preferences or logs.
+The optional setup assistant uses the phone's Android-approved connection to the temporary Bose setup Wi-Fi. The selected SSID and password are passed directly from this app to the speaker's **original Bose firmware** over local, unencrypted HTTP. They are not sent to Remote for STR servers or analytics services; Remote for STR runs no such servers. The Wi-Fi password is kept only for the active attempt and is not written to preferences or logs.
 
 After the attempt, this app may locally retain a Bose device identifier, verified local IP address, setup status and user-assigned room to display the speaker separately from STR-enabled devices until STR becomes reachable. The selected Wi-Fi password is never part of that record. Other platform-level backup policies remain governed by Android settings.
 
@@ -34,6 +34,6 @@ Once implemented and distributed, the Android app will query GitHub's **public**
 
 On choosing “Anderes SoundTouch-Modell”, a voluntary form asks for the model name and a manually selected success/failure response (no default answer). As the user types, suggestions come from a local static historic Bose catalog; no typed text is sent to a remote service for matching. The model remains freely editable.
 
-Only after the user taps **“Feedback als E-Mail vorbereiten”** does Android open an installed email app with a draft addressed to `str-remote-android@gmx.org`. The draft includes the entered model, selected outcome, installed STR Remote version (with a Debug qualifier when applicable), and Android version/API level. This version information is shared only as part of the draft, not uploaded silently. Users review and send the message themselves; no GitHub account is required.
+Only after the user taps **“Feedback als E-Mail vorbereiten”** does Android open an installed email app with a draft addressed to `str-remote-android@gmx.org`. The draft includes the entered model, selected outcome, installed Remote for STR version (with a Debug qualifier when applicable), and Android version/API level. This version information is shared only as part of the draft, not uploaded silently. Users review and send the message themselves; no GitHub account is required.
 
-No Wi-Fi SSID or password, Bose device ID, IP/MAC address, diagnostic trace, attachment, Google account or any other identifier is automatically included. The user’s email client/provider and recipient process normal email metadata (including the sender address) if the user actually sends. No email address, message or selected model is saved by STR Remote as an analytics record.
+No Wi-Fi SSID or password, Bose device ID, IP/MAC address, diagnostic trace, attachment, Google account or any other identifier is automatically included. The user’s email client/provider and recipient process normal email metadata (including the sender address) if the user actually sends. No email address, message or selected model is saved by Remote for STR as an analytics record.
