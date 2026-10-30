@@ -7,12 +7,14 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 /** Optional best-effort check against the official public GitHub release API. */
+internal data class AppUpdateCheckResult(val available: AvailableAppUpdate?)
+
 internal object AppUpdateChecker {
     private const val API_URL =
         "https://api.github.com/repos/K-Cosmo/str-remote-android/releases/latest"
     private const val MAX_JSON_BYTES = 64 * 1024
 
-    fun fetch(installedVersion: String): AvailableAppUpdate? {
+    fun fetch(installedVersion: String): AppUpdateCheckResult? {
         var connection: HttpsURLConnection? = null
         return try {
             connection = URL(API_URL).openConnection() as HttpsURLConnection
@@ -34,7 +36,7 @@ internal object AppUpdateChecker {
                     output.write(buffer, 0, count)
                 }
             }
-            parsePublicRelease(output.toString("UTF-8"), installedVersion)
+            AppUpdateCheckResult(parsePublicRelease(output.toString("UTF-8"), installedVersion))
         } catch (_: Exception) {
             // GitHub/outside connectivity must never block STR discovery or playback.
             null

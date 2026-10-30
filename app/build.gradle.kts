@@ -37,4 +37,6 @@ android {
 // Host-side tests only; no additional runtime dependency in the release APK.
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    // Local JVM tests use the actual JSON parser, not Android's stubbed android.jar.
+    testImplementation("org.json:json:20250517")
 }

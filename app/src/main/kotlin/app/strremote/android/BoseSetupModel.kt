@@ -19,9 +19,9 @@ internal enum class BoseSetupModel(
     ),
     SOUND_TOUCH_10(
         "SoundTouch 10",
-        "SoundTouch 10 · Testbetrieb",
+        "SoundTouch 10 · mit Test-WLAN geprüft",
         "Die SoundTouch 10 besitzt kein Textdisplay. Achte auf die dauerhaft gelbe WLAN-LED.",
-        false
+        true
     );
 
     companion object {

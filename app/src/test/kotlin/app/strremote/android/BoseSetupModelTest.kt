@@ -1,7 +1,6 @@
 package app.strremote.android
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -13,11 +12,12 @@ class BoseSetupModelTest {
             BoseSetupModel.fromId("not-supported"))
     }
 
-    @Test fun soundTouch10IsExplicitlyExperimental() {
+    @Test fun soundTouch10HasVerifiedTestWifiProfile() {
         assertEquals(BoseSetupModel.SOUND_TOUCH_10,
             BoseSetupModel.fromId(BoseSetupModel.SOUND_TOUCH_10.name))
-        assertFalse(BoseSetupModel.SOUND_TOUCH_10.protocolVerifiedOnDevice)
+        assertTrue(BoseSetupModel.SOUND_TOUCH_10.protocolVerifiedOnDevice)
         assertTrue(BoseSetupModel.SOUND_TOUCH_10.setupHint.contains("LED"))
+        assertTrue(BoseSetupModel.SOUND_TOUCH_10.selectionLabel.contains("Test-WLAN"))
     }
 
     @Test fun onlyExplicitlyImplementedModelsAreSelectable() {
