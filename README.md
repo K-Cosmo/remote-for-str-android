@@ -6,7 +6,9 @@ Remote for STR discovers STR-enabled SoundTouch speakers on the local network an
 
 > Remote for STR is an independent, unofficial community app and is not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project. **Bose** and **SoundTouch** are trademarks of Bose Corporation.
 
-**Current published release:** v0.3.0 (published under the former name **STR Remote**). The **Remote for STR** rename is implemented in the open development branch but is not yet released.
+**Current release:** 0.3.0
+
+This published version was issued as **STR Remote**. **Remote for STR 0.3.1** is prepared on the development branch, but is **not yet signed, accepted or published**.
 
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest)
 

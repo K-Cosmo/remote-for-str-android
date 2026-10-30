@@ -28,6 +28,10 @@ jobs:
         shell: pwsh
         run: ./tools/test-apksigner-certificate.ps1
 
+      - name: Check documentation/version/release consistency
+        shell: pwsh
+        run: ./tools/verify-doc-consistency.ps1
+
       - name: Verify wrapper and build
         run: |
           chmod +x ./gradlew

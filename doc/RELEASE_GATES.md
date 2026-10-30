@@ -10,9 +10,10 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] GitHub Actions builds/tests green for implementation commit `e5759e6aed445eb03ca7d574d62c09a692a865eb`; check final post-doc head separately
 - [ ] Accept new launcher/Devices header as **Remote for STR ⓘ**, Info visible only on Devices, and native control regressions on phone
 - [ ] Validate updated GitHub Releases URL in production app and new-version notification behavior (debug app intentionally skips check)
-- [ ] Resolve or explicitly assess historical evidence LAN-address disclosure before upstream promotion
+- [x] Redact affected current-branch historical QA Markdown files using RFC 5737 placeholders; acknowledge prior commits still contain previous text and defer history rewrite explicitly
 - [ ] Complete negative-case smoke tests required for release (including absence of a mail client), or explicitly defer with rationale
-- [ ] Bump versionName/versionCode, build and sign production APK with **original** signing key, validate certificate/zipalign and naming convention
+- [x] Stage candidate Android `versionName=0.3.1` / `versionCode=12` without changing `applicationId`
+- [ ] Build and sign production APK with **original** signing key, validate certificate/zipalign and `Remote-for-STR-0.3.1.apk` naming
 - [ ] Confirm exact signed artifact updates over installed v0.3.0 preserving saved speakers and rooms; approve the signed release candidate
 - [ ] Final exact-commit CI, merge approval, tagged GitHub release, published checksum verification
 

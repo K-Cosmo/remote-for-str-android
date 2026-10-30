@@ -157,3 +157,24 @@ The user explicitly confirmed **“Englische Geräteprüfung des WLAN-Assistente
 CI: both Android Actions runs **41138096537** and **41138090921** passed for source commit `e5759e6aed445eb03ca7d574d62c09a692a865eb` before this documentation-only evidence update. Recheck CI on the final candidate head.
 
 Outstanding release-specific gates: complete any outstanding regressions for Remote control, native title/Info display after rebrand, production signing with original key, `versionCode` increment, signed update-over-v0.3.0 preserving saved data, and verifying the production update dialog against an actual newer release. Before promoting the GitHub repository to the upstream maintainer, sanitize the known private LAN address in historical QA evidence. The cosmetic paragraph spacing limitation in the external email client remains non-blocking. No merge, release, new APK or compatibility certification occurred from this confirmation.
+
+## 0.3.1 release-candidate preparation and CI documentation gate
+
+- Android `versionName=0.3.1`, `versionCode=12` staged on the open PR branch, **not** published, tagged or signed. The original application ID remains `app.strremote.android`, with debug variant `.poc`.
+- Signed Windows release script already derives `Remote-for-STR-0.3.1.apk` and checksum artifact from versionName, and refuses dirty builds/changed signer cert. Release signing requires the original local keystore; do **not** copy the keystore/password into GitHub or the issue tracker.
+- CI now executes `tools/verify-doc-consistency.ps1` before Android build, with the documented public 0.3.0 release treated separately from current 0.3.1 development state. Existing 0.3.0 signing evidence/tags remain untouched.
+- Two 2026-09-26 Markdown QA reports now use reserved `192.0.2.29` documentation placeholders instead of the actual private host IP, with explanatory notes. Historic commits may still expose the old text; no repository history rewrite or forced push.
+
+### Remaining exact-signed-APK verification checklist
+
+1. Confirm the new debug/test APK has **Remote for STR** in launcher and **Remote for STR ⓘ** on Devices only; the Info action is absent in the Remote/WebView and Remote-offline views. Check saved devices/rooms, STR playback/preset/volume controls, Android back navigation, and DE/EN information dialog; do not infer these from compile-only CI.
+2. Locally on a **clean, committed source tree** with original signing keystore available, run:
+
+   ```powershell
+   .\\tools\\build-signed-release.ps1 -ProjectRoot . -KeystorePath "<path-to-your-existing-release-keystore>"
+   ```
+
+   Supply the alias/password interactively. Script performs clean Android Debug+Release build, lint, unit tests, 16KiB zipalign, APK signing, signer SHA-256 validation and emits `dist/Remote-for-STR-0.3.1.apk` plus checksum. Never commit private signing materials.
+3. **Upgrade test:** with the currently signed `v0.3.0` installed and saved speaker/room configuration retained, use `adb install -r dist/Remote-for-STR-0.3.1.apk` (no uninstall). Verify the installer treats it as an **update**, Android App Info shows 0.3.1, saved speakers/rooms persist, and normal remote controls work. Capture signer/certificate check output and the exact APK SHA-256 for release evidence.
+4. Production update-checker: verify current/older versions are silent, and a newer public stable release with correctly named APK opens its official page **only after explicit consent**. This cannot be fully exercised against the actual latest public release until a newer public release is available; deterministic policy coverage exists in unit tests. Do not publish an intentionally broken test release.
+5. Only after explicit phone/signer/user acceptance, run final clean CI, merge PR and create the `v0.3.1` signed release with its checksum. Currently **OPEN**.
