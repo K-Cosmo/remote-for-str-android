@@ -24,7 +24,7 @@ internal object BoseCommunityFeedback {
         // No identifiers, SSIDs, passwords, IP addresses, LAN results or traces.
         // GitHub receives data only if the user submits the issue in the browser.
         return BoseCommunityIssueDraft(
-            title = "SoundTouch WLAN-Einrichtung: Modellrückmeldung",
+            title = "SoundTouch WLAN-Einrichtung: $model – ${outcome.label}",
             body = listOf(
                 "## Community-Test der WLAN-Ersteinrichtung",
                 "",
