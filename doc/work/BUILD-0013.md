@@ -135,3 +135,13 @@ Upstream STR maintainer review added to the normative [BACKLOG](../BACKLOG.md) a
 **Implemented on PR #5:** a circled `ⓘ` text action with 48dp touch target and localized accessibility content description is positioned immediately after the toolbar title inside a horizontal title row. It is **visible only in the Devices/discovery panel**, hidden in active Remote/WebView and Remote-offline states. The existing bilingual About dialog and links are unchanged. Needs on-device screenshot and navigation QA.
 
 **Brand candidates:** `Remote for STR` (recommended) and `Remote 4 STR` (alternative). No final user choice yet; do not change the visible title, Android `applicationId`, signing certificate, repo URL, updater endpoint or release links until the chosen name is finalized. A GitHub repository rename is feasible after final decision, but must include source/configuration/update-check URL/link adjustments. Maintaining Android package identity preserves upgrade compatibility for the two existing users.
+
+## Product name finalized: Remote for STR (STR-020)
+
+User chose **Remote for STR** as final app name. The implementation branch now uses this in both Android string locales, including launcher, Devices title (`Remote for STR ⓘ` on Devices only), permission/setup/update notices and optional email-version text. README reflects the new brand, while explicitly distinguishing the old published STR Remote 0.3.0 release.
+
+Future signed APK: `Remote-for-STR-<version>.apk` via existing signing/release workflow. Update checker matches new and legacy release asset names, with host tests covering both. Android application ID and original signing certificate are intentionally unchanged to allow upgrades. No version bump or public release has occurred.
+
+**Repository rename not yet executed:** current repo remains `K-Cosmo/str-remote-android`, and valid API/source/issues links intentionally stay there. After a repository admin renames it to `K-Cosmo/remote-for-str`, update canonical GitHub endpoint strings (update API, release URLs and About/README/documentation), run CI, and verify the HTTPS updater against the actual renamed repository. Do not assume redirects apply to every client.
+
+**Acceptance still pending:** CI green on exact head; real phone screenshot of new launcher/Devices title; full English wizard/Info UI; release package/signature/versionCode and update-over-v0.3.0 tests. Preserve accepted `v0.3.0` release.
