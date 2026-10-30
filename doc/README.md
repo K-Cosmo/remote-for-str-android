@@ -1,6 +1,6 @@
 # Project documentation
 
-`/doc` is the single normative source of truth for STR Remote. Root-level files may provide public or tooling entry points, but they must not duplicate normative project rules.
+`/doc` is the single normative source of truth for Remote for STR. Root-level files may provide public or tooling entry points, but they must not duplicate normative project rules.
 
 ## Current release
 
