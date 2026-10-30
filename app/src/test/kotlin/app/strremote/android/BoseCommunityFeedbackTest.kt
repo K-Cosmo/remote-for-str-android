@@ -19,7 +19,7 @@ class BoseCommunityFeedbackTest {
         val success = BoseCommunityFeedback.compose(
             " SoundTouch Portable ", BoseCommunityOutcome.SUCCESS
         )!!
-        assertEquals("SoundTouch WLAN-Einrichtung: Modellrückmeldung", success.title)
+        assertEquals("SoundTouch WLAN-Einrichtung: SoundTouch Portable – Erfolgreich", success.title)
         assertTrue(success.body.contains("SoundTouch Portable"))
         assertTrue(success.body.contains("Erfolgreich"))
         assertTrue(success.body.contains("selbst angegeben"))
