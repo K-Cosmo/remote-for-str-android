@@ -198,17 +198,52 @@ try {
     # Without precisely the same signing key as v0.2.1, Android will refuse
     # the update. Refuse to package an unusable or unexpectedly signed APK.
     $expectedCertificate = "3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32"
-    $verifyText = $verificationOutput | Out-String
-    $certificateMatch = [regex]::Match(
-        $verifyText,
-        'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]{64})'
-    )
-    if (-not $certificateMatch.Success) {
-        throw "Could not verify the signing certificate identity from apksigner output."
+    # Preserve the raw native output. Out-String can hard-wrap long SHA-256
+    # lines at the console width (often 80 columns), corrupting the fingerprint.
+    $verifyText = (@($verificationOutput | ForEach-Object { $_.ToString() })) -join "`n"
+
+    # Android Build Tools <= 36 prints "Signer #1 certificate SHA-256 digest".
+    # Build Tools 37 may instead print "V2 Signer: certificate SHA-256 digest"
+    # or "V3.0 Signer: certificate SHA-256 digest". A single APK may print
+    # multiple signing schemes with the SAME certificate: verify them all.
+    # Do not match the unrelated "public key SHA-256 digest" field.
+    $certificatePattern = '(?im)^\s*(?:Signer\s+#\d+|Signer\s+\([^\r\n)]+\)|V\d+(?:\.\d+)?\s+Signer:)\s+certificate\s+SHA-256\s+digest:[ \t]*([0-9a-f]{64})[ \t]*
+    Write-Host "Release signer matches the v0.2.1 update identity."
+
+    & $zipalign -c -P 16 -v 4 $signedApk
+    if ($LASTEXITCODE -ne 0) { throw "zipalign verification failed ($LASTEXITCODE)." }
+
+    $hash = (Get-FileHash $signedApk -Algorithm SHA256).Hash.ToLowerInvariant()
+    "$hash  $baseName.apk" | Set-Content -Path $hashFile -Encoding ascii
+
+    Write-Host ""
+    Write-Host "== Final artifact =="
+    Write-Host $signedApk
+    Write-Host "SHA-256: $hash"
+    Write-Host "Hash file: $hashFile"
+    Write-Host "Source commit: $gitHead"
+    Write-Host ""
+    Write-Host "Next gate: install exactly this APK on the real device and run the final release smoke test."
+}
+finally {
+    Pop-Location
+}
+
+    $certificateMatches = [regex]::Matches($verifyText, $certificatePattern)
+    if ($certificateMatches.Count -eq 0) {
+        throw "Could not locate a supported signing-certificate SHA-256 digest in apksigner output. Check the printed verification details above."
     }
-    $actualCertificate = $certificateMatch.Groups[1].Value.ToLowerInvariant()
+
+    $certificates = @($certificateMatches |
+        ForEach-Object { $_.Groups[1].Value.ToLowerInvariant() } |
+        Sort-Object -Unique)
+    if ($certificates.Count -ne 1) {
+        throw "Multiple different signing certificates were reported by apksigner. Refusing to publish an ambiguous APK."
+    }
+
+    $actualCertificate = $certificates[0]
     if ($actualCertificate -ne $expectedCertificate) {
-        throw "Wrong release-signing certificate: the APK cannot update installed STR Remote 0.2.1."
+        throw "Wrong release-signing certificate ($actualCertificate): APK cannot update STR Remote 0.2.1."
     }
     Write-Host "Release signer matches the v0.2.1 update identity."
 
