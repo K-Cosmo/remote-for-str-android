@@ -202,7 +202,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private fun refreshDiagnosticView() {
         val events = synchronized(diagnosticEvents) { diagnosticEvents.toList() }
-        resultsView.text = technicalReport + "\n\n" +
+        resultsView.text = BoseTechnicalReportLocalization.translate(\n            technicalReport, resources.configuration.locales[0].language\n        ) + "\n\n" +
             getString(R.string.bose_technical_session) + "\n" +
             events.joinToString("\n")
     }
