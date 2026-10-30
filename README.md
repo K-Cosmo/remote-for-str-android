@@ -4,7 +4,7 @@ A small independent Android companion app for the **phone remote built into [Sou
 
 STR Remote discovers STR-enabled SoundTouch speakers on the local network and opens the existing STR phone interface in a dedicated Android app. It does **not** replace STR or reimplement playback controls.
 
-> STR Remote is an independent community project and is not affiliated with Bose Corporation or the SoundTouch Reborn project.
+> STR Remote is an independent, unofficial community app and is not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project. **Bose** and **SoundTouch** are trademarks of Bose Corporation.
 
 **Current release:** 0.3.0
 
@@ -28,6 +28,7 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 - last-successful-speaker reconnect;
 - embedded STR phone remote;
 - German and English UI;
+- a native bilingual About dialog with independent community attribution, trademark notice, version, source and support links (development branch; not in public v0.3.0);
 - Android 8.0+;
 - no account, analytics, telemetry or STR Remote backend.
 
