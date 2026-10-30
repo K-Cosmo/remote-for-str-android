@@ -1,6 +1,13 @@
 # STR Remote 0.3.0 — final signed-APK and publication handoff
 
-**State:** release candidate, not a public GitHub Release until all checks below pass.
+**State: COMPLETED — v0.3.0 accepted and published on 2026-10-30.** This document remains available as a reproducible, historical signing and publication playbook, not a pending request.
+
+- Signed source commit: `5b351f04dc9f989eee48fc262764f3add8641573`
+- Annotated release tag: `v0.3.0`, main and tag CI successful
+- Signed APK SHA-256: `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`
+- Published [STR Remote 0.3.0](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0)
+- User confirmed signed APK smartphone acceptance: passed
+- [Detailed release evidence](evidence/qa/2026-10-30-release-0.3.0.md)
 
 ## Source and CI
 

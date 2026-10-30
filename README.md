@@ -6,9 +6,7 @@ STR Remote discovers STR-enabled SoundTouch speakers on the local network and op
 
 > STR Remote is an independent community project and is not affiliated with Bose Corporation or the SoundTouch Reborn project.
 
-**Current release:** 0.2.1
-
-**Next release candidate:** 0.3.0 — Bose Wi-Fi setup wizard; signed APK not yet published.
+**Current release:** 0.3.0
 
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest)
 
@@ -57,7 +55,7 @@ STR Remote does not install STR, modify speaker firmware or bundle the STR agent
 
 ## Compatibility
 
-The accepted 0.2.1 baseline is:
+The accepted 0.3.0 baseline is:
 
 - Android 8.0+ (`minSdk 26`);
 - compile/target API 37;

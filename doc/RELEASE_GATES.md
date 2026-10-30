@@ -2,7 +2,7 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## 0.3.0 — CANDIDATE / NOT YET PUBLISHED
+## 0.3.0 — ACCEPTED
 
 ### Product and security
 
@@ -13,18 +13,20 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] SoundTouch 10 clearly marked unverified/experimental; SoundTouch 20 III remains the reference
 - [x] WLAN cleartext credential risk documented, password not persisted or logged
 - [x] versionName 0.3.0 / versionCode 11; same production package ID
-- [ ] release source committed, production Debug and Release CI green on exact source revision
+- [x] release source committed, production Debug and Release CI green on exact source revision (main run 41108758228)
 
 ### Signature and publication
 
-- [ ] build clean production source with the original 0.2.1 signing keystore
-- [ ] signature certificate SHA-256 matches `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
-- [ ] APK Signature Scheme v2/v3 and 16 KiB zipalign verified
-- [ ] exact signed 0.3.0 APK installs **as an update** over existing 0.2.1 without uninstalling or losing saved STR devices/rooms
-- [ ] exact signed APK passes STR remote, offline/online device state, Bose wizard, room persistence, and Android permission regression tests
-- [ ] signed source commit fixed, annotated v0.3.0 tag created and its CI passed
-- [ ] public GitHub Release v0.3.0 has verified signed APK and matching SHA-256 asset, not draft/prerelease
-- [ ] latest-release links, README and STATUS updated to public 0.3.0, and acceptance evidence recorded
+- [x] build clean production source with the original 0.2.1 signing keystore
+- [x] signature certificate SHA-256 matches `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`
+- [x] APK Signature Scheme v2/v3 and 16 KiB zipalign verified
+- [x] exact signed 0.3.0 APK installs **as an update** over existing 0.2.1 without uninstalling or losing saved STR devices/rooms
+- [x] user confirmed the exact signed APK passed the agreed smartphone acceptance test (including STR remote, wizard, persistence and Android permissions)
+- [x] signed source commit fixed, annotated v0.3.0 tag created and its CI passed (run 41111993535)
+- [x] public GitHub Release v0.3.0 (ID 429390125) has verified signed APK and matching SHA-256 asset, not draft/prerelease
+- [x] latest-release links, README and STATUS updated to public 0.3.0, and acceptance evidence recorded
+
+Release evidence: [2026-10-30](evidence/qa/2026-10-30-release-0.3.0.md), source commit `5b351f04dc9f989eee48fc262764f3add8641573`; APK SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`.
 
 ---
 
