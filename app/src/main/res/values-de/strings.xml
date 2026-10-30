@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">STR Remote</string>
+    <string name="app_name">Remote for STR</string>
     <string name="devices">Geräte</string>
     <string name="searching">Suche nach SoundTouch-Reborn-Lautsprechern…</string>
     <string name="found_devices">Gefundene Geräte</string>
@@ -31,7 +31,7 @@
     <string name="str_unreachable">Ein Lautsprecher wurde gefunden, aber seine SoundTouch-Reborn-Web-Remote ist nicht erreichbar. Prüfe, ob STR installiert ist und läuft.</string>
     <string name="saved_unreachable">Der gespeicherte Lautsprecher ist momentan nicht erreichbar. Prüfe WLAN und SoundTouch Reborn und versuche es erneut.</string>
     <string name="permission_title">Zugriff auf das lokale Netzwerk erforderlich</string>
-    <string name="permission_body">STR Remote benötigt LAN-Zugriff, um deine Box zu finden und die dort bereitgestellte Web-Remote zu öffnen.</string>
+    <string name="permission_body">Remote for STR benötigt LAN-Zugriff, um deine Box zu finden und die dort bereitgestellte Web-Remote zu öffnen.</string>
     <string name="grant_permission">Lokales Netzwerk erlauben</string>
     <string name="discovery_failed">Gerätesuche fehlgeschlagen (Fehler %1$d).</string>
     <string name="manual_invalid">Bitte einen gültigen Hostnamen oder eine IP-Adresse eingeben.</string>
@@ -75,7 +75,7 @@
     <string name="selected_speaker_room">%1$s · %2$s</string>
     <string name="speaker_room_title">%1$s · %2$s</string>
     <string name="speaker_management_hide">Hinweis ausblenden</string>
-    <string name="update_available_title">STR Remote: Update verfügbar</string>
+    <string name="update_available_title">Remote for STR: Update verfügbar</string>
     <string name="update_available_message">Version %1$s ist auf GitHub verfügbar. Möchtest du die Release-Seite zum Herunterladen und Aktualisieren öffnen?</string>
     <string name="update_view_release">Release öffnen</string>
     <string name="update_later">Später</string>
