@@ -143,3 +143,8 @@ Post-0.2.0 documentation drift has been converged:
 ## Pending BUILD-0013 development (not in v0.3.0)
 
 The in-app GitHub release notification, optional compact STR WebView header and ST10 test-profile validation wording are implemented in development; they are not included in the signed, published `v0.3.0` APK. Physical-device WebView spacing and controls regression testing remains required before the next signed update. Separate SoundTouch 10 original-firmware WLAN test-profile success was reported on 2026-10-30, after the v0.3.0 release validation record.
+
+
+## BUILD-0013 extension — pending device acceptance
+
+The working development branch includes the unknown-model selection and privacy-scoped GitHub-Issue feedback form. The 10 CSS px STR header spacing is user-accepted visually on the supplied screenshot; the community-feedback workflow, especially its early-failure path, needs real-device testing. This is **not** part of public v0.3.0. No release or signed APK is created from this branch yet.

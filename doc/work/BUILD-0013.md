@@ -7,6 +7,7 @@ Status: **feature branch implemented; device UI acceptance pending**. Public rel
 1. STR Remote needs an in-app notification when a newer version is published, comparable to the existing Abfahrtsradar implementation.
 2. On the main remote screen, the screenshot highlights an unused vertical region *between the native STR Remote title and the STR WebUI header buttons*. Remove the redundant top padding only; do **not** remove the speaker switcher, power or accessibility controls.
 3. Bose SoundTouch 10 original-firmware WLAN setup was successfully hardware-tested against the user's **separate test WLAN profile**. Retain the limitation that other profiles and firmware versions are not independently tested.
+4. Both tested models should show a concise **„geprüft“** label. Provide a third selection **„Anderes SoundTouch-Modell“** running the same four steps, followed by optional community feedback asking for the exact model and whether WLAN provisioning succeeded.
 
 ## Source investigation
 
@@ -33,6 +34,8 @@ Status: **feature branch implemented; device UI acceptance pending**. Public rel
 
 ### On-device spacing feedback (2026-10-30)
 
+The tester explicitly accepted the revised **10 CSS px spacing** in a new ST20 screenshot: “Abstand ist jetzt super!”. This visual gate for the header gap is complete; normal STR controls still need final functional smoke validation.
+
 The first WebView revision with `padding-top: 0` did remove the large empty strip, as verified by the tester's ST20 screenshot. However, the STR control row visually touched/overlapped the Android native toolbar edge; button shadows were visible across the boundary. Restore **10 CSS px** of separation at the known STR header, not the original browser/PWA `16px + safe-area` padding. Do not alter the native toolbar, STR button sizing or sticky/header controls. Screenshot QA is still required on this revision.
 
 ## SoundTouch 10 validation
@@ -41,13 +44,26 @@ The first WebView revision with `padding-top: 0` did remove the large empty stri
 - Do not rewrite the historical v0.3.0 release/tag or claim that all Bose firmware/WLAN combinations are validated.
 - Record the user-reported result in a standalone QA note; previous ST10 STR remote testing was a different scope.
 
+## Community validation workflow (unknown models)
+
+- Keep SoundTouch 20 III and 10 marked **„geprüft“** in the dropdown. The ST10 validation applies to its successful separate test WLAN profile, not every router/firmware combination. The existing screenshot spacing is accepted.
+- Offer **„Anderes SoundTouch-Modell“** as an opt-in experimental choice. Reuse the existing four-step Bose Wi-Fi transport and the one-shot profile POST; do not add auto-retry or new API calls. Clearly warn that the usual Preset 2 + Volume − sequence is not yet verified for an unknown model.
+- On a terminal result, show a separate optional **Community-Feedback** screen accessible via a button, not an extra step in the four-step setup. Also expose a feedback path when entering Bose setup mode or connecting to its setup WLAN is impossible, so unsuccessful attempts are reportable.
+- Ask users **only** for their model label (2–60 safe characters) and explicit **Ja, erfolgreich** / **Nein, nicht erfolgreich** selection, with neither preselected nor inferred from the HTTP response. Avoid optional network identifiers or freeform diagnostic data.
+- Only on explicit button click, synthesize a fixed-origin GitHub Issues `/new` URL, embedding the two fields as an unsent, prefilled issue **draft**. Nothing is automatically posted. Users need a GitHub account, review the text and click GitHub's final submit themselves. Do not request, store or transmit SSID, password, IP, MAC, device ID or diagnostics.
+- GitHub Issues are enabled in `K-Cosmo/str-remote-android` (GitHub Discussions are currently disabled). Use Issues as the first community-feedback inbox.
+- Community outcomes are **claims to review**, not automatically trusted compatibility evidence. Maintainer checks reports for model/firmware ambiguity, repeats and contradictory experiences before promoting a model to „geprüft“. A failed setup or a device not found after timeout does **not** prove a model is incompatible.
+- Android form tests: normal tested models never show the feedback path; unknown models reach it both after terminal verification and after early setup failure; finish and back buttons remain correct; select neither outcome by default.
+- Unit tests: exactly three models; strict model label validation, successful/failed issue draft; no automatic device/network fields; no GitHub API token or silent submission.
+
 ## Acceptance gates
 
 - [ ] Latest branch GitHub CI: debug and release assembly, debug/release lint, host tests
 - [ ] JVM tests: strict version ordering, malformed tags, public release with matching APK, no draft/prerelease and unknown upstream header guard
-- [ ] Physical-device screenshot: highlighted top gap is reduced, and STR header controls remain usable
+- [x] Physical-device screenshot: 10 px header spacing accepted by tester (“Abstand ist jetzt super!”)
 - [ ] Physical device: STR presets, volume, speaker selector, Android status bars and back navigation still work
 - [ ] Android UI test: new-version dialog shows a correct version/link; non-newer and offline situations show none
+- [ ] Unknown-model feedback flow validated on a physical device, including failed-setup path and GitHub draft (without publishing test issues)
 - [ ] Release version is bumped to 0.3.1 or next appropriate version **only after UI acceptance**, built, signed with existing certificate, tested as update and published through release gates
 
 Development must remain separate from public `main` until acceptance.
