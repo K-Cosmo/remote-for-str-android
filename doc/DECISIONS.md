@@ -189,3 +189,9 @@ The user proposed two possible replacement public names, `Remote for STR` and `R
 **Compatibility:** Preserve Android `applicationId=app.strremote.android`, the signing key and installed user data; changing that technical identifier would register a separate Android app and require manual migration. Preserve historical `v0.3.0` tag, APK, checksum and CI evidence under the old product name.
 
 **Repository:** Proposed future name `K-Cosmo/remote-for-str`. Do not switch the hard-coded GitHub Releases API URL, website links or repository remote until an actual GitHub repository rename is completed and tested. Android project/module technical package names may remain stable. Complete PR CI, physical-device locale/UI QA and signed upgrade test before merging/releasing.
+
+## D-043 — Actual GitHub repository rename and canonical URL cutover
+
+**Decision (2026-10-30):** The user has renamed the GitHub repository to **`K-Cosmo/remote-for-str-android`**; the GitHub connection verified the repository and open PR #5 at the new address. This is the authoritative slug, not the earlier candidate `remote-for-str`. Update the in-app GitHub Releases API endpoint (which disables automatic HTTP redirects), release-page links, About/source/issue links, regression-test assertions and current documentation directly to the new path.
+
+Do not change Android `applicationId=app.strremote.android`, the original signing key, local saved data, previous release tags or signed APK contents. Do not assume a GitHub redirect is sufficient for clients with disabled redirects. Canonical repository URLs should be verified before final release. PR remains unmerged pending quality gates.

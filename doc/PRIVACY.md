@@ -27,7 +27,7 @@ After the attempt, this app may locally retain a Bose device identifier, verifie
 
 ## Planned optional update check (BUILD-0013, not in released 0.3.0)
 
-Once implemented and distributed, the Android app will query GitHub's **public** `api.github.com/repos/K-Cosmo/str-remote-android/releases/latest` endpoint over HTTPS on app start, at most once per 24 h after a successful response. This requires a direct request to GitHub: GitHub can observe the requesting IP address, standard network information and the minimal `STR-Remote-Android` User-Agent. The app sends no speaker identifier, Wi-Fi SSID, password, usage analytics, account ID or device telemetry. The result is only used to show a local release notification; the last successful check timestamp is kept in app-private preferences. The app does not fetch or install APK files automatically.
+Once implemented and distributed, the Android app will query GitHub's **public** `api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest` endpoint over HTTPS on app start, at most once per 24 h after a successful response. This requires a direct request to GitHub: GitHub can observe the requesting IP address, standard network information and the minimal `STR-Remote-Android` User-Agent. The app sends no speaker identifier, Wi-Fi SSID, password, usage analytics, account ID or device telemetry. The result is only used to show a local release notification; the last successful check timestamp is kept in app-private preferences. The app does not fetch or install APK files automatically.
 
 
 ## Optional model feedback by email (BUILD-0013, not in released v0.3.0)

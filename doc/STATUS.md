@@ -2,7 +2,7 @@
 
 ## Development brand (PR #5 — NOT RELEASED)
 
-The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository currently remains at `K-Cosmo/str-remote-android` pending a separate repository-admin rename; no API/documentation links have yet been switched. The new branding, English wizard and full real-device release gates are not yet accepted.
+The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The new branding, English wizard and full real-device release gates are not yet accepted.
 
 **Development version:** 0.3.0
 **Latest public release:** 0.3.0
@@ -18,15 +18,15 @@ Release identity:
 - version: `0.3.0` / versionCode `11`; package `app.strremote.android`;
 - signed APK source commit: `5b351f04dc9f989eee48fc262764f3add8641573`;
 - annotated tag `v0.3.0`, tag object `a071b2b6a4cbb0c6b5fb528cbe33f088969365ed`, resolving to the exact source commit;
-- public [GitHub Release 0.3.0](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
+- public [GitHub Release 0.3.0](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
 - signed APK `STR-Remote-0.3.0.apk`, size 1,156,741 bytes, SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`;
 - companion checksum asset `STR-Remote-0.3.0.apk.sha256.txt`;
 - original release-signing certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`.
 
 Acceptance:
 
-- exact release-source `main` CI: success, run [41108758228](https://github.com/K-Cosmo/str-remote-android/actions/runs/41108758228);
-- exact release-source `v0.3.0` tag CI: success, run [41111993535](https://github.com/K-Cosmo/str-remote-android/actions/runs/41111993535);
+- exact release-source `main` CI: success, run [41108758228](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41108758228);
+- exact release-source `v0.3.0` tag CI: success, run [41111993535](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41111993535);
 - local signing script reported matching original signing certificate, signature verification and alignment checks;
 - user confirmed that the signed production APK passed the planned smartphone acceptance test;
 - public APK asset SHA-256 is an exact match to the locally signed SHA-256;
