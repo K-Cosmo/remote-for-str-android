@@ -28,3 +28,8 @@ After the attempt, this app may locally retain a Bose device identifier, verifie
 ## Planned optional update check (BUILD-0013, not in released 0.3.0)
 
 Once implemented and distributed, the Android app will query GitHub's **public** `api.github.com/repos/K-Cosmo/str-remote-android/releases/latest` endpoint over HTTPS on app start, at most once per 24 h after a successful response. This requires a direct request to GitHub: GitHub can observe the requesting IP address, standard network information and the minimal `STR-Remote-Android` User-Agent. The app sends no speaker identifier, Wi-Fi SSID, password, usage analytics, account ID or device telemetry. The result is only used to show a local release notification; the last successful check timestamp is kept in app-private preferences. The app does not fetch or install APK files automatically.
+
+
+## Planned community model feedback (BUILD-0013, not published in v0.3.0)
+
+If the user selects “Anderes SoundTouch-Modell”, a voluntary feedback screen allows entering a SoundTouch model designation and manually choosing whether its WLAN setup succeeded. No result is selected automatically. The app creates a GitHub Issues URL with **only those two user-provided fields and fixed explanatory text**. It does not automatically create or publish an issue. The GitHub website opens only after the explicit "Feedback bei GitHub vorbereiten" tap; publication requires the user to review the draft and submit it using their own GitHub account. GitHub receives normal browser traffic and may display the resulting report publicly. No Wi-Fi SSID/password, Bose identifier, IP/MAC, diagnostic data, firmware or Android device identifiers are included automatically. Users are instructed not to publish private network details.
