@@ -181,3 +181,11 @@ Do not silently choose a successor name, change `applicationId`, modify the sign
 **Decision (2026-10-30, BUILD-0013):** Based on user-tested visibility of About, change the information entry point from an always-on right-aligned toolbar icon to a title-adjacent circled `ⓘ` action on the **Devices** page, with a 48dp target and localized content description. Hide it when a Remote/WebView or connection-error panel is active. Do not change the About content, links, privacy behavior or known device-control logic.
 
 The user proposed two possible replacement public names, `Remote for STR` and `Remote 4 STR`. The former is the preferred recommendation for readability, **not yet an adopted final decision**. The app ID and signing key should normally remain stable so existing v0.3.0 installs can receive updates; changing app ID is a new installation and does not migrate app-private preferences. A later GitHub repo rename may be done separately after selecting the brand and updating canonical links, especially GitHub Releases update-check URLs.
+
+## D-042 — Adopt Remote for STR as the public Android product name
+
+**Decision (2026-10-30):** User explicitly selected **Remote for STR** over Remote 4 STR. This is the successor brand to the existing Android **STR Remote**, removing name ambiguity with the separate iOS app. Rebrand the DE/EN launcher/title, user-visible helper/error/update copy, community email version label, README and future signed APKs. Use `Remote-for-STR-<version>.apk` for subsequent release artifacts, while allowing legacy `STR-Remote-<version>.apk` in the updater during transition.
+
+**Compatibility:** Preserve Android `applicationId=app.strremote.android`, the signing key and installed user data; changing that technical identifier would register a separate Android app and require manual migration. Preserve historical `v0.3.0` tag, APK, checksum and CI evidence under the old product name.
+
+**Repository:** Proposed future name `K-Cosmo/remote-for-str`. Do not switch the hard-coded GitHub Releases API URL, website links or repository remote until an actual GitHub repository rename is completed and tested. Android project/module technical package names may remain stable. Complete PR CI, physical-device locale/UI QA and signed upgrade test before merging/releasing.
