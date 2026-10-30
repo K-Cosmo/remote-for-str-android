@@ -33,6 +33,9 @@ import android.widget.ImageView
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.text.InputFilter
 import android.text.method.PasswordTransformationMethod
 import android.view.Gravity
 import android.view.ViewGroup
@@ -92,6 +95,16 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var preparationPage: LinearLayout
     private lateinit var passwordPage: LinearLayout
     private lateinit var completionPage: LinearLayout
+    private lateinit var feedbackPage: LinearLayout
+    private lateinit var feedbackModelField: EditText
+    private lateinit var feedbackOutcomeGroup: RadioGroup
+    private lateinit var feedbackErrorView: TextView
+    private lateinit var completionFeedbackButton: Button
+    private lateinit var earlyFeedbackPrepButton: Button
+    private lateinit var earlyFeedbackConnectionButton: Button
+    private var feedbackSuccessId = View.NO_ID
+    private var feedbackFailureId = View.NO_ID
+    private var feedbackOriginPage = 0
     private lateinit var manualNextButton: Button
     private lateinit var chosenPasswordNetworkView: TextView
     private lateinit var completionStatusText: TextView
@@ -116,6 +129,7 @@ internal class BoseSetupProbeActivity : Activity() {
     private lateinit var surveyStatusView: TextView
     private lateinit var surveySpinner: ProgressBar
     private lateinit var modelInstructionTitle: TextView
+    private lateinit var modelInstructionSteps: TextView
     private lateinit var modelInstructionHint: TextView
     private lateinit var modelTestNotice: TextView
     private var selectedModel = BoseSetupModel.SOUND_TOUCH_20_III
@@ -332,11 +346,8 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         modelInstructionTitle = heading("")
         instructionCard.addView(modelInstructionTitle)
-        instructionCard.addView(text(
-            "1. Schalte den Lautsprecher ein.\n" +
-                "2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n" +
-                "3. Warte, bis die WLAN-Anzeige dauerhaft gelb leuchtet."
-        ))
+        modelInstructionSteps = text("")
+        instructionCard.addView(modelInstructionSteps)
         modelInstructionHint = text("", 14f, muted)
         instructionCard.addView(modelInstructionHint)
         preparationPage.addView(instructionCard)
@@ -352,6 +363,14 @@ internal class BoseSetupProbeActivity : Activity() {
             setOnClickListener { showPage(2) }
         }
         preparationPage.addView(nextButton)
+        earlyFeedbackPrepButton = Button(this).apply {
+            text = "Einrichtung mit diesem Modell nicht möglich? Feedback geben"
+            isAllCaps = false
+            minHeight = dp(54)
+            visibility = View.GONE
+            setOnClickListener { startCommunityFeedbackFromSetupFailure() }
+        }
+        preparationPage.addView(earlyFeedbackPrepButton)
         content.addView(preparationPage)
 
         connectionPage = panel()
@@ -385,6 +404,14 @@ internal class BoseSetupProbeActivity : Activity() {
             }
         }
         connectionPage.addView(startButton)
+        earlyFeedbackConnectionButton = Button(this).apply {
+            text = "Verbindung nicht möglich? Modell-Feedback geben"
+            isAllCaps = false
+            minHeight = dp(54)
+            visibility = View.GONE
+            setOnClickListener { startCommunityFeedbackFromSetupFailure() }
+        }
+        connectionPage.addView(earlyFeedbackConnectionButton)
         val connectionProgress = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
@@ -630,7 +657,86 @@ internal class BoseSetupProbeActivity : Activity() {
             setOnClickListener { beginLanVerification() }
         }
         completionPage.addView(completionRetryButton)
+        completionFeedbackButton = Button(this).apply {
+            text = "Community-Feedback zu diesem Modell geben"
+            isAllCaps = false
+            minHeight = dp(54)
+            visibility = View.GONE
+            setOnClickListener {
+                feedbackOriginPage = BoseSetupFlow.COMPLETE_PAGE
+                showPage(BoseSetupFlow.FEEDBACK_PAGE)
+            }
+        }
+        completionPage.addView(completionFeedbackButton)
         content.addView(completionPage)
+
+        feedbackPage = panel()
+        feedbackPage.addView(heading("Erfahrung mit deinem SoundTouch teilen"))
+        feedbackPage.addView(text(
+            "Diese Modellvariante wurde bisher nicht geprüft. " +
+                "Deine Rückmeldung hilft, weitere SoundTouch-Modelle schrittweise zu testen.",
+            15f
+        ))
+        feedbackPage.addView(heading("Welches SoundTouch-Modell?").apply {
+            setPadding(0, dp(10), 0, dp(7))
+        })
+        feedbackModelField = EditText(this).apply {
+            hint = "z. B. SoundTouch 30 Series III"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setSingleLine(true)
+            filters = arrayOf(InputFilter.LengthFilter(60))
+            textSize = 16f
+            setTextColor(ink)
+            setHintTextColor(muted)
+            background = card(Color.rgb(126, 148, 169))
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            minHeight = dp(54)
+            isSaveEnabled = false
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        }
+        feedbackPage.addView(feedbackModelField)
+        feedbackPage.addView(heading("War die WLAN-Einrichtung erfolgreich?").apply {
+            setPadding(0, dp(14), 0, dp(7))
+        })
+        feedbackOutcomeGroup = RadioGroup(this).apply {
+            orientation = RadioGroup.VERTICAL
+            background = card()
+            setPadding(dp(12), dp(4), dp(12), dp(4))
+        }
+        feedbackSuccessId = View.generateViewId()
+        feedbackFailureId = View.generateViewId()
+        listOf(
+            feedbackSuccessId to "Ja, erfolgreich",
+            feedbackFailureId to "Nein, nicht erfolgreich"
+        ).forEach { (id, label) ->
+            feedbackOutcomeGroup.addView(RadioButton(this).apply {
+                this.id = id
+                text = label
+                textSize = 16f
+                setTextColor(ink)
+                minHeight = dp(50)
+                isChecked = false
+            })
+        }
+        feedbackPage.addView(feedbackOutcomeGroup)
+        feedbackErrorView = text("", 13f, Color.rgb(156, 49, 49)).apply {
+            visibility = View.GONE
+        }
+        feedbackPage.addView(feedbackErrorView)
+        feedbackPage.addView(text(
+            "Freiwillig: Wir öffnen einen vorbereiteten GitHub-Issue-Entwurf. " +
+                "Du kannst alles vor dem öffentlichen Absenden prüfen; ein GitHub-Konto " +
+                "ist dafür erforderlich. Es werden weder WLAN-Daten noch " +
+                "Gerätekennungen automatisch übernommen.",
+            13f
+        ).apply { setPadding(0, dp(10), 0, dp(12)) })
+        feedbackPage.addView(Button(this).apply {
+            text = "Feedback bei GitHub vorbereiten"
+            isAllCaps = false
+            minHeight = dp(54)
+            setOnClickListener { openCommunityFeedbackDraft() }
+        })
+        content.addView(feedbackPage)
 
         detailsButton = Button(this).apply {
             text = "Technische Details anzeigen"
@@ -683,6 +789,11 @@ internal class BoseSetupProbeActivity : Activity() {
                     4 -> {
                         setPasswordVisible(false)
                         showPage(3)
+                    }
+                    BoseSetupFlow.FEEDBACK_PAGE -> {
+                        if (feedbackOriginPage == BoseSetupFlow.COMPLETE_PAGE) {
+                            showPage(BoseSetupFlow.COMPLETE_PAGE)
+                        }
                     }
                 }
             }
@@ -756,7 +867,9 @@ internal class BoseSetupProbeActivity : Activity() {
         passwordPage.visibility = if (page == 4) View.VISIBLE else View.GONE
         resultPage.visibility = if (page == 5) View.VISIBLE else View.GONE
         completionPage.visibility = if (page == 6) View.VISIBLE else View.GONE
-        stepLabel.text = if (page >= 5) "Einrichtung – Abschluss"
+        feedbackPage.visibility = if (page == BoseSetupFlow.FEEDBACK_PAGE) View.VISIBLE else View.GONE
+        stepLabel.text = if (page == BoseSetupFlow.FEEDBACK_PAGE) "Optionales Feedback"
+            else if (page >= 5) "Einrichtung – Abschluss"
             else "Schritt $page von ${BoseSetupFlow.STEP_COUNT}"
         pageTitle.text = when (page) {
             1 -> "Lautsprecher vorbereiten"
@@ -764,7 +877,8 @@ internal class BoseSetupProbeActivity : Activity() {
             3 -> "Heim-WLAN auswählen"
             4 -> "WLAN-Passwort eingeben"
             5 -> "Verbindung wird überprüft"
-            else -> "Ergebnis der Einrichtung"
+            6 -> "Ergebnis der Einrichtung"
+            else -> "SoundTouch-Modell melden"
         }
         if (page == 4) {
             chosenPasswordNetworkView.text = "WLAN: " + ssidField.text.toString()
@@ -772,7 +886,11 @@ internal class BoseSetupProbeActivity : Activity() {
         }
         statusView.visibility = if (page == 1) View.GONE else View.VISIBLE
         detailsButton.visibility = if (page == 1) View.GONE else View.VISIBLE
-        backButton.visibility = if (page in 2..4) View.VISIBLE else View.GONE
+        backButton.visibility =
+            if (page in 2..4 ||
+                (page == BoseSetupFlow.FEEDBACK_PAGE &&
+                    feedbackOriginPage == BoseSetupFlow.COMPLETE_PAGE)
+            ) View.VISIBLE else View.GONE
         val mayFinish = BoseSetupFlow.mayFinish(setupPhase, page)
         cancelButton.text = if (mayFinish) "Fertig"
                             else if (page == 5) "Abbrechen"
@@ -794,6 +912,8 @@ internal class BoseSetupProbeActivity : Activity() {
         resultSpinner.visibility = View.GONE
         completionStatusText.text = resultText.text
         completionRetryButton.visibility = if (offerRetry) View.VISIBLE else View.GONE
+        completionFeedbackButton.visibility =
+            if (selectedModel == BoseSetupModel.OTHER_SOUND_TOUCH) View.VISIBLE else View.GONE
         showPage(BoseSetupFlow.COMPLETE_PAGE)
     }
 
@@ -813,19 +933,70 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private fun renderModelInstructions() {
         if (!::modelInstructionTitle.isInitialized) return
+        val other = selectedModel == BoseSetupModel.OTHER_SOUND_TOUCH
         modelInstructionTitle.text = "Am " + selectedModel.modelLabel
+        modelInstructionSteps.text =
+            "1. Schalte den Lautsprecher ein.\n" +
+                "2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n" +
+                "3. Warte, bis die WLAN-Anzeige dauerhaft gelb leuchtet."
         modelInstructionHint.text = selectedModel.setupHint
         modelTestNotice.text =
-            if (selectedModel == BoseSetupModel.SOUND_TOUCH_10) {
-                "Mit einem separaten WPA2-Test-WLAN erfolgreich geprüft. " +
-                    "Andere WLAN-Konfigurationen und Firmwarestände sind nicht separat validiert."
-            } else if (selectedModel.protocolVerifiedOnDevice) {
-                "Die WLAN-Einrichtung wurde auf diesem Modell bereits erfolgreich getestet."
+            if (other) {
+                "Ungeprüftes Modell: Diese Schritte sind ein Versuch. " +
+                    "Wenn keine gelbe WLAN-Anzeige oder kein Bose-Setup-WLAN erscheint, " +
+                    "versuche keine WLAN-Übertragung. Du kannst auch einen Fehlversuch melden."
             } else {
-                "Testbetrieb: Die Bose-Tastenkombination ist dokumentiert. " +
-                    "Unsere WLAN-API wurde auf diesem Modell noch nicht erprobt. " +
-                    "Bitte zuerst die WLAN-Suche prüfen."
+                "Die WLAN-Einrichtung wurde auf diesem Modell erfolgreich geprüft."
             }
+        if (::earlyFeedbackPrepButton.isInitialized) {
+            earlyFeedbackPrepButton.visibility = if (other) View.VISIBLE else View.GONE
+        }
+        if (::earlyFeedbackConnectionButton.isInitialized) {
+            earlyFeedbackConnectionButton.visibility = if (other) View.VISIBLE else View.GONE
+        }
+        if (::completionFeedbackButton.isInitialized) {
+            completionFeedbackButton.visibility = if (other) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun startCommunityFeedbackFromSetupFailure() {
+        if (selectedModel != BoseSetupModel.OTHER_SOUND_TOUCH || postInFlight) return
+        closeSession()
+        setupPhase = BoseSetupPhase.TERMINAL
+        feedbackOriginPage = 0
+        showPage(BoseSetupFlow.FEEDBACK_PAGE)
+    }
+
+    private fun openCommunityFeedbackDraft() {
+        if (selectedModel != BoseSetupModel.OTHER_SOUND_TOUCH ||
+            setupPhase != BoseSetupPhase.TERMINAL
+        ) return
+
+        val outcome = when (feedbackOutcomeGroup.checkedRadioButtonId) {
+            feedbackSuccessId -> BoseCommunityOutcome.SUCCESS
+            feedbackFailureId -> BoseCommunityOutcome.FAILURE
+            else -> null
+        }
+        val draft = BoseCommunityFeedback.compose(feedbackModelField.text.toString(), outcome)
+        if (draft == null) {
+            feedbackErrorView.text =
+                "Bitte das Modell (2–60 Zeichen) und Ja oder Nein auswählen."
+            feedbackErrorView.visibility = View.VISIBLE
+            return
+        }
+        feedbackErrorView.visibility = View.GONE
+        // Explicit click only. GitHub pre-fills a draft; the user must review
+        // and submit it in the browser. No device identifiers or credentials.
+        val url = Uri.parse(BoseCommunityFeedback.ISSUE_PATH).buildUpon()
+            .appendQueryParameter("title", draft.title)
+            .appendQueryParameter("body", draft.body)
+            .build()
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, url))
+        } catch (_: Exception) {
+            feedbackErrorView.text = "GitHub konnte nicht im Browser geöffnet werden."
+            feedbackErrorView.visibility = View.VISIBLE
+        }
     }
 
     private fun setSurveyBusy(busy: Boolean) {
