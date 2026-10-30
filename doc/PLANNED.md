@@ -4,7 +4,9 @@
 
 BUILD-0012 Bose Wi-Fi setup was released and accepted on 2026-10-30 as STR Remote `0.3.0`. It is now part of the production Android app, no longer an unreleased PoC. The WLAN wizard requires Android 10+; the existing STR remote works from Android 8.
 
-**Next hardware-specific gate:** SoundTouch 10 original-firmware Wi-Fi provisioning remains *experimental* and needs its own end-to-end verification. The already functioning STR remote on SoundTouch 10 does not prove the original Bose WLAN setup flow. SoundTouch 20 Series III is the tested reference model.
+**Additional hardware evidence (2026-10-30):** SoundTouch 10 original-firmware Wi-Fi provisioning was successfully tested with a separate test WLAN profile, independently of its existing STR remote functionality. More firmware and WLAN profiles remain unverified. The published v0.3.0 APK retains its release-time "Testbetrieb" label; the development branch revises the label to the scoped test status.
+
+**Current work — BUILD-0013:** add a foreground GitHub Releases update notification and remove redundant browser/PWA safe-area padding from the embedded STR WebView. Do not alter the accepted 0.3.0 tag or signed APK; test UI and update-check behavior before the next release.
 
 Sources: [BUILD-0012](work/BUILD-0012.md), [v0.3.0 release](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0), [accepted gates](RELEASE_GATES.md).
 

@@ -138,3 +138,8 @@ Post-0.2.0 documentation drift has been converged:
 - historical build/spec/evidence records remain unchanged as dated snapshots.
 
 `0.2.1` is the current accepted public release.
+
+
+## Pending BUILD-0013 development (not in v0.3.0)
+
+The in-app GitHub release notification, optional compact STR WebView header and ST10 test-profile validation wording are implemented in development; they are not included in the signed, published `v0.3.0` APK. Physical-device WebView spacing and controls regression testing remains required before the next signed update. Separate SoundTouch 10 original-firmware WLAN test-profile success was reported on 2026-10-30, after the v0.3.0 release validation record.

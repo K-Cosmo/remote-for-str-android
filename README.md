@@ -47,11 +47,17 @@ STR Remote does not install STR, modify speaker firmware or bundle the STR agent
 ## Bose Wi-Fi setup compatibility (0.3.0)
 
 - **SoundTouch 20 Series III**: provisioning flow hardware-tested on the reference original Bose firmware. Results may vary with other firmware revisions.
-- **SoundTouch 10**: model instructions and selectable test flow are present, but original Bose firmware provisioning **has not been validated** on hardware.
+- **SoundTouch 10**: original Bose firmware provisioning was subsequently **hardware-tested successfully with a separate test WLAN profile** (2026-10-30). Other WLAN/router/firmware combinations remain unverified. The published v0.3.0 APK still displays its original "Testbetrieb" label; the next development version uses the updated scoped test status.
 - Other SoundTouch generations are **not claimed compatible** with this provisioning flow.
 - Requires Android 10+ for Android's system-approved Bose setup network picker; the STR remote itself remains usable on Android 8/9.
 
 **Important:** Bose's original provisioning endpoint uses **unencrypted HTTP** to transfer the Wi-Fi password over the temporary Bose setup network. Perform setup only in a trusted physical/network environment, and choose an isolated WPA2 network if you want to minimize credential exposure. Never reuse a sensitive password on an untrusted network. The app does not log or persist the entered password and does not automatically repeat a failed/uncertain transfer.
+
+## Planned follow-up (BUILD-0013)
+
+An in-app update check and compact embedded STR header are implemented on the development branch but **not included in published 0.3.0**. The app will check GitHub Releases in the foreground (no recurring background work), display a local alert for a newer stable version with an official APK asset, and open the official release page on demand. STR Remote will not download or install an APK silently.
+
+The redundant top padding in STR's browser/PWA header can be removed inside the Android WebView without hiding STR's speaker selector, power or accessibility controls; this modification still requires real-device visual QA.
 
 ## Compatibility
 
