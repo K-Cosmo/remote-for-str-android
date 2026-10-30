@@ -14,7 +14,26 @@
 | STR-013 | Discovery/network resilience: no-Wi-Fi, timeout, no-device/STR-unreachable guidance, retry | P0 | ACCEPTED in 0.1.1 |
 | STR-005 | Persistent speaker picker / saved speakers / favorites / quick switching / room assignment | P1 | ACCEPTED in 0.2.0 |
 | STR-015 | Compact remote banner + saved-speaker online/offline highlighting | P1 | ACCEPTED in 0.2.1 |
-| STR-016 | Bose SoundTouch 20 Series III original-firmware Wi-Fi setup PoC (Android 10+, SoftAP) | P1 | SPECIFIED — Phase A read-only PoC pending (BUILD-0012) |
+| STR-016 | Bose SoundTouch WLAN-Einrichtung (Android 10+), reference model ST20 III | P1 | ACCEPTED in 0.3.0; ST10 separate test WLAN confirmed afterwards |
 | STR-014 | Evaluate Gradle 9.8.x maintenance upgrade | P2 | DEFERRED — eligible post-0.2.0; schedule separately |
 | STR-012 | Additional SoundTouch model compatibility evidence | P2 | BACKLOG |
 | STR-006 | Evaluate STR authentication changes when upstream provides them | P2 | BACKLOG |
+
+## Next development and community integration (2026-10-30)
+
+The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the open development PR, **not** an accepted hardware test or a public release. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
+
+| ID | Item | Priority | State |
+|---|---|---:|---|
+| STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #5; final QA, upstream CSS contract pending |
+| STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | IMPLEMENTED in PR #5; end-to-end DE/EN device QA pending |
+| STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | FIX IMPLEMENTED in PR #5 (RFC 6068 + Intent extras); client/device verification pending |
+| STR-020 | New distinct public Android app name to avoid the existing iOS app named STR Remote; retain applicationId/signature for updates | P0 | PLANNED — product name not yet selected; prerequisite for STR community listing |
+| STR-021 | Visible bilingual in-app Info/About notice: independent unofficial community app, no Bose/STR affiliation, Bose and SoundTouch trademark notice; align README | P0 | PLANNED — prerequisite for STR community listing |
+| STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #5 compatibility risk |
+| STR-023 | Federated community support: own STR upstream Show-and-tell thread; link to project's GitHub Discussions/Issues + optional email feedback (no GitHub account needed) | P1 | PLANNED |
+| STR-024 | Redact real private LAN address in historical `doc/evidence/` before upstream promotion, retaining test meaning | P0 | PLANNED — privacy hygiene |
+| STR-025 | Request listing on the upstream STR Community Apps page after name, About notice and EN wizard QA are complete | P1 | PLANNED — depends on STR-020/021/018 acceptance |
+| STR-026 | Extend hardware evidence for additional original-Bose-firmware SoundTouch models; crowd reports remain unverified | P2 | BACKLOG |
+
+Do not conflate optional user-reported Wi-Fi feedback with certified compatibility. Do not rename the Android `applicationId`, reset app data, alter published release tags or add automatic email/network telemetry.
