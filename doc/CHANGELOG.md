@@ -8,7 +8,7 @@ Only implemented changes belong here. Verification/acceptance state is tracked s
 - Prepared the next signed release APK naming convention: `Remote-for-STR-<version>.apk`. The update checker also recognizes historical `STR-Remote-<version>.apk` assets.
 - Renamed development CI artifact to `remote-for-str-debug` and Gradle project display name to `RemoteForSTR`.
 - Left production Android application ID `app.strremote.android` and original signing certificate untouched, preserving update compatibility.
-- **Not yet changed:** GitHub repository name or its URL. No new signed public version or v0.3.0 artifact modification.
+- GitHub repository was renamed to `K-Cosmo/remote-for-str-android` and direct API/release/source/support URLs were updated; added a regression assertion for the canonical Releases API URL. No new signed public version or v0.3.0 artifact modification.
 
 
 ## 0.3.0 — 2026-10-30

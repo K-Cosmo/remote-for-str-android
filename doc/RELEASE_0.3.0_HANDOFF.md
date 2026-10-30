@@ -5,7 +5,7 @@
 - Signed source commit: `5b351f04dc9f989eee48fc262764f3add8641573`
 - Annotated release tag: `v0.3.0`, main and tag CI successful
 - Signed APK SHA-256: `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`
-- Published [STR Remote 0.3.0](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0)
+- Published [STR Remote 0.3.0](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.0)
 - User confirmed signed APK smartphone acceptance: passed
 - [Detailed release evidence](evidence/qa/2026-10-30-release-0.3.0.md)
 
@@ -82,7 +82,7 @@ Acceptance matrix:
    git push origin v0.3.0
    ```
 
-2. Verify tag CI is green. In [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases), create the non-prerelease release **STR Remote 0.3.0** from tag `v0.3.0`.
+2. Verify tag CI is green. In [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases), create the non-prerelease release **STR Remote 0.3.0** from tag `v0.3.0`.
 3. Upload *exactly* `dist\STR-Remote-0.3.0.apk` and `dist\STR-Remote-0.3.0.apk.sha256.txt`. Confirm GitHub's resulting asset SHA-256 equals the local file.
 4. Update `README.md` current public release, `doc/STATUS.md`, `doc/RELEASE_GATES.md` and release evidence only after GitHub publication is verified.
 
