@@ -1085,7 +1085,7 @@ internal class BoseSetupProbeActivity : Activity() {
                     trace("ui_onLost token=$token")
                     if (postInFlight) {
                         b2NetworkLostDuringPost = true
-                        trace("b2_network_lost_during_post")
+                        trace("wifi_setup_network_lost_during_transfer")
                         statusView.text =
                             "Die SoundTouch wechselt möglicherweise gerade ins neue WLAN. " +
                                 "Bitte das Ergebnis abwarten."
@@ -1170,11 +1170,11 @@ internal class BoseSetupProbeActivity : Activity() {
             // Bounded read-only capability inquiry. Only the names
             // of three known Wi-Fi-related API endpoints are surfaced; the
             // original XML body is discarded and cannot enter logs/UI.
-            trace("b1_supported_urls_start token=$token")
+            trace("bose_capabilities_check_start token=$token")
             val b1Report = BoseSupportedUrlsProbe.inspectReport(network)
             val identifiedDeviceId = BoseLanIdentity.getDeviceId(network, "192.0.2.1")
             observations.add(b1Report.summary)
-            trace("b1_supported_urls_finished token=$token")
+            trace("bose_capabilities_check_finished token=$token")
             runOnUiThread {
                 if (token != generation) return@runOnUiThread
                 trace("http_probe_complete token=$token")
@@ -1197,7 +1197,7 @@ internal class BoseSetupProbeActivity : Activity() {
                         "SoundTouch verbunden. Wähle jetzt ihr zukünftiges WLAN aus."
                     setupPhase = BoseSetupPhase.CHOOSING_NETWORK
                     setConnectionBusy(false)
-                    trace("b2_ready token=$token surveySupported=$surveySupported")
+                    trace("wifi_setup_ready token=$token surveySupported=$surveySupported")
                     showPage(3)
                     if (surveySupported) runBoseSurvey()
                 } else {
@@ -1229,7 +1229,7 @@ internal class BoseSetupProbeActivity : Activity() {
         surveyStatusView.text = "Deine SoundTouch sucht gerade nach verfügbaren WLANs …"
         setSurveyBusy(true)
         val token = generation
-        trace("b2_site_survey_start token=$token")
+        trace("wifi_search_start token=$token")
         val worker = Thread({
             val result = BoseWirelessSiteSurvey.scan(network)
             runOnUiThread {
@@ -1247,7 +1247,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 }
                 technicalReport += "\n\nWLAN-Suche: " + result.status
                 refreshDiagnosticView()
-                trace("b2_site_survey_end token=$token count=${result.candidates.size}")
+                trace("wifi_search_end token=$token count=${result.candidates.size}")
                 renderSurveyNetworks()
                 if (result.candidates.any { it.selectable } && visible && currentPage == 3) {
                     showWifiPicker()
@@ -1290,7 +1290,7 @@ internal class BoseSetupProbeActivity : Activity() {
         resultText.text = "WLAN-Einstellungen werden übertragen …"
         statusView.text = "Bitte warten. Die SoundTouch stellt ihre WLAN-Verbindung um."
         showPage(BoseSetupFlow.VERIFY_PAGE)
-        trace("b2_post_started token=$token")
+        trace("wifi_transfer_started token=$token")
         val worker = Thread({
             val result = try {
                 BoseWirelessProfilePost.submitOnce(network, payload)
@@ -1299,7 +1299,7 @@ internal class BoseSetupProbeActivity : Activity() {
             }
             runOnUiThread {
                 if (generation != token || isFinishing || isDestroyed) return@runOnUiThread
-                trace("b2_post_completed token=$token")
+                trace("wifi_transfer_completed token=$token")
                 profileResponseAcknowledged = result.contains("AddWirelessProfileResponse erkannt")
                 // Store only that setup was attempted/acknowledged; this is
                 // deliberately NOT a saved STR endpoint. No SSID or password.
