@@ -87,7 +87,8 @@ internal class BoseSetupProbeActivity : Activity() {
     }
     private val handler = Handler(Looper.getMainLooper())
     private val diagnosticEvents = mutableListOf<String>()
-    private var technicalReport = getString(R.string.bose_no_connection_initial)
+    // Android resources are not accessible before Activity.onCreate attaches Context.
+    private var technicalReport = ""
 
     private lateinit var startButton: Button
     private lateinit var connectionSpinner: ProgressBar
@@ -201,12 +202,14 @@ internal class BoseSetupProbeActivity : Activity() {
 
     private fun refreshDiagnosticView() {
         val events = synchronized(diagnosticEvents) { diagnosticEvents.toList() }
-        resultsView.text = technicalReport + "\n\nAblauf (ohne Netzwerkkennungen):\n" +
+        resultsView.text = technicalReport + "\n\n" +
+            getString(R.string.bose_technical_session) + "\n" +
             events.joinToString("\n")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        technicalReport = getString(R.string.bose_no_connection_initial)
         b2Mode = true // The guided setup is available in the production app.
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
         selectedModel = BoseSetupModel.fromId(
