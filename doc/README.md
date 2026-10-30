@@ -5,7 +5,7 @@
 ## Current release
 
 - latest signed public release: **0.3.0** (published as *STR Remote*)
-- current unreleased development candidate: **Remote for STR 0.3.1** (PR #5)
+- current unreleased development candidate: **Remote for STR 0.3.1** (draft PR #6)
 - public **0.3.0** status: **RELEASED / ACCEPTED**; **0.3.1** status: **IN DEVELOPMENT / QA**, no signed release
 - release status and artifact identity: `STATUS.md`
 - accepted release gates: `RELEASE_GATES.md`
@@ -28,7 +28,8 @@
 - `FINDINGS.md` / `BLOCKERS.md` — findings and current blockers
 - `PLANNED.md` / `BACKLOG.md` — future work
 - `CHANGELOG.md` — canonical implemented-change history
-- `GIT_HISTORY_CLEANUP.md` — controlled destructive Git-history ref rewrite, backups and obsolete branch retirement
+- `GIT_HISTORY_CLEANUP.md` — historical rewrite procedure and pending PR-ref cleanup
+- `GIT_HISTORY_PROVENANCE.md` — verified rewritten Git tags, unchanged signed APK identity and residual PR-reference exposure
 
 ## Historical records
 

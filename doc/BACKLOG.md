@@ -25,14 +25,14 @@ The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the 
 
 | ID | Item | Priority | State |
 |---|---|---:|---|
-| STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #5; final QA, upstream CSS contract pending |
+| STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #6; final QA, upstream CSS contract pending |
 | STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | **English WLAN wizard phone QA PASS (2026-10-30)**; model dropdown and feedback layout device tested. Negative-case/regression release QA outstanding |
 | STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | VERIFIED on tested client; extra paragraph styling not preserved on user's device — cosmetic, DEFERRED; no-mail-app path QA pending |
-| STR-020 | Public product name **Remote for STR**; UI, docs and future artifacts; preserve Android package ID and original signer | P0 | IMPLEMENTED in PR #5; GitHub repo renamed to `K-Cosmo/remote-for-str-android` and canonical URLs migrated; final CI + device/release QA pending |
+| STR-020 | Public product name **Remote for STR**; UI, docs and future artifacts; preserve Android package ID and original signer | P0 | IMPLEMENTED in PR #6; GitHub repo renamed to `K-Cosmo/remote-for-str-android` and canonical URLs migrated; final CI + device/release QA pending |
 | STR-021 | Visible bilingual Info/About: independent unofficial community app, no Bose/STR affiliation, trademark notice and README | P0 | User verified About screen opens; UI adjusted so circled info sits next to title on Devices only; updated placement and EN phone QA pending |
-| STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #5 compatibility risk |
+| STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #6 compatibility risk |
 | STR-023 | Federated community support: own STR upstream Show-and-tell thread; link to project's GitHub Discussions/Issues + optional email feedback (no GitHub account needed) | P1 | PLANNED |
-| STR-024 | Sanitize historical real LAN endpoint across **all** branches, release tags, PR refs and caches; prune obsolete branches | P0 | **PARTIAL:** current PR text redacted; older refs still expose original; history-cleanup runbook prepared, execution requires authenticated Git mirror and coordination with signed releases/PR #5 |
+| STR-024 | Sanitize historical LAN information in Git refs, remove stale branches | P0 | **NORMAL REFS DONE:** 2 branches/5 tags rewritten, six stale branches deleted. **RESIDUAL:** GitHub-managed old PR refs and caches |
 | STR-025 | Request listing on the upstream STR Community Apps page after name, About notice and EN wizard QA are complete | P1 | PLANNED — depends on STR-020/021/018 acceptance |
 | STR-026 | Extend hardware evidence for additional original-Bose-firmware SoundTouch models; crowd reports remain unverified | P2 | BACKLOG |
 

@@ -1,17 +1,19 @@
 # Status
 
-## Remote for STR 0.3.1 — unsigned release candidate on PR #5
+## Remote for STR 0.3.1 — unsigned release candidate on PR #6
 
 The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The user confirmed English Wi-Fi wizard device QA (2026-10-30). New branding and other release-specific gates are not fully accepted.
 
 **Release candidate note:** Code version and Android versionCode are staged at `0.3.1` / `12` for phone QA and subsequent signed-upgrade verification. **No signed 0.3.1 APK, tag or public release exists yet.** Published `0.3.0` remains ACCEPTED and unchanged. The production ID `app.strremote.android` is stable.
 
-**Privacy audit:** see `evidence/qa/2026-10-30-repository-privacy-and-doc-audit.md`. The current branch has redacted two early QA files; current `main` and the PR branch have redacted present QA files, but older commits in their history, release tags and PR refs can still expose the original text until Git-history cleanup is executed.
+**Git history state:** both normal branch refs and all five release tags have been rewritten; six stale branches deleted. Original signed APK/checksum assets are unchanged. GitHub-managed old `refs/pull/*` remain outside the ordinary ref rewrite; see [provenance](GIT_HISTORY_PROVENANCE.md).
 
 **Development version:** 0.3.1
 **Latest public release:** 0.3.0
 **Status:** IN DEVELOPMENT / QA
 **Date:** 2026-10-30
+
+**Post-rewrite GitHub CI:** main and feature push runs [41144950249](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41144950249) and [41144950285](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41144950285) both passed. Replacement draft PR #6 is open; signed 0.3.1 regression remains pending.
 
 ## 0.3.0 release — ACCEPTED
 
@@ -20,8 +22,8 @@ BUILD-0012 Bose SoundTouch WLAN-Einrichtung is released and accepted.
 Release identity:
 
 - version: `0.3.0` / versionCode `11`; package `app.strremote.android`;
-- signed APK source commit: `5b351f04dc9f989eee48fc262764f3add8641573`;
-- annotated tag `v0.3.0`, tag object `a071b2b6a4cbb0c6b5fb528cbe33f088969365ed`, resolving to the exact source commit;
+- historical APK was signed from pre-rewrite source (original identity retained in encrypted offline mirror); rewritten tag source: `edc64cd5468e60edff355ec1dd1fd73c338004af` (the signed APK was not rebuilt);
+- current rewritten annotated tag `v0.3.0` object: `2e0c29414f71ae711b410b8bfe0b1e370b0aa14b`; this is **not** the original signing-time tag identity;
 - public [GitHub Release 0.3.0](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
 - signed APK `STR-Remote-0.3.0.apk`, size 1,156,741 bytes, SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`;
 - companion checksum asset `STR-Remote-0.3.0.apk.sha256.txt`;
@@ -45,9 +47,9 @@ BUILD-0011 is released and accepted.
 
 Release identity:
 
-- source commit: `6a3352928dc177419f2f5d7f5bc49868e9ab0589`;
+- current rewritten tag source commit: `8afa46d25e5ec2be10bf84c07df071eb555b0ed2` (signed APK predates history rewrite);
 - annotated tag: `v0.2.1`;
-- annotated tag object: `7347fad1f8693746ec5e806df25cd43d326e42b2`;
+- rewritten annotated tag object: `f3b020247bb195ee1c9c9d326c8590aa75743ff6`;
 - final APK: `STR-Remote-0.2.1.apk`;
 - APK SHA-256: `bf019801b4a47226ab1af616f4f74f1dd7abfb71731205253e1d9709af76de67`;
 - signer: `C=DE, CN=STR Remote`;
@@ -92,7 +94,7 @@ Speaker Management / Rooms is released and accepted.
 
 Release identity:
 
-- source commit: `b5ff103e318f4342ba3a748b786084108d4093af`;
+- current rewritten tag source commit: `945bb9d7cfaa9f737fd6fb8d24780ada571249f0` (signed APK predates history rewrite);
 - annotated tag: `v0.2.0`;
 - final APK: `STR-Remote-0.2.0.apk`;
 - APK SHA-256: `5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`;

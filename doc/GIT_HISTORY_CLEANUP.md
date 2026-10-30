@@ -1,18 +1,18 @@
 # Git history clean-up — deliberate, destructive maintenance
 
-**State: prepared only; NOT executed on GitHub.** This procedure changes historic commit hashes and tag objects. Do not confuse editing current files with complete removal of information from GitHub.
+**State: ordinary branch and tag history rewrite COMPLETE.** The steps below are a historical runbook, **not** a command to rerun against the cleaned repository. See [verified provenance](GIT_HISTORY_PROVENANCE.md). GitHub-managed old PR refs remain.
 
 **Repository:** https://github.com/K-Cosmo/remote-for-str-android
 
 ## Motivation and scope
 
-One real private LAN host address appeared in two early Android QA Markdown files. The current development branch uses a reserved documentation placeholder instead. The current `main` and PR branch Markdown has been redacted, but the older value remains reachable from historic commits in the ancestry of `main`, published release tags and possibly GitHub PR refs. Only the **exact historic host address** should be replaced across all Git text objects. Do not rewrite all private IP literals indiscriminately: Bose setup endpoints, test vectors, and the SSDP multicast group are part of application logic.
+One real private LAN host address appeared in two early Android QA Markdown files. The current development branch uses a reserved documentation placeholder instead. The historical address was removed from all rewritten ordinary branch/tag commit trees. However, old GitHub-managed PR refs still point at original commit objects. Only the **exact historic host address** should be replaced across all Git text objects. Do not rewrite all private IP literals indiscriminately: Bose setup endpoints, test vectors, and the SSDP multicast group are part of application logic.
 
 The current audit did not identify an obvious committed password, token, MAC address or private key in present tracked text; that does NOT prove every historical blob or fork is clean.
 
 ## Git references — inventory before migration
 
-- **Keep:** main; the active feature/update-checker-compact-str-header branch while PR #5 is being resolved.
+- **Kept after cutover:** `main` and `feature/update-checker-compact-str-header`. Original PR #5 was closed, and replacement draft PR #6 opened.
 - **Five release tag names:** v0.1.0, v0.1.1, v0.2.0, v0.2.1, v0.3.0. Their tagged commit SHAs and annotated tag object IDs will change after a full history rewrite. Cryptographic commit/tag signatures, if present, may be removed.
 - **Six branches to retire after offline backup:** feature/0.2.1-ux, feature/build-0012-bose-wifi-provisioning, fix/release-030-apksigner-37-cert-format, fix/release-030-apksigner-stderr, fix/release-030-clean-user-text, release/v0.3.0-prep. Some have unique diverged commits, so deletion must not precede a full backup.
 - **Published GitHub Releases:** Keep all APK and SHA-256 assets byte-for-byte. Rewriting Git commit history does not itself change the signed APK, but it breaks historic source commit/tag attestations and can invalidate release provenance links.
@@ -21,7 +21,7 @@ The current audit did not identify an obvious committed password, token, MAC add
 
 **Prerequisites:** Git, PowerShell 5.1+ and git-filter-repo supporting the sensitive-data-removal option. An authenticated GitHub account is needed only later for pushing.
 
-**Before starting:** GitHub advises merging or closing open pull requests ahead of a full rewrite. PR #5 is OPEN and holds the unreleased 0.3.1 changes. Do NOT force-push an in-progress rewrite while it is still under normal review. Either finish the outstanding signed-upgrade/merge acceptance first, or explicitly coordinate closing and recreating PR #5 after the clean refs are published. Freeze writes and notify anyone with local clones.
+**Before starting:** GitHub advises merging or closing open pull requests ahead of a full rewrite. Original PR #5 was closed without merge and continued as draft PR #6 after the rewrite. Do NOT force-push an in-progress rewrite while it is still under normal review. Either finish the outstanding signed-upgrade/merge acceptance first, or explicitly coordinate closing and recreating PR #5 after the clean refs are published. Freeze writes and notify anyone with local clones.
 
 ~~~powershell
 git filter-repo --version
@@ -98,3 +98,7 @@ GitHub Android CI parses `tools/prepare-history-rewrite.ps1` using PowerShell's 
 Before rewriting, the live repository was inspected: eight current branch refs, five annotated release tag refs (`v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.2.1`, `v0.3.0`), five pull-request head refs and one open PR (#5). **All five annotated tag objects were reported as `verification.reason=unsigned`**, i.e. no cryptographic tag signature needs to be retained; their tag object IDs and referenced source commit IDs nevertheless change. Repository metadata reported **0 forks** at inspection time, not evidence that nobody cloned or cached it.
 
 Do not treat unsigned annotated Git tags as unsigned APKs: Android release APKs have their own separately verified signing certificate and hashes and **must be retained byte-for-byte**. Always inspect the live ref inventory again immediately before a force-push; the above numbers are a point-in-time preflight.
+
+## Executed outcome
+
+The user verified both clean branch-tip trees against the original mirror, all 285 rewritten reachable commit trees for the exact historical private IP and `git fsck --full --strict`. All five APK/checksum pairs passed local SHA-256 checks. The atomic force-with-lease remote update and independent branch/tag comparison passed. GitHub verified two remaining branches, five rewritten tag names, six old branches deleted, ten original release assets preserved and green CI on rewritten `main` and feature. Old PR #5 closed without merge; draft PR #6 opened. GitHub-managed historical `refs/pull/1/head` through `refs/pull/5/head` still exist; full server-wide erasure is **not** claimed.

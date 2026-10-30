@@ -2,15 +2,15 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## Next release (unreleased, BUILD-0013 / PR #5)
+## Next release (unreleased, BUILD-0013 / PR #6)
 
 - [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**
 - [x] Model search for “30” and “SoundTouch”, readable suggestions and compact feedback page confirmed on phone
 - [x] Recipient, subject and body of volunteer email draft confirmed on tested email client; decorative paragraph spacing unsupported there, cosmetic/deferred
-- [x] GitHub Actions builds/tests green for implementation commit `e5759e6aed445eb03ca7d574d62c09a692a865eb`; check final post-doc head separately
+- [x] Android CI passed on rewritten `main` (`951e38130fa5`) and rewritten feature push (`2d1e2d7bda54`); final exact-candidate CI remains a gate
 - [ ] Accept new launcher/Devices header as **Remote for STR ⓘ**, Info visible only on Devices, and native control regressions on phone
 - [ ] Validate updated GitHub Releases URL in production app and new-version notification behavior (debug app intentionally skips check)
-- [x] Redact affected current-branch historical QA Markdown files using RFC 5737 placeholders; acknowledge prior commits still contain previous text and defer history rewrite explicitly
+- [x] Rewrite normal branch/tag refs and remove six obsolete branches; preserve five signed releases. [ ] Follow up on GitHub-managed old PR refs/caches separately
 - [ ] Complete negative-case smoke tests required for release (including absence of a mail client), or explicitly defer with rationale
 - [x] Stage candidate Android `versionName=0.3.1` / `versionCode=12` without changing `applicationId`
 - [ ] Build and sign production APK with **original** signing key, validate certificate/zipalign and `Remote-for-STR-0.3.1.apk` naming
@@ -45,7 +45,7 @@ This checklist is **not accepted**; public `v0.3.0` is unchanged. The user’s E
 - [x] public GitHub Release v0.3.0 (ID 429390125) has verified signed APK and matching SHA-256 asset, not draft/prerelease
 - [x] latest-release links, README and STATUS updated to public 0.3.0, and acceptance evidence recorded
 
-Release evidence: [2026-10-30](evidence/qa/2026-10-30-release-0.3.0.md), source commit `5b351f04dc9f989eee48fc262764f3add8641573`; APK SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`.
+Release evidence: [2026-10-30](evidence/qa/2026-10-30-release-0.3.0.md), rewritten tag source `edc64cd5468e60edff355ec1dd1fd73c338004af` (the historic APK was not rebuilt); APK SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`.
 
 ---
 
