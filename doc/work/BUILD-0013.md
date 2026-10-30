@@ -66,6 +66,26 @@ Bose's official historical SoundTouch-app support list identifies families and r
 
 User-requested update (2026-10-30): Feedback moved from GitHub Issues to the default mail program because most users do not have a GitHub account. The two reported fields remain opt-in; app and Android version metadata is added transparently and shown in the email draft. No new permissions or background transmission.
 
+## 2026-10-30: On-device feedback-screen failure and bilingual wizard correction
+
+**Hardware screenshots** of BUILD-0013 demonstrate two genuine UI defects:
+
+1. The "Other SoundTouch model" first screen was too long: the repeated untested-model paragraph, full preparation card, redundant Bose-WLAN explainer and two actions were not simultaneously visible.
+2. The feedback screen had excessive explanatory text and displayed an oversize **dark Android autocomplete popup with dark text**, making model suggestions unreadable and covering the form. Technical diagnostics consumed additional vertical space.
+3. The whole Wi-Fi setup wizard had German literal strings despite STR Remote's supported **German and English** locales. An English phone still displayed German setup guidance, connection errors and results.
+
+**Fix in the existing draft PR #5:**
+
+- Trim repeated warnings on the unknown-model first screen; leave the model-specific caution in the instructions card. Remove redundant after-card explainer. Do not shrink the model dropdown, instructions or confirm action below comfortable touch sizes.
+- The optional feedback screen shows just a model name input, a single Yes/No group, short privacy note and email action. Hide global status and expandable technical diagnostics *on this screen only*. Preserve a bottom "Done" action. No scroll should be needed on the tester's ordinary phone at the previous text/display scale.
+- Give `AutoCompleteTextView` a **white popup drawable** and white row backgrounds with dark text explicitly in `getDropDownView`. Limit popup height to **190dp** and each suggested row to 44dp; keep inline filtering and freeform names. No giant dark full-screen overlay.
+- Move model labels, instructions, headings, UI buttons, dialogs, WLAN-picker captions, network/permission/retry/transfer/verification outcomes to localized Android `values/bose_setup.xml` (English default) and `values-de/bose_setup.xml` (German), using resource placeholders for SSID/version/count and dynamic results. Respect device/app locale without a language switcher. The prepared feedback email body/subject follows the app locale too; always disclose the STR Remote and Android versions and never attach network identifiers.
+- Leave Bose network protocol / credential POST / retry state logic unchanged. Technical low-level Bose API reports are retained as diagnostics, not user instructions.
+- Existing resource code references are caught by Debug and Release compilation + lint. A temporary incomplete intermediate localization commit failed CI due to missing model keys; those keys were subsequently added in both locales, and a subsequent full build passed.
+- **New phone acceptance gate**: screenshot the first screen with "Other model" and early-failure button visible without scrolling; screenshot the feedback page and autocomplete suggestions for "30", with all suggestions readable. Then switch Android app language DE ↔ EN (or device locale), navigate all four wizard screens and verification/result and ensure no German prose in the English UI. Check email draft for EN versions/recipient and that all prior STR/WLAN controls still work.
+
+Status: candidate, **not** in published 0.3.0. Do not merge PR #5 or cut 0.3.1 until UI screenshot/locale QA.
+
 ## Acceptance gates
 
 - [ ] Latest branch GitHub CI: debug and release assembly, debug/release lint, host tests

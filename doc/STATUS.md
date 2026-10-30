@@ -148,3 +148,7 @@ The in-app GitHub release notification, optional compact STR WebView header and 
 ## BUILD-0013 extension — pending device acceptance
 
 The working development branch includes the unknown-model selection, offline historical SoundTouch model suggestions and an opt-in E-Mail feedback form. The 10 CSS px STR header spacing is user-accepted visually on the supplied screenshot; the community-feedback workflow, especially its early-failure path, needs real-device testing. This is **not** part of public v0.3.0. No release or signed APK is created from this branch yet.
+
+## BUILD-0013 usability and locale follow-up (2026-10-30)
+
+Tester screenshots identified unreadable black-on-black SoundTouch autocomplete suggestions and excessive first-page/feedback-page content, plus German-only wizard texts despite intended DE/EN product support. The development branch now includes white bounded model suggestions, compact no-scroll first/feedback screens, and a bilingual Wizard string-resource conversion. The published signed 0.3.0 is unchanged; phone UI and bilingual acceptance remain open.

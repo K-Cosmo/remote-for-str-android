@@ -112,3 +112,7 @@ Development is AI-assisted for implementation, debugging, review and documentati
 ## License
 
 STR Remote is released under the [MIT License](LICENSE).
+
+## Wizard languages (BUILD-0013, pending next release)
+
+The upcoming Wi-Fi setup assistant is localized for **German and English** like the rest of STR Remote. Model autocomplete remains offline; suggestions have a readable, bounded light popup, and feedback email wording follows the app language. The signed public v0.3.0 is not modified; these enhancements require a new version after phone QA.
