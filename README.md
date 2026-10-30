@@ -57,7 +57,9 @@ STR Remote does not install STR, modify speaker firmware or bundle the STR agent
 
 An in-app update check and compact embedded STR header are implemented on the development branch but **not included in published 0.3.0**. The app will check GitHub Releases in the foreground (no recurring background work), display a local alert for a newer stable version with an official APK asset, and open the official release page on demand. STR Remote will not download or install an APK silently.
 
-The redundant top padding in STR's browser/PWA header can be removed inside the Android WebView without hiding STR's speaker selector, power or accessibility controls; this modification still requires real-device visual QA.
+The redundant top padding in STR's browser/PWA header has been reduced to a user-approved 10 CSS px separation without hiding the speaker selector, power or accessibility controls.
+
+The optional “Anderes SoundTouch-Modell” feedback uses offline suggestions drawn from Bose's historical support list and an email draft to `str-remote-android@gmx.org` (model, user-reported success, STR Remote/Android versions), with a separate email app handling voluntary sending. It does not require a GitHub account or silently transmit data.
 
 ## Compatibility
 

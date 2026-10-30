@@ -24,4 +24,4 @@ Gradle 9.8.x evaluation remains deferred. The accepted build baseline stays Grad
 
 ### BUILD-0013 — model coverage through voluntary community feedback
 
-The next development wizard offers a third **Anderes SoundTouch-Modell** option beside the two hardware-checked SoundTouch 10/20 III options. Results and early setup failures can be reported using an explicitly initiated GitHub-Issue draft, with user-entered model and success/failure only; the maintainer must review reports before extending the checked model list. No feedback feature is present in the already published v0.3.0 APK.
+The next development wizard offers a third **Anderes SoundTouch-Modell** option beside the two hardware-checked SoundTouch 10/20 III options. Results and early setup failures can be reported via an explicitly requested email draft to `str-remote-android@gmx.org`. The draft includes model, selected success/failure and STR Remote/Android versions; the maintainer must review reports before extending the checked model list. The offline Bose model suggestion list is not a verified Wi-Fi compatibility matrix. No feedback feature is present in the already published v0.3.0 APK.
