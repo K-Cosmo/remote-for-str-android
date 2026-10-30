@@ -10,6 +10,32 @@ BUILD-0012 Bose Wi-Fi setup was released and accepted on 2026-10-30 as STR Remot
 
 Sources: [BUILD-0012](work/BUILD-0012.md), [v0.3.0 release](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0), [accepted gates](RELEASE_GATES.md).
 
+## Active: BUILD-0013 quality gates (PR #5)
+
+These changes are **implemented on the development branch, not released or accepted**.
+
+1. **P0 — Email draft interoperability (STR-019):** user device test confirms recipient, localized subject and complete multiline body arrive in the selected Android mail client. Reported regression: recipient was populated but subject/body were blank. The draft now carries an RFC 6068 percent-encoded `mailto:` subject/body **and** standard `EXTRA_EMAIL` / `EXTRA_SUBJECT` / `EXTRA_TEXT`. Unit tests cover UTF-8 and CRLF. Retest with the actual selected mail app; no send without user confirmation. Handle the no-mail-app case.
+2. **P1 — Wizard DE/EN and compact UI (STR-018):** validate model selector/search (including “30”, “SoundTouch”), 35 historical offline suggestions, freeform input, readable capped popup, short non-scrolling feedback page, permission/error/success text and optional email draft in both locales. Hardware-verified ST10 and ST20 III display “geprüft”; the generic “other” model is experimental, never auto-certified.
+3. **P1 — GitHub update alert and STR header (STR-017):** verify official stable GitHub APK release only, 24-hour throttling, no debug-app alert, correct external browser and no implicit installer. Validate header spacing and all STR WebUI controls; assess the upstream CSS selector dependency described below.
+4. Final CI and actual-phone QA must pass before PR merge and any later version/signing/release. Preserve the `v0.3.0` tag, signing certificate, user app data and production package identity.
+
+## Upstream STR Community Apps listing — maintainer response of 2026-10-30
+
+The STR maintainer reviewed the independent Android app and considers its local-only v0.3.0 design suitable for the Community Apps page. The previously broken footer link is repaired. Existing entries include the **STR Remote iOS** app by Wagges, **SoundFork** on Android and **SoundRebornRemote** on Android; this makes the Android title “STR Remote” ambiguous. A listing is conditional on **all three** items below, not merely code compilation:
+
+1. **STR-020 / P0 — Distinct app name:** choose a short unique name not confused with the iOS STR Remote. “Reborn Companion” is an *unapproved candidate*, not a final brand. Update launcher label, user-visible app text, readme and release naming consistently after selecting a name; **keep `applicationId=app.strremote.android` and the signing identity**, so installed users can update.
+2. **STR-021 / P0 — About/Info and legal clarity:** add a visible, accessible in-app DE/EN information screen identifying the Android product as an **unofficial, independent community app**, not affiliated with Bose Corporation or the STR project; state that **Bose** and **SoundTouch** are Bose Corporation trademarks. Add matching README wording. Make current app version, support/contact and source links straightforward to find. Do not imply upstream endorsement.
+3. **STR-018 / P0 listing gate — English WLAN setup:** the full safety-sensitive wizard must be understandable in English, including consent, warnings and results, or be hidden on unsupported languages. PR #5 implements the full DE/EN resource coverage; **device verification is still pending**, so this requirement is not yet marked accepted.
+
+Further maintainer observations:
+
+- **STR-024 / P0:** remove or redact a private LAN address from `doc/evidence/` before linking or drawing new public attention to the repository. Preserve non-sensitive QA evidence. Review for other real local identifiers without rewriting unrelated history.
+- **STR-022 / P1:** the PR #5 injected WebView CSS depends on upstream `body > header`, `#dev` and `#powerBtn`, which can change at any time. Share the exact 10-px safe-area requirement with the STR maintainer and ask for a supported, durable header spacing hook. Until clarified, treat this as a compatibility risk, **not** a guaranteed upstream contract.
+- **STR-023 / P1:** open a dedicated upstream [Show and tell discussion](https://github.com/JRpersonal/streborn/discussions), similar to the [existing iOS community thread](https://github.com/JRpersonal/streborn/discussions/1233). This acts as a public directory/feedback rendezvous. Feature requests and reproducible bugs live in the Android project's own GitHub Issues/Discussions; non-GitHub users can voluntarily submit wizard feedback by mail (`str-remote-android@gmx.org`). Clearly route responsibility and link the paths from the About page/README. No new backend, account requirement or automatic telemetry.
+- **STR-025 / P1:** once the three listing requirements are accepted, provide the maintainer the final app name, repository/releases URL and community thread and request the actual listing; do not describe inclusion as already granted.
+
+The separate proposed **Play Store/F-Droid** distributions remain later candidates. This upstream listing and community workflow does not require them.
+
 ## Deferred maintenance — BUILD-0008
 
 Gradle 9.8.x evaluation remains deferred. The accepted build baseline stays Gradle 9.7.1 + AGP 9.4.1 until a dedicated maintenance build proves the upgrade.
