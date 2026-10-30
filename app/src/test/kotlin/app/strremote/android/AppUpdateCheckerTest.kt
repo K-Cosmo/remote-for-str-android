@@ -5,6 +5,13 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class AppUpdateCheckerTest {
+    @Test fun checksOnlyCanonicalRenamedRepository() {
+        assertEquals(
+            "https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest",
+            AppUpdateChecker.API_URL
+        )
+    }
+
     @Test fun acceptsOfficialReleaseWithMatchingApk() {
         val json = """{"tag_name":"v0.4.0","draft":false,"prerelease":false,
             "assets":[{"name":"Remote-for-STR-0.4.0.apk"}]}"""
