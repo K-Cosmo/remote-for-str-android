@@ -151,7 +151,7 @@
     <string name="bose_model_10_name">SoundTouch 10</string>
     <string name="bose_model_10_option">SoundTouch 10 · verified</string>
     <string name="bose_model_10_hint">The SoundTouch 10 has no text display. Look for a solid amber Wi-Fi light.</string>
-    <string name="bose_model_other_name">other SoundTouch model</string>
+    <string name="bose_model_other_name">another SoundTouch model</string>
     <string name="bose_model_other_option">Other SoundTouch model</string>
     <string name="bose_model_other_hint">Preset 2 + Volume Down is unverified for this model. Continue only if a Bose setup Wi-Fi network appears.</string>
     <string name="bose_model_instruction_title">For %1$s</string>
