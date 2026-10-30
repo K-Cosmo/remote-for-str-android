@@ -145,4 +145,14 @@
     <string name="bose_technical_session">Timeline (no network identifiers):</string>
     <string name="bose_technical_survey">Wi-Fi scan:</string>
     <string name="bose_technical_lost">Bose setup Wi-Fi disconnected during transfer.</string>
+    <string name="bose_model_20_name">SoundTouch 20 Series III</string>
+    <string name="bose_model_20_option">SoundTouch 20 III · verified</string>
+    <string name="bose_model_20_hint">The SoundTouch 20 III shows a countdown followed by Setup on its display.</string>
+    <string name="bose_model_10_name">SoundTouch 10</string>
+    <string name="bose_model_10_option">SoundTouch 10 · verified</string>
+    <string name="bose_model_10_hint">The SoundTouch 10 has no text display. Look for a solid amber Wi-Fi light.</string>
+    <string name="bose_model_other_name">other SoundTouch model</string>
+    <string name="bose_model_other_option">Other SoundTouch model</string>
+    <string name="bose_model_other_hint">The preset 2 + Volume Down shortcut has not been confirmed for this model. Continue only if the speaker actually offers a Bose setup Wi-Fi network.</string>
+    <string name="bose_model_instruction_title">On %1$s</string>
 </resources>
