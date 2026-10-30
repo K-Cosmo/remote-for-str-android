@@ -119,3 +119,11 @@ Upstream STR maintainer review added to the normative [BACKLOG](../BACKLOG.md) a
 - **OPEN:** negative path without an installed mail application.
 
 **Requested polish, implemented after the above phone check:** DE/EN feedback email body now contains named plain-text sections (speaker/model and result, software versions, note/privacy), with blank lines between groups, while preserving version fields and confidentiality rules. This change uses the existing RFC 6068 UTF-8 CRLF mailto encoding, not HTML, for broad email-client interoperability. Host tests validate both layouts; **its final on-device visual appearance still requires a quick recheck**. Do not mark BUILD-0013 overall ACCEPTED until the remaining gates close.
+
+## Follow-up: email client rendering limitation and About screen (STR-021)
+
+**User device observation:** the mail-client-specific visual paragraph formatting enhancement did not display as intended. The essential draft handoff (recipient, subject and complete body) remains VERIFIED on the user's client. This cosmetic layout variance is accepted as a deferred, non-blocking limitation: preserve portable plain text, no HTML or new permissions, and do not infer reliable styling from `mailto:` across clients.
+
+**New implementation in PR #5:** a 40dp native toolbar info icon opens a scrollable, bilingual Android About dialog on both Remote and Devices views. It displays installed app version, explicitly states independent/unofficial community status and no affiliation/endorsement by Bose or STR, credits Bose and SoundTouch as Bose Corporation trademarks, and offers user-activated GitHub source/issues and an optional external email contact action. No external request on dialog open; no additional storage, runtime dependency, Android permission, or change of signed release identity. The app name remains provisional pending STR-020.
+
+**Acceptance still open:** verify icon touch target/content description, legible dialog and navigation on a physical phone (including small screen/large text), both DE and EN notice, all three external actions, back/close handling and no-email-client behavior. The English WLAN wizard remains separately unverified on device.
