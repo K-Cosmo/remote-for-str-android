@@ -345,7 +345,7 @@ internal class BoseSetupProbeActivity : Activity() {
         val instructionCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = card()
-            setPadding(dp(16), dp(16), dp(16), dp(8))
+            setPadding(dp(14), dp(12), dp(14), dp(6))
         }
         modelInstructionTitle = heading("")
         instructionCard.addView(modelInstructionTitle)
@@ -355,10 +355,6 @@ internal class BoseSetupProbeActivity : Activity() {
         instructionCard.addView(modelInstructionHint)
         preparationPage.addView(instructionCard)
         renderModelInstructions()
-        preparationPage.addView(text(
-            getString(R.string.bose_setup_wifi_explainer),
-            14f
-        ).apply { setPadding(0, dp(16), 0, dp(12)) })
         nextButton = Button(this).apply {
             text = getString(R.string.bose_yellow_button)
             isAllCaps = false
@@ -664,9 +660,6 @@ internal class BoseSetupProbeActivity : Activity() {
         content.addView(completionPage)
 
         feedbackPage = panel()
-        feedbackPage.addView(text(
-            getString(R.string.bose_feedback_intro), 15f
-        ))
         feedbackPage.addView(heading(getString(R.string.bose_feedback_model_label)).apply {
             textSize = 17f
             setPadding(0, dp(8), 0, dp(4))
@@ -961,12 +954,11 @@ internal class BoseSetupProbeActivity : Activity() {
         modelInstructionSteps.text =
             getString(R.string.bose_setup_button_steps)
         modelInstructionHint.text = getString(selectedModel.setupHintRes)
-        modelTestNotice.text =
-            if (other) {
-                getString(R.string.bose_other_warning)
-            } else {
-                getString(R.string.bose_model_checked)
-            }
+        // The model-specific instructions already warn about untested
+        // devices. Avoid a second large warning that pushes the action below
+        // the fold on ordinary phones.
+        modelTestNotice.visibility = if (other) View.GONE else View.VISIBLE
+        modelTestNotice.text = if (other) "" else getString(R.string.bose_model_checked)
         if (::earlyFeedbackPrepButton.isInitialized) {
             earlyFeedbackPrepButton.visibility = if (other) View.VISIBLE else View.GONE
         }
