@@ -6,6 +6,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class BoseCommunityFeedbackTest {
     @Test fun onlyExplicitModelAndOutcomeProduceDraft() {
@@ -71,4 +73,36 @@ class BoseCommunityFeedbackTest {
     @Test fun fixedRecipientDoesNotRequireGitHubAccount() {
         assertEquals("str-remote-android@gmx.org", BoseCommunityFeedback.RECIPIENT)
     }
+    @Test fun mailtoUriRoundTripsGermanSubjectAndMultilineBody() {
+        val draft = BoseCommunityFeedback.compose(
+            "SoundTouch 30 Series III", BoseCommunityOutcome.FAILURE,
+            "0.3.0 (Debug)", "16 (API 36)", "de"
+        )!!
+        val uri = BoseCommunityFeedback.mailtoUri(draft)
+        assertTrue(uri.startsWith("mailto:str-remote-android@gmx.org?subject="))
+        assertTrue(uri.contains("&body="))
+        assertTrue(uri.contains("%0D%0A"))
+        assertFalse(uri.contains("+"))
+        val subjectEncoded = uri.substringAfter("subject=").substringBefore("&body=")
+        val bodyEncoded = uri.substringAfter("&body=")
+        val subject = URLDecoder.decode(subjectEncoded, StandardCharsets.UTF_8.name())
+        val body = URLDecoder.decode(bodyEncoded, StandardCharsets.UTF_8.name())
+        assertEquals(draft.subject, subject)
+        assertEquals(draft.body.replace("\\n", "\\r\\n"), body)
+    }
+
+    @Test fun mailtoUriRoundTripsEnglishDraftWithoutNetworkIdentifiers() {
+        val draft = BoseCommunityFeedback.compose(
+            "Wave SoundTouch", BoseCommunityOutcome.SUCCESS,
+            "0.3.0", "16 (API 36)", "en"
+        )!!
+        val uri = BoseCommunityFeedback.mailtoUri(draft)
+        assertEquals(draft.subject, URLDecoder.decode(
+            uri.substringAfter("subject=").substringBefore("&body="),
+            StandardCharsets.UTF_8.name()
+        ))
+        assertFalse(uri.contains("password=", ignoreCase = true))
+        assertFalse(uri.contains("ssid=", ignoreCase = true))
+    }
+
 }
