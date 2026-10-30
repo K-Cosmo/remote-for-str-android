@@ -149,3 +149,11 @@ Future signed APK: `Remote-for-STR-<version>.apk` via existing signing/release w
 ### Repository URL cutover — verified 2026-10-30
 
 The user provided the actual renamed repository: `https://github.com/K-Cosmo/remote-for-str-android`. PR #5 survived the rename and remains open on `feature/update-checker-compact-str-header`. Coordinated one commit for update-checker HTTPS URL, release-page URL, About links, unit test and README. Updated normative status, planning, decisions and privacy docs to this canonical path. Do not confuse the published `v0.3.0` signed artifact names with a repository URL migration. A successful Android build proves compilation and tests, not device-level GitHub network reachability or English wizard UX.
+
+## 2026-10-30: English Wi-Fi wizard — physical Android QA confirmation
+
+The user explicitly confirmed **“Englische Geräteprüfung des WLAN-Assistenten: Bestätigt.”** Record **PASS** for the English-language WLAN setup wizard on the user's actual phone (STR-018 / upstream Community Apps language requirement). This confirmation is a language/UI acceptance report; it does not establish independent testing of every permission-denied path, every failure scenario, all compatible Bose speaker variants, or actual English-language email sending.
+
+CI: both Android Actions runs **41138096537** and **41138090921** passed for source commit `e5759e6aed445eb03ca7d574d62c09a692a865eb` before this documentation-only evidence update. Recheck CI on the final candidate head.
+
+Outstanding release-specific gates: complete any outstanding regressions for Remote control, native title/Info display after rebrand, production signing with original key, `versionCode` increment, signed update-over-v0.3.0 preserving saved data, and verifying the production update dialog against an actual newer release. Before promoting the GitHub repository to the upstream maintainer, sanitize the known private LAN address in historical QA evidence. The cosmetic paragraph spacing limitation in the external email client remains non-blocking. No merge, release, new APK or compatibility certification occurred from this confirmation.

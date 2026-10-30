@@ -2,6 +2,24 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## Next release (unreleased, BUILD-0013 / PR #5)
+
+- [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**
+- [x] Model search for “30” and “SoundTouch”, readable suggestions and compact feedback page confirmed on phone
+- [x] Recipient, subject and body of volunteer email draft confirmed on tested email client; decorative paragraph spacing unsupported there, cosmetic/deferred
+- [x] GitHub Actions builds/tests green for implementation commit `e5759e6aed445eb03ca7d574d62c09a692a865eb`; check final post-doc head separately
+- [ ] Accept new launcher/Devices header as **Remote for STR ⓘ**, Info visible only on Devices, and native control regressions on phone
+- [ ] Validate updated GitHub Releases URL in production app and new-version notification behavior (debug app intentionally skips check)
+- [ ] Resolve or explicitly assess historical evidence LAN-address disclosure before upstream promotion
+- [ ] Complete negative-case smoke tests required for release (including absence of a mail client), or explicitly defer with rationale
+- [ ] Bump versionName/versionCode, build and sign production APK with **original** signing key, validate certificate/zipalign and naming convention
+- [ ] Confirm exact signed artifact updates over installed v0.3.0 preserving saved speakers and rooms; approve the signed release candidate
+- [ ] Final exact-commit CI, merge approval, tagged GitHub release, published checksum verification
+
+This checklist is **not accepted**; public `v0.3.0` is unchanged. The user’s English-language acceptance does not automatically clear the other gates.
+
+---
+
 ## 0.3.0 — ACCEPTED
 
 ### Product and security
