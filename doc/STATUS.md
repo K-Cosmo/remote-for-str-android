@@ -1,5 +1,9 @@
 # Status
 
+## Development brand (PR #5 — NOT RELEASED)
+
+The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository currently remains at `K-Cosmo/str-remote-android` pending a separate repository-admin rename; no API/documentation links have yet been switched. The new branding, English wizard and full real-device release gates are not yet accepted.
+
 **Development version:** 0.3.0
 **Latest public release:** 0.3.0
 **Status:** RELEASED / ACCEPTED
