@@ -2,8 +2,8 @@ package app.strremote.android
 
 /**
  * STR's browser/PWA header adds safe-area top padding for standalone browsers.
- * Android's native frame already owns the system-bar insets. Remove ONLY the
- * redundant space; do not remove STR's device, power or accessibility controls.
+ * Android's native frame already owns the system-bar insets. Keep a small 10px
+ * separation below the native toolbar without touching STR's controls.
  * Guard on the known STR DOM structure so a changed upstream page is untouched.
  */
 internal object StrWebViewHeader {
@@ -15,7 +15,7 @@ internal object StrWebViewHeader {
           if (document.getElementById('str-remote-android-header-spacing')) return;
           var style = document.createElement('style');
           style.id = 'str-remote-android-header-spacing';
-          style.textContent = 'body > header { padding-top: 0 !important; }';
+          style.textContent = 'body > header { padding-top: 10px !important; }';
           document.head.appendChild(style);
         })();
     """.trimIndent()

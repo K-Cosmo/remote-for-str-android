@@ -27,9 +27,13 @@ Status: **feature branch implemented; device UI acceptance pending**. Public rel
 ## Compact upstream header: safety and compatibility
 
 - After a successful, allowed speaker WebView main-frame load, inject a static CSS `<style>` once per DOM.
-- Apply `body > header { padding-top: 0 !important; }` **only when the DOM contains both** `#dev` and `#powerBtn`. Android already handles OS bars. On unknown upstream DOMs or errors, do nothing.
+- Apply `body > header { padding-top: 10px !important; }` **only when the DOM contains both** `#dev` and `#powerBtn`. Android already handles OS bars. On unknown upstream DOMs or errors, do nothing.
 - Preserve the STR header, sticky behavior, speaker switcher, power button and accessibility (`Aa`), and all playback/preset elements. No JavaScript interface, host injection or changes to STR firmware.
 - Regression concern: STR upstream UI revisions may change header structure and safe-area handling; require screenshot QA, both standard dark and accessibility text size if possible.
+
+### On-device spacing feedback (2026-10-30)
+
+The first WebView revision with `padding-top: 0` did remove the large empty strip, as verified by the tester's ST20 screenshot. However, the STR control row visually touched/overlapped the Android native toolbar edge; button shadows were visible across the boundary. Restore **10 CSS px** of separation at the known STR header, not the original browser/PWA `16px + safe-area` padding. Do not alter the native toolbar, STR button sizing or sticky/header controls. Screenshot QA is still required on this revision.
 
 ## SoundTouch 10 validation
 
