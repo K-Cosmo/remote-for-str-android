@@ -14,7 +14,7 @@ import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 
 /**
- * controlled B2 hardware attempt; called only after explicit user consent.
+ * Controlled WLAN-profile transfer, called only after explicit user action.
  * Exactly ONE POST attempt. No automatic retries, redirects, logging or persistence.
  * A positive API acknowledgement is NOT proof of joining the destination WLAN.
  */
@@ -42,18 +42,18 @@ internal object BoseWirelessProfilePost {
 
             val code = connection.responseCode
             if (code !in 200..299) {
-                "B2: HTTP $code. WLAN-Profil nicht bestätigt. Kein automatischer Wiederholungsversuch."
+                "WLAN-Übertragung: HTTP $code. Übernahme nicht bestätigt; keine automatische Wiederholung."
             } else {
                 val mediaType = connection.contentType.orEmpty().substringBefore(';').lowercase()
                 if (mediaType != "text/xml" && mediaType != "application/xml") {
-                    "B2: HTTP $code, Antworttyp nicht XML. Annahme unbestimmt; keinen weiteren POST ausführen."
+                    "WLAN-Übertragung: HTTP $code, unerwartete Antwort. Ergebnis unbestimmt; nicht erneut senden."
                 } else {
                     val body = readBounded(connection)
                     if (isExpectedAcknowledgement(body)) {
-                        "B2: HTTP $code, AddWirelessProfileResponse erkannt. " +
+                        "WLAN-Übertragung: HTTP $code, AddWirelessProfileResponse erkannt. " +
                             "Nur API-Antwort; WLAN-Beitritt des Lautsprechers separat prüfen."
                     } else {
-                        "B2: HTTP $code, aber keine erwartete XML-Bestätigung. " +
+                        "WLAN-Übertragung: HTTP $code, aber keine erwartete Bestätigung. " +
                             "Annahme unbestimmt; keinen weiteren POST ausführen."
                     }
                 }
@@ -61,8 +61,8 @@ internal object BoseWirelessProfilePost {
         } catch (_: Exception) {
             // A timeout/lost SoftAP may mean the speaker accepted the credentials.
             // Never log exceptions (some may include network identifiers).
-            "B2: POST-Ergebnis unbestimmt (Verbindung/Timeout/XML). " +
-                "Lautsprecher im Zielnetz prüfen; nicht blind erneut senden."
+            "WLAN-Übertragung: Ergebnis unbestimmt (Verbindung/Timeout/XML). " +
+                "Lautsprecher im WLAN prüfen; nicht automatisch erneut senden."
         } finally {
             connection?.disconnect()
         }
