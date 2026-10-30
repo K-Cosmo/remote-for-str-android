@@ -88,3 +88,7 @@ GitHub warns that rewriting history changes all downstream commit hashes, can in
 Present-day `/doc` separates normative source-of-truth, accepted release identity/gates, planned work and historical BUILD/QA evidence. The top-level `doc/README.md` now explicitly differentiates the accepted public **0.3.0** from the unsigned **0.3.1** candidate. Archival records should not be deleted or silently restated as current policies. `doc/SECURITY.md` now uses the renamed repository's direct canonical Releases API address.
 
 Preserve original release SHA-256, signer fingerprints and old commit/tag ID mappings in the sensitive offline backup. After the rewrite, write a public provenance note that previous source commit/tag IDs changed but the signed APK files and checksums did not. Do not claim old signatures or signed release provenance remains identical.
+
+## Automation safety gate
+
+GitHub Android CI parses `tools/prepare-history-rewrite.ps1` using PowerShell's built-in parser but **never executes it**. The preparation script remains offline-only and requires an explicitly chosen clean workspace and an interactively entered historic endpoint. The user must independently check backup encryption, open PR handling, old/new release-tag mapping and all stale branch deletions before performing the destructive commands from Phase C. Script syntax verification is not execution acceptance.

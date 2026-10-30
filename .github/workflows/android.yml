@@ -28,6 +28,21 @@ jobs:
         shell: pwsh
         run: ./tools/test-apksigner-certificate.ps1
 
+      - name: Parse-check offline Git history cleanup script (NO execution)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/prepare-history-rewrite.ps1",
+            [ref]$tokens,
+            [ref]$parseErrors
+          ) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Error $_.Message }
+            throw "PowerShell history-rewrite script syntax errors"
+          }
+
       - name: Check documentation/version/release consistency
         shell: pwsh
         run: ./tools/verify-doc-consistency.ps1
