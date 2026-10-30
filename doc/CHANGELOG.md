@@ -2,6 +2,15 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
+## Unreleased (BUILD-0013, PR #5)
+
+- Renamed Android app to **Remote for STR** in the launcher, native Devices toolbar, German/English UI, guided SoundTouch setup explanations and community email draft version field.
+- Prepared the next signed release APK naming convention: `Remote-for-STR-<version>.apk`. The update checker also recognizes historical `STR-Remote-<version>.apk` assets.
+- Renamed development CI artifact to `remote-for-str-debug` and Gradle project display name to `RemoteForSTR`.
+- Left production Android application ID `app.strremote.android` and original signing certificate untouched, preserving update compatibility.
+- **Not yet changed:** GitHub repository name or its URL. No new signed public version or v0.3.0 artifact modification.
+
+
 ## 0.3.0 — 2026-10-30
 
 New feature — guided SoundTouch Wi-Fi setup before installing STR:
