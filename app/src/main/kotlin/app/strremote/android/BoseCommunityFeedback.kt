@@ -1,5 +1,8 @@
 package app.strremote.android
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
 /** User-triggered email only, containing no device or network identifiers. */
 internal enum class BoseCommunityOutcome {
     SUCCESS, FAILURE
@@ -14,6 +17,18 @@ internal data class BoseCommunityEmailDraft(
 internal object BoseCommunityFeedback {
     const val RECIPIENT = "str-remote-android@gmx.org"
     private const val MAX_MODEL_LENGTH = 60
+
+    /**
+     * RFC 6068 mailto URI. Some email apps ignore ACTION_SENDTO extras but
+     * honor subject/body from the data URI. Keep both representations.
+     */
+    fun mailtoUri(draft: BoseCommunityEmailDraft): String {
+        fun encode(value: String): String =
+            URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+                .replace("+", "%20")
+        val normalizedBody = draft.body.replace("\r\n", "\n").replace("\n", "\r\n")
+        return "mailto:${draft.recipient}?subject=${encode(draft.subject)}&body=${encode(normalizedBody)}"
+    }
 
     fun validModel(value: String): Boolean {
         val model = value.trim()
