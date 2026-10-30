@@ -145,4 +145,14 @@
     <string name="bose_technical_session">Ablauf (ohne Netzwerkkennungen):</string>
     <string name="bose_technical_survey">WLAN-Suche:</string>
     <string name="bose_technical_lost">Bose-Setup-WLAN während der Übertragung getrennt.</string>
+    <string name="bose_model_20_name">SoundTouch 20 Series III</string>
+    <string name="bose_model_20_option">SoundTouch 20 III · geprüft</string>
+    <string name="bose_model_20_hint">Die SoundTouch 20 III zeigt einen Countdown und anschließend „Setup“ im Display.</string>
+    <string name="bose_model_10_name">SoundTouch 10</string>
+    <string name="bose_model_10_option">SoundTouch 10 · geprüft</string>
+    <string name="bose_model_10_hint">Die SoundTouch 10 besitzt kein Textdisplay. Achte auf die dauerhaft gelbe WLAN-LED.</string>
+    <string name="bose_model_other_name">anderen SoundTouch-Modell</string>
+    <string name="bose_model_other_option">Anderes SoundTouch-Modell</string>
+    <string name="bose_model_other_hint">Die Tastenkombination Preset 2 + Leiser ist für dieses Modell noch nicht bestätigt. Nur fortfahren, wenn die Box tatsächlich ein Bose-Setup-WLAN anbietet.</string>
+    <string name="bose_model_instruction_title">Am %1$s</string>
 </resources>
