@@ -1140,10 +1140,10 @@ class MainActivity : Activity() {
         paragraph(getString(R.string.about_support_heading), emphasized = true)
 
         linkButton(R.string.about_source_link) {
-            openExternalUri(Uri.parse("https://github.com/K-Cosmo/str-remote-android"))
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/remote-for-str-android"))
         }
         linkButton(R.string.about_issues_link) {
-            openExternalUri(Uri.parse("https://github.com/K-Cosmo/str-remote-android/issues"))
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/remote-for-str-android/issues"))
         }
         linkButton(R.string.about_email_link) {
             val uri = Uri.parse(

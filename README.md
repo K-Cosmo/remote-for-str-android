@@ -8,7 +8,7 @@ Remote for STR discovers STR-enabled SoundTouch speakers on the local network an
 
 **Current published release:** v0.3.0 (published under the former name **STR Remote**). The **Remote for STR** rename is implemented in the open development branch but is not yet released.
 
-**Download:** [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest)
+**Download:** [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest)
 
 ## Features
 
@@ -32,7 +32,7 @@ Remote for STR discovers STR-enabled SoundTouch speakers on the local network an
 - Android 8.0+;
 - no account, analytics, telemetry or Remote for STR backend.
 
-**Project identity:** The Android package remains `app.strremote.android` and future updates use the original signing certificate. The public GitHub repository is **still named `str-remote-android`**; links in this README intentionally point to the existing working address until the repository is actually renamed. The old v0.3.0 tag and signed APK remain unchanged.
+**Project identity:** The Android package remains `app.strremote.android` and future updates use the original signing certificate. The repository has been renamed to **`K-Cosmo/remote-for-str-android`** and all live GitHub links point directly to that canonical address. The old v0.3.0 tag and signed APK remain unchanged.
 
 ## Requirements and installation
 
@@ -42,7 +42,7 @@ For remote control, Remote for STR requires **SoundTouch Reborn to be installed 
    - [STR website](https://st-reborn.de)
    - [STR on GitHub](https://github.com/JRpersonal/streborn)
 2. Connect the Android device to the same local Wi-Fi network as the speaker.
-3. Download the published signed APK from [GitHub Releases](https://github.com/K-Cosmo/str-remote-android/releases/latest). Published v0.3.0 is named `STR-Remote-0.3.0.apk`; future rebranded releases will use `Remote-for-STR-<version>.apk`.
+3. Download the published signed APK from [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest). Published v0.3.0 is named `STR-Remote-0.3.0.apk`; future rebranded releases will use `Remote-for-STR-<version>.apk`.
 4. Install the APK and grant the local-network permission when Android requests it.
 
 Remote for STR does not install STR, modify speaker firmware or bundle the STR agent.

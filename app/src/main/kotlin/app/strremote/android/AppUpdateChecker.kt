@@ -11,7 +11,7 @@ internal data class AppUpdateCheckResult(val available: AvailableAppUpdate?)
 
 internal object AppUpdateChecker {
     private const val API_URL =
-        "https://api.github.com/repos/K-Cosmo/str-remote-android/releases/latest"
+        "https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest"
     private const val MAX_JSON_BYTES = 64 * 1024
 
     fun fetch(installedVersion: String): AppUpdateCheckResult? {
