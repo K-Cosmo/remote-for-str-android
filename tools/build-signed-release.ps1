@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "apksigner-certificate.ps1")
 $ProjectRoot = (Resolve-Path $ProjectRoot).Path
 $KeystorePath = (Resolve-Path $KeystorePath).Path
 
@@ -198,17 +199,14 @@ try {
     # Without precisely the same signing key as v0.2.1, Android will refuse
     # the update. Refuse to package an unusable or unexpectedly signed APK.
     $expectedCertificate = "3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32"
-    $verifyText = $verificationOutput | Out-String
-    $certificateMatch = [regex]::Match(
-        $verifyText,
-        'Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]{64})'
-    )
-    if (-not $certificateMatch.Success) {
-        throw "Could not verify the signing certificate identity from apksigner output."
-    }
-    $actualCertificate = $certificateMatch.Groups[1].Value.ToLowerInvariant()
+    # Do not use Out-String: its host-width formatting may split a
+    # 64-character SHA-256 fingerprint. The helper recognizes old apksigner
+    # "Signer #1" and Build Tools 37 "V2 Signer:" / "V3.0 Signer:"
+    # output, and rejects conflicting fingerprints.
+    $verifyText = (@($verificationOutput | ForEach-Object { $_.ToString() })) -join "`n"
+    $actualCertificate = Get-ApkSignerCertificateDigest -OutputText $verifyText
     if ($actualCertificate -ne $expectedCertificate) {
-        throw "Wrong release-signing certificate: the APK cannot update installed STR Remote 0.2.1."
+        throw "Wrong release-signing certificate ($actualCertificate): APK cannot update STR Remote 0.2.1."
     }
     Write-Host "Release signer matches the v0.2.1 update identity."
 

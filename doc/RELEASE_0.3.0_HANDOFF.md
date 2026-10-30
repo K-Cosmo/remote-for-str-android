@@ -36,6 +36,9 @@ Expected artifacts in `dist\`:
 
 The script validates v2/v3 signing and 16 KiB zipalign. Do **not** use `app-release-unsigned.apk` as a release asset.
 
+**Build Tools 37 compatibility:** `apksigner verify --verbose --print-certs` may print `V2 Signer: certificate SHA-256 digest` or `V3.0 Signer: certificate SHA-256 digest` instead of the older `Signer #1 certificate SHA-256 digest`. The release script parses both and **rejects** missing, conflicting or unexpected certificates. It reads native output without `Out-String` so PowerShell's console width cannot split the 64-character digest. A standalone parser regression test is available via `pwsh -NoProfile -File .\tools\test-apksigner-certificate.ps1` and is run in GitHub CI. Java restricted-method warnings on stderr do not waive exit-code or certificate checks.
+
+
 ## Test the exact signed APK as an update
 
 **Do not uninstall v0.2.1 or clear its data**: the upgrade must preserve existing speaker/room preferences.
