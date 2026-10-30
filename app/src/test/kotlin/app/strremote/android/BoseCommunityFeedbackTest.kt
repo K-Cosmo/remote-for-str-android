@@ -33,7 +33,7 @@ class BoseCommunityFeedbackTest {
         )
         assertTrue(mail.body.contains("SoundTouch Portable"))
         assertTrue(mail.body.contains("WLAN-Einrichtung erfolgreich: Ja"))
-        assertTrue(mail.body.contains("STR Remote Version: 0.3.0 (Debug)"))
+        assertTrue(mail.body.contains("Remote for STR Version: 0.3.0 (Debug)"))
         assertTrue(mail.body.contains("Android-Version: 16 (API 36)"))
         assertTrue(mail.body.startsWith("SoundTouch WLAN-Einrichtung – Community-Feedback\n\nLautsprecher\n"))
         assertTrue(mail.body.contains("WLAN-Einrichtung erfolgreich: Ja\n\nSoftware\n"))
