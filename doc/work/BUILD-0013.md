@@ -107,3 +107,15 @@ Reported on physical Android device: Android successfully presents an installed 
 Regression tests: deterministic localized DE/EN draft composition, RFC 6068 URI encoding/decoding with Unicode and multiline text, consent/no-network-identifier boundaries. **Still pending:** exact phone/email-client smoke test for correctly filled recipient/subject/body and cancel/no-app path. No claim that mail was sent or that all clients are compatible.
 
 Upstream STR maintainer review added to the normative [BACKLOG](../BACKLOG.md) and [PLANNED](../PLANNED.md): a distinct name from the existing iOS `STR Remote`, a visible unofficial community/brand info notice and fully understandable English Wi-Fi wizard are required before upstream Community Apps listing. The pending CSS-selector coupling, an address in QA evidence, upstream Show-and-tell thread and federated support links are also tracked. The suggested working name `Reborn Companion` is not adopted until decided. No changes to the published `v0.3.0` artifact.
+
+## 2026-10-30: User QA update — feedback body and model search
+
+**Observed on actual Android device (user confirmation):**
+
+- **PASS:** optional email draft opens the mail application with recipient, subject **and** body fully populated after the RFC 6068 fix. This closes the specifically reported missing-subject/body regression for the tested mail client. No statement about other mail clients or successful sending.
+- **PASS:** searching for `30` and `SoundTouch` displays readable model suggestions.
+- **PASS:** feedback page does not require unnecessary scrolling.
+- **OPEN:** full end-to-end English device-language wizard walkthrough, including intermediate/error/result messages, permissions and English email subject/body.
+- **OPEN:** negative path without an installed mail application.
+
+**Requested polish, implemented after the above phone check:** DE/EN feedback email body now contains named plain-text sections (speaker/model and result, software versions, note/privacy), with blank lines between groups, while preserving version fields and confidentiality rules. This change uses the existing RFC 6068 UTF-8 CRLF mailto encoding, not HTML, for broad email-client interoperability. Host tests validate both layouts; **its final on-device visual appearance still requires a quick recheck**. Do not mark BUILD-0013 overall ACCEPTED until the remaining gates close.
