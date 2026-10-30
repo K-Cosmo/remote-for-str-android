@@ -2,7 +2,7 @@
 
 ## Scope
 
-STR Remote remains a thin Android integration layer around the web remote served by SoundTouch Reborn. STR owns playback/business behavior; STR Remote owns Android discovery, endpoint selection, local UI metadata, persistence, permission/network handling and WebView integration.
+Remote for STR remains a thin Android integration layer around the web remote served by SoundTouch Reborn. STR owns playback/business behavior; Remote for STR owns Android discovery, endpoint selection, local UI metadata, persistence, permission/network handling and WebView integration.
 
 ## Components
 
@@ -46,11 +46,11 @@ Persistence is deliberately small and app-private:
 - explicitly saved speakers support durable device management;
 - room metadata is presentation-only;
 - the dismissed-help preference is UI-only;
-- none of this data is uploaded or synchronized by STR Remote.
+- none of this data is uploaded or synchronized by Remote for STR.
 
 ## Dependency direction
 
-The Android wrapper depends on STR's local contracts. STR does not depend on the Android wrapper. There is no hosted STR Remote service.
+The Android wrapper depends on STR's local contracts. STR does not depend on the Android wrapper. There is no hosted Remote for STR service.
 
 ## Native shell geometry
 
@@ -82,5 +82,5 @@ Pending Android UI screenshot/regression verification before a separately signed
 
 - `BoseSoundTouchCatalog` provides a static local list of historic SoundTouch-app model names, including different generations and equipment that uses SoundTouch adapters. It is a hint-only catalog, not an approved WLAN provisioning set; the user may freely enter any other plausible model.
 - `BoseCommunityFeedback` is a pure model/yes-no/version draft composer; fixed recipient `str-remote-android@gmx.org` and strict label validation. `BoseSetupProbeActivity` creates an Android `ACTION_SENDTO` mail intent only following explicit user action.
-- STR Remote version comes from the installed package, Android version/API from the OS. Neither is sent in the background. No GitHub login, GitHub API feedback call, app-level SMTP, privileged permissions or new runtime library.
+- Remote for STR version comes from the installed package, Android version/API from the OS. Neither is sent in the background. No GitHub login, GitHub API feedback call, app-level SMTP, privileged permissions or new runtime library.
 - Test behavior with a configured email client and without one before merging. Manual review of incoming mail remains required before an additional SoundTouch model can be marked as verified.

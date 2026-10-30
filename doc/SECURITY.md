@@ -2,7 +2,7 @@
 
 ## Trust boundary
 
-STR currently serves the phone UI over plain HTTP on the local network. STR Remote therefore permits the cleartext access needed for local STR endpoints. The LAN is the current trust boundary.
+STR currently serves the phone UI over plain HTTP on the local network. Remote for STR therefore permits the cleartext access needed for local STR endpoints. The LAN is the current trust boundary.
 
 Because speakers can receive dynamic DHCP addresses, Android Network Security Configuration cannot practically enumerate the single permitted host ahead of time. The wrapper combines the required cleartext base configuration with runtime WebView navigation restrictions.
 
@@ -17,7 +17,7 @@ Because speakers can receive dynamic DHCP addresses, Android Network Security Co
 - other HTTP/HTTPS top-level links handed to the system browser;
 - subresource behavior left to the upstream STR page to avoid reimplementing/breaking STR functionality;
 - no analytics/tracking SDK;
-- no Bluetooth permission unless STR Remote itself gains a documented Bluetooth feature.
+- no Bluetooth permission unless Remote for STR itself gains a documented Bluetooth feature.
 
 Chromium/WebView hidden-API or Bluetooth warnings are not a sufficient reason to broaden permission scope.
 
@@ -71,6 +71,6 @@ For the embedded STR WebView, static CSS is injected only into the already permi
 
 The unknown model option uses the same single-attempt Bose WLAN transfer as the tested models, but an identical setup shortcut or interface is not presumed. User feedback never automatically changes the known-good model list.
 
-Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed STR Remote version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
+Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed Remote for STR version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
 
 The offline model suggestion catalog reflects Bose's SoundTouch app support list; it is not a verified compatibility matrix for original-firmware WLAN provisioning. The outgoing draft excludes WLAN SSID/password, IP/MAC, device ID, diagnostics and other automatically collected identifiers. Users are advised not to add such information manually.

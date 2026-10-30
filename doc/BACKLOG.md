@@ -32,7 +32,7 @@ The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the 
 | STR-021 | Visible bilingual Info/About: independent unofficial community app, no Bose/STR affiliation, trademark notice and README | P0 | User verified About screen opens; UI adjusted so circled info sits next to title on Devices only; updated placement and EN phone QA pending |
 | STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #5 compatibility risk |
 | STR-023 | Federated community support: own STR upstream Show-and-tell thread; link to project's GitHub Discussions/Issues + optional email feedback (no GitHub account needed) | P1 | PLANNED |
-| STR-024 | Redact real private LAN address from 2026-09-26 QA Markdown without losing test meaning | P0 | **DONE for current branch** (RFC 5737 placeholder); historic commits still retain prior text; history rewrite deliberately deferred |
+| STR-024 | Sanitize historical real LAN endpoint across **all** branches, release tags, PR refs and caches; prune obsolete branches | P0 | **PARTIAL:** current PR text redacted; older refs still expose original; history-cleanup runbook prepared, execution requires authenticated Git mirror and coordination with signed releases/PR #5 |
 | STR-025 | Request listing on the upstream STR Community Apps page after name, About notice and EN wizard QA are complete | P1 | PLANNED — depends on STR-020/021/018 acceptance |
 | STR-026 | Extend hardware evidence for additional original-Bose-firmware SoundTouch models; crowd reports remain unverified | P2 | BACKLOG |
 

@@ -64,8 +64,8 @@ It verifies at minimum:
 - an ACCEPTED release is no longer described as the current final-publication step in `PLANNED.md`;
 - relative Markdown links resolve inside the repository.
 
-The script remains a local documentation/release-maintenance gate. GitHub CI stays focused on proving the Android build. Human review is still required for semantic drift that cannot be checked mechanically.
+The script runs locally **and in GitHub Android CI** before compilation. CI verifies version/release metadata and the Android build; human review is still required for semantic drift and private-data risks that cannot be detected deterministically.
 
 ## Public AI transparency
 
-STR Remote is intentionally AI-assisted during development. Public project material must distinguish development assistance from runtime behavior: AI may help implement, analyze, debug, review and document the project, but acceptance remains evidence-based and human-directed. The shipped Android app has no AI/LLM runtime or AI-service data path unless a future explicit product decision changes that boundary.
+Remote for STR is intentionally AI-assisted during development. Public project material must distinguish development assistance from runtime behavior: AI may help implement, analyze, debug, review and document the project, but acceptance remains evidence-based and human-directed. The shipped Android app has no AI/LLM runtime or AI-service data path unless a future explicit product decision changes that boundary.
