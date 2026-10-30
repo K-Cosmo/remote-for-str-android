@@ -92,3 +92,9 @@ Preserve original release SHA-256, signer fingerprints and old commit/tag ID map
 ## Automation safety gate
 
 GitHub Android CI parses `tools/prepare-history-rewrite.ps1` using PowerShell's built-in parser but **never executes it**. The preparation script remains offline-only and requires an explicitly chosen clean workspace and an interactively entered historic endpoint. The user must independently check backup encryption, open PR handling, old/new release-tag mapping and all stale branch deletions before performing the destructive commands from Phase C. Script syntax verification is not execution acceptance.
+
+## Verified release-tag and fork preflight (GitHub API)
+
+Before rewriting, the live repository was inspected: eight current branch refs, five annotated release tag refs (`v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.2.1`, `v0.3.0`), five pull-request head refs and one open PR (#5). **All five annotated tag objects were reported as `verification.reason=unsigned`**, i.e. no cryptographic tag signature needs to be retained; their tag object IDs and referenced source commit IDs nevertheless change. Repository metadata reported **0 forks** at inspection time, not evidence that nobody cloned or cached it.
+
+Do not treat unsigned annotated Git tags as unsigned APKs: Android release APKs have their own separately verified signing certificate and hashes and **must be retained byte-for-byte**. Always inspect the live ref inventory again immediately before a force-push; the above numbers are a point-in-time preflight.

@@ -30,3 +30,9 @@
 The connected GitHub integration supports editing, creating Git objects and moving branch refs, **but does not expose deletion of branch refs or a full mirror fetch/push/history rewrite**, and the execution environment cannot reach GitHub over Git transport. GitHub-managed `refs/pull/*` are not ordinary writable Git refs. Therefore **branch deletion and complete historical purging were not claimed as performed**.
 
 Use the checked-in runbook `doc/GIT_HISTORY_CLEANUP.md` from a machine with Git, `git-filter-repo` and authenticated push access. It requires a protected offline mirror backup; a narrowly scoped replacement (never all private IPs); coordinated tag and PR updates; verifying no leaked blob is reachable; and explicit action to clear GitHub cached PR views where necessary. **Do not merge/publish while the rewrite is partly applied.**
+
+## Additional reviewed baseline (follow-up)
+
+Present-day top-level normative Markdown audit found **no identical paragraphs longer than 120 characters** across twelve core policy/status docs and no duplicate level-two headings in those files. Repeat descriptions of release and test state are conceptually overlapping but have distinct roles (canonical STATUS, acceptance RELEASE_GATES, forward PLANNED/BACKLOG, historical BUILD/QA). Retain archived BUILD-0012 and release evidence intact. Corrected one stale GitHub Releases endpoint in `doc/SECURITY.md`; clarified that current main-tip Markdown is redacted while old objects reachable through main ancestry/tags are not yet purged.
+
+GitHub API verified the five published release tag objects as **annotated but unsigned**; source commit/tag object hashes will change in the rewrite, while signed APK hashes remain unchanged. GitHub metadata currently reports **zero forks** but previously cloned copies and cached pull request diffs cannot be ruled out.
