@@ -170,3 +170,23 @@
 **Observed:** root duplicate changelog/privacy/contribution content and several /doc authorities still described 0.1.0-era build, blocker or persistence state; DECISIONS.md also contained two different D-019 headings.
 **Action:** remove the duplicate root changelog, convert root privacy/contribution files to pointers, converge current normative /doc files on the accepted 0.2.0 baseline, normalize the duplicate decision ID and explicitly classify historical records as snapshots.
 **State:** VERIFIED by documentation consistency, whitespace and duplicate-ID checks in the convergence change.
+
+## F-027 — BUILD-0013 feedback mail subject/body missing in selected client
+
+**Evidence:** physical Android test report from 2026-10-30: email application chooser appeared, selected mail client opened, recipient was present, but subject and body were blank.
+**Observed:** the draft formatter generated the subject and body correctly but `ACTION_SENDTO` relied solely on `Intent.EXTRA_SUBJECT` and `Intent.EXTRA_TEXT`, which did not work with the tested client.
+**Action:** retain `ACTION_SENDTO` and existing extras, additionally encode `subject` and `body` in an RFC 6068 `mailto:` URI using UTF-8 percent encoding and CRLF; add unit regression coverage and explicit on-device client QA. No automatic send, SMTP, credential or device identifier collection.
+**State:** FIX IMPLEMENTED in PR #5, phone retest and exact-revision CI acceptance pending.
+
+## F-028 — BUILD-0013 WebView CSS relies on private upstream STR DOM
+
+**Evidence:** upstream STR maintainer review of draft PR #5 on 2026-10-30.
+**Observed:** `body > header`, `#dev` and `#powerBtn` are internal markup selectors and not a stable extension API. The visible 10px spacing was approved on device but future STR markup can break injection.
+**Action:** discuss the desired safe-area adjustment with STR maintainer and prefer an explicit supported hook; retain compatibility regression testing until resolved. Track in STR-022.
+**State:** OPEN compatibility risk, not a blocker in the already published 0.3.0.
+
+## F-029 — 0.3.0 accepted release status contradicted by legacy tail line
+
+**Evidence:** `doc/STATUS.md` header correctly identified 0.3.0 RELEASED/ACCEPTED while its final sentence still claimed 0.2.1 was the current accepted release.
+**Action:** correct the stale sentence on the ongoing feature branch without rewriting signed release evidence or historical release tags.
+**State:** DOCUMENTATION FIX IMPLEMENTED in PR #5; consistency gate pending.
