@@ -27,7 +27,7 @@ The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the 
 |---|---|---:|---|
 | STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #5; final QA, upstream CSS contract pending |
 | STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | IMPLEMENTED in PR #5; end-to-end DE/EN device QA pending |
-| STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | FIX IMPLEMENTED in PR #5 (RFC 6068 + Intent extras); client/device verification pending |
+| STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | VERIFIED on tested phone/client (2026-10-30); improved body formatting implemented, visual recheck/no-mail-app path pending |
 | STR-020 | New distinct public Android app name to avoid the existing iOS app named STR Remote; retain applicationId/signature for updates | P0 | PLANNED — product name not yet selected; prerequisite for STR community listing |
 | STR-021 | Visible bilingual in-app Info/About notice: independent unofficial community app, no Bose/STR affiliation, Bose and SoundTouch trademark notice; align README | P0 | PLANNED — prerequisite for STR community listing |
 | STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #5 compatibility risk |
