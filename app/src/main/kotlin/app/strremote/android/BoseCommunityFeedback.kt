@@ -56,31 +56,41 @@ internal object BoseCommunityFeedback {
             if (outcome == BoseCommunityOutcome.SUCCESS) "Successful"
             else "Unsuccessful"
         }
+        // Keep this portable plain text: blank lines separate sections in
+        // Gmail, Outlook and other email apps without requiring HTML support.
         val lines = if (de) {
             listOf(
-                "SoundTouch WLAN-Ersteinrichtung – freiwillige Rückmeldung",
+                "SoundTouch WLAN-Einrichtung – Community-Feedback",
                 "",
+                "Lautsprecher",
                 "SoundTouch-Modell: $model",
                 "WLAN-Einrichtung erfolgreich: ${if (outcome == BoseCommunityOutcome.SUCCESS) "Ja" else "Nein"}",
+                "",
+                "Software",
                 "STR Remote Version: $appVersion",
                 "Android-Version: $androidVersion",
                 "",
-                "Die Angaben sind eine persönliche Rückmeldung, keine Modellfreigabe.",
-                "Bitte vor dem Senden prüfen und keine WLAN-Namen, Passwörter, " +
-                    "IP-/MAC-Adressen oder Gerätekennungen ergänzen."
+                "Hinweis",
+                "Diese Rückmeldung beschreibt einen einzelnen Test und ist keine allgemeine Modellfreigabe.",
+                "Bitte vor dem Senden prüfen. Keine WLAN-Namen, Passwörter,",
+                "IP-/MAC-Adressen oder Gerätekennungen ergänzen."
             )
         } else {
             listOf(
-                "SoundTouch Wi-Fi setup – voluntary feedback",
+                "SoundTouch Wi-Fi setup – Community feedback",
                 "",
+                "Speaker",
                 "SoundTouch model: $model",
                 "Wi-Fi setup successful: ${if (outcome == BoseCommunityOutcome.SUCCESS) "Yes" else "No"}",
+                "",
+                "Software",
                 "STR Remote version: $appVersion",
                 "Android version: $androidVersion",
                 "",
-                "This is a personal report, not an official compatibility certification.",
-                "Please review before sending. Do not include Wi-Fi names, passwords, " +
-                    "IP/MAC addresses or device identifiers."
+                "Note",
+                "This is one user's test, not a general model compatibility certification.",
+                "Please review before sending. Do not add Wi-Fi names, passwords,",
+                "IP/MAC addresses or device identifiers."
             )
         }
 
