@@ -100,3 +100,7 @@ For a public release:
 - root helper Markdown does not duplicate normative `/doc` policy.
 
 A successful compile alone is not functional evidence.
+
+## Private-data check before public evidence or release
+
+The CI documentation-consistency tool checks tracked `/doc/**/*.md` text for unexpected RFC1918 host addresses, allowing only the explicitly documented Bose setup alternate endpoint. New screenshots, user-supplied logs and test reports must be sanitized before committing: use RFC 5737 example addresses and remove SSIDs, MAC/serial numbers, tokens, usernames, account identifiers and unnecessary personal paths. This preventive check only covers current Markdown; historical commits require a separately coordinated `git-filter-repo` cleanup. See `GIT_HISTORY_CLEANUP.md`.
