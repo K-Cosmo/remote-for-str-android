@@ -1,6 +1,6 @@
 # Clean Code concept
 
-Clean Code in STR Remote means simple ownership, small responsibilities and code that is easy to locate and debug — not maximum abstraction.
+Clean Code in Remote for STR means simple ownership, small responsibilities and code that is easy to locate and debug — not maximum abstraction.
 
 ## Rules
 

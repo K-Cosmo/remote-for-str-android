@@ -80,7 +80,7 @@ For a public release:
 
 - build only from a clean committed source tree;
 - record exact source commit;
-- sign with the accepted STR Remote signing identity;
+- sign with the accepted Remote for STR signing identity;
 - verify APK signature schemes and certificate;
 - run post-sign 16 KiB-aware zipalign verification;
 - record final SHA-256;

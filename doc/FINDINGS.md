@@ -190,3 +190,19 @@
 **Evidence:** `doc/STATUS.md` header correctly identified 0.3.0 RELEASED/ACCEPTED while its final sentence still claimed 0.2.1 was the current accepted release.
 **Action:** correct the stale sentence on the ongoing feature branch without rewriting signed release evidence or historical release tags.
 **State:** DOCUMENTATION FIX IMPLEMENTED in PR #5; consistency gate pending.
+
+## F-030 — Early hardware QA address remains in historical Git references
+
+**State:** OPEN / security/privacy maintenance, 2026-10-30.
+
+**Evidence:** Current branch redacts one real RFC1918 host address from two dated QA Markdown files using RFC 5737 documentation addresses. The original blob remains reachable through published historical refs, including `main` and release tags. There is no observed private key, token or password in the current tracked text audit. The old host address is not itself an Internet-routable secret, but it is unnecessary public operational metadata.
+
+**Resolution:** Controlled, backed-up history rewrite across all relevant refs plus obsolete branch cleanup; review GitHub PR caches and external clones. Record exact impact on signed release source/tag identities before execution. No history purge has occurred merely by editing a branch.
+
+## F-031 — Normative documentation version and process drift
+
+**State:** CONVERGED on active PR branch, CI proof pending, 2026-10-30.
+
+**Evidence:** `doc/README.md` still described 0.2.0 as the public release; `doc/BLOCKERS.md` still described the accepted 0.2.0 baseline; governance text incorrectly said the document consistency script runs only locally although GitHub CI now invokes it. Current public signed release is 0.3.0, while 0.3.1 remains the unreleased candidate. Historical work/evidence records are intentionally not rewritten solely for outdated wording.
+
+**Resolution:** Update current-state authorities, retain historical evidence and ensure `STATUS.md` is the canonical release-state source.

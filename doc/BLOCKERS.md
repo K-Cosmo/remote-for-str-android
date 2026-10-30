@@ -1,6 +1,6 @@
 # Blockers
 
-There are currently **no known release or functional blockers** for the accepted 0.2.0 baseline.
+The signed public **0.3.0** baseline has no known unresolved release blockers. The **unreleased 0.3.1** release candidate still has unfulfilled acceptance gates (signing with original key, update-over-0.3.0 device test and final QA). Repository-history privacy cleanup is a separate maintenance action, not evidence that a product runtime feature is broken.
 
 ## Accepted baseline
 
@@ -14,7 +14,16 @@ The following release-critical areas are closed by real build/runtime evidence:
 - device selection, saved speakers, room assignment and quick switching;
 - reconnect, permission recovery and native back navigation;
 - constrained WebView navigation and normal STR controls;
-- signed 0.2.0 publication artifact and GitHub release.
+- signed 0.3.0 publication artifact and GitHub release.
+
+## Open pre-release tasks (0.3.1 / PR #5)
+
+- confirm final user-device smoke after the display-name change and the production APK update path;
+- protect the original Android application ID and signing certificate;
+- address historical private-LAN endpoint exposure across Git refs (requires an offline history rewrite; the present PR branch is already redacted);
+- ensure both release and documentation consistency gates pass on the final commit.
+
+See `RELEASE_GATES.md`, `PLANNED.md` and the dated privacy audit for authoritative status.
 
 ## Non-blocking observations
 

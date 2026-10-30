@@ -1,6 +1,6 @@
 # Android and build compatibility
 
-## Accepted 0.2.0 baseline
+## Accepted 0.3.0 baseline
 
 | Item | Version / rule | State |
 |---|---|---|
@@ -14,7 +14,7 @@
 | Gradle daemon criteria | Java major 25 | pinned |
 | Java source/target | 17 | application baseline |
 
-The public 0.2.0 release and its GitHub CI were built successfully on this baseline.
+The public 0.3.0 release and its GitHub CI were built successfully on this unchanged toolchain baseline.
 
 ## Gradle Wrapper and JVM
 

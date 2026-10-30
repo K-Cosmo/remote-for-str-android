@@ -2,14 +2,14 @@
 
 ## Product
 
-STR Remote is a thin Android integration layer around the web remote already served by SoundTouch Reborn (STR). The Android app discovers STR speakers on the local network, resolves a reachable STR endpoint and displays the existing STR web UI in a constrained WebView.
+Remote for STR is a thin Android integration layer around the web remote already served by SoundTouch Reborn (STR). The Android app discovers STR speakers on the local network, resolves a reachable STR endpoint and displays the existing STR web UI in a constrained WebView.
 
 ## Architectural boundaries
 
 1. STR owns playback/business logic and the phone-remote web application.
-2. STR Remote owns Android discovery, endpoint selection, local persistence, permission handling and WebView integration.
+2. Remote for STR owns Android discovery, endpoint selection, local persistence, permission handling and WebView integration.
 3. Do not duplicate STR playback/business logic natively without an explicit recorded decision.
-4. No analytics, tracking, account system or hosted STR Remote backend.
+4. No analytics, tracking, account system or hosted Remote for STR backend.
 5. Prefer Android platform APIs. A new dependency requires a documented reason and decision.
 6. STR discovery uses DNS-SD/mDNS service types `_streborn._tcp.` and legacy `_soundtouchstick._tcp.`.
 7. Endpoint probing accepts STR web ports 8888 and 17008; 8888 is preferred when reachable.

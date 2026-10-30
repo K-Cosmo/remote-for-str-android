@@ -4,7 +4,8 @@
 
 ## Current release
 
-- public release: **0.2.0**
+- latest signed public release: **0.3.0** (published as *STR Remote*)
+- current unreleased development candidate: **Remote for STR 0.3.1** (PR #5)
 - status: **RELEASED — ACCEPTED**
 - release status and artifact identity: `STATUS.md`
 - accepted release gates: `RELEASE_GATES.md`

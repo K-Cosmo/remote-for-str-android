@@ -6,6 +6,8 @@ The product name **Remote for STR** has been selected and implemented in the act
 
 **Release candidate note:** Code version and Android versionCode are staged at `0.3.1` / `12` for phone QA and subsequent signed-upgrade verification. **No signed 0.3.1 APK, tag or public release exists yet.** Published `0.3.0` remains ACCEPTED and unchanged. The production ID `app.strremote.android` is stable.
 
+**Privacy audit:** see `evidence/qa/2026-10-30-repository-privacy-and-doc-audit.md`. The current branch has redacted two early QA files; older release tags and `main` still retain the original text until Git-history cleanup is executed.
+
 **Development version:** 0.3.1
 **Latest public release:** 0.3.0
 **Status:** IN DEVELOPMENT / QA
