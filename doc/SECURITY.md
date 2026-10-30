@@ -67,6 +67,10 @@ The new version checker only accesses the fixed `https://api.github.com/repos/K-
 For the embedded STR WebView, static CSS is injected only into the already permitted local STR page after an exact upstream `#dev` and `#powerBtn` DOM check. No JavaScript bridge or access to other domains is added; STR controls remain unchanged.
 
 
-## Community issue feedback boundaries (BUILD-0013)
+## Optional community email feedback boundaries (BUILD-0013)
 
-The experimental “Anderes SoundTouch-Modell” shares the exact one-shot Bose provisioning process; a compatible setup-mode button sequence or matching original API must not be assumed for arbitrary hardware. All claims are user-supplied and do not directly change compatibility status. GitHub issue drafts are composed using only a strictly validated 2–60-character model label and a consciously selected success/failure outcome, and the URL is built with Android `Uri.Builder` on the fixed `github.com/K-Cosmo/str-remote-android/issues/new` path (not user-controlled redirects). No identity, SSID, credentials, LAN endpoint or diagnostics are attached. Nothing is submitted without additional user action on GitHub.
+The unknown model option uses the same single-attempt Bose WLAN transfer as the tested models, but an identical setup shortcut or interface is not presumed. User feedback never automatically changes the known-good model list.
+
+Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed STR Remote version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
+
+The offline model suggestion catalog reflects Bose's SoundTouch app support list; it is not a verified compatibility matrix for original-firmware WLAN provisioning. The outgoing draft excludes WLAN SSID/password, IP/MAC, device ID, diagnostics and other automatically collected identifiers. Users are advised not to add such information manually.

@@ -50,11 +50,21 @@ The first WebView revision with `padding-top: 0` did remove the large empty stri
 - Offer **„Anderes SoundTouch-Modell“** as an opt-in experimental choice. Reuse the existing four-step Bose Wi-Fi transport and the one-shot profile POST; do not add auto-retry or new API calls. Clearly warn that the usual Preset 2 + Volume − sequence is not yet verified for an unknown model.
 - On a terminal result, show a separate optional **Community-Feedback** screen accessible via a button, not an extra step in the four-step setup. Also expose a feedback path when entering Bose setup mode or connecting to its setup WLAN is impossible, so unsuccessful attempts are reportable.
 - Ask users **only** for their model label (2–60 safe characters) and explicit **Ja, erfolgreich** / **Nein, nicht erfolgreich** selection, with neither preselected nor inferred from the HTTP response. Avoid optional network identifiers or freeform diagnostic data.
-- Only on explicit button click, synthesize a fixed-origin GitHub Issues `/new` URL, embedding the two fields as an unsent, prefilled issue **draft**. Nothing is automatically posted. Users need a GitHub account, review the text and click GitHub's final submit themselves. Do not request, store or transmit SSID, password, IP, MAC, device ID or diagnostics.
-- GitHub Issues are enabled in `K-Cosmo/str-remote-android` (GitHub Discussions are currently disabled). Use Issues as the first community-feedback inbox.
+- On explicit button click, open a **new email draft** through Android `ACTION_SENDTO` / `mailto:` to `str-remote-android@gmx.org`. The external mail app receives the model, manually chosen result, installed STR Remote version and Android version (including API level); the user reviews and explicitly sends. No GitHub account, server integration, silent mail or analytics.
+- No SSID, password, IP/MAC, Bose device ID, firmware data, technical traces or attachment is included. An unavailable mail client produces a visible and recoverable message.
+- The local `BoseSoundTouchCatalog` contains **35 historical model suggestions** from Bose's SoundTouch-app compatibility listing, including speaker generations, Portable/Wave/Stereo JC and amplifiers, adapters, soundbars and home cinema. Android `AutoCompleteTextView` displays matches while typing; **free typing remains possible** for rare/regional models. This is a curated list, not a guaranteed complete global catalog and not proof of compatibility with the setup SoftAP.
 - Community outcomes are **claims to review**, not automatically trusted compatibility evidence. Maintainer checks reports for model/firmware ambiguity, repeats and contradictory experiences before promoting a model to „geprüft“. A failed setup or a device not found after timeout does **not** prove a model is incompatible.
 - Android form tests: normal tested models never show the feedback path; unknown models reach it both after terminal verification and after early setup failure; finish and back buttons remain correct; select neither outcome by default.
-- Unit tests: exactly three models; strict model label validation, successful/failed issue draft; no automatic device/network fields; no GitHub API token or silent submission.
+- Unit tests: exactly three wizard model types; strict input validation, successful/failed email drafts including STR Remote/Android versions; catalog uniqueness and validation, fixed mail recipient, no device/network identifiers or silent submission.
+
+## Source for the suggestion catalog
+
+Bose's official historical SoundTouch-app support list identifies families and revisions; the offline list is a best-effort transcription rather than a contract that the local Wi-Fi provisioning interface works for each device:
+
+- https://support.bose.com/s/article/vw46iii-speakertv-download-the-bose-soundtouch-app-for-compatible-products---ka08c000000hgwkaau
+- https://www.bose.com/soundtouch-trade-up
+
+User-requested update (2026-10-30): Feedback moved from GitHub Issues to the default mail program because most users do not have a GitHub account. The two reported fields remain opt-in; app and Android version metadata is added transparently and shown in the email draft. No new permissions or background transmission.
 
 ## Acceptance gates
 
@@ -63,7 +73,7 @@ The first WebView revision with `padding-top: 0` did remove the large empty stri
 - [x] Physical-device screenshot: 10 px header spacing accepted by tester (“Abstand ist jetzt super!”)
 - [ ] Physical device: STR presets, volume, speaker selector, Android status bars and back navigation still work
 - [ ] Android UI test: new-version dialog shows a correct version/link; non-newer and offline situations show none
-- [ ] Unknown-model feedback flow validated on a physical device, including failed-setup path and GitHub draft (without publishing test issues)
+- [ ] Unknown-model feedback flow validated on a physical device, including early-failure path, typing/filtering model suggestions and a prepared email (without actually sending a test message)
 - [ ] Release version is bumped to 0.3.1 or next appropriate version **only after UI acceptance**, built, signed with existing certificate, tested as update and published through release gates
 
 Development must remain separate from public `main` until acceptance.

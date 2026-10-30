@@ -147,4 +147,4 @@ The in-app GitHub release notification, optional compact STR WebView header and 
 
 ## BUILD-0013 extension — pending device acceptance
 
-The working development branch includes the unknown-model selection and privacy-scoped GitHub-Issue feedback form. The 10 CSS px STR header spacing is user-accepted visually on the supplied screenshot; the community-feedback workflow, especially its early-failure path, needs real-device testing. This is **not** part of public v0.3.0. No release or signed APK is created from this branch yet.
+The working development branch includes the unknown-model selection, offline historical SoundTouch model suggestions and an opt-in E-Mail feedback form. The 10 CSS px STR header spacing is user-accepted visually on the supplied screenshot; the community-feedback workflow, especially its early-failure path, needs real-device testing. This is **not** part of public v0.3.0. No release or signed APK is created from this branch yet.

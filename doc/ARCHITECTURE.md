@@ -76,3 +76,11 @@ The production APK shares the original `app.strremote.android` package ID to per
 - `StrWebViewHeader`: guarded, static, one-time CSS removal of upstream PWA top safe-area padding in recognized STR pages; the native frame already handles system insets. No upstream header elements or controls removed.
 
 Pending Android UI screenshot/regression verification before a separately signed next release.
+
+
+## Optional model email feedback and offline suggestions (BUILD-0013)
+
+- `BoseSoundTouchCatalog` provides a static local list of historic SoundTouch-app model names, including different generations and equipment that uses SoundTouch adapters. It is a hint-only catalog, not an approved WLAN provisioning set; the user may freely enter any other plausible model.
+- `BoseCommunityFeedback` is a pure model/yes-no/version draft composer; fixed recipient `str-remote-android@gmx.org` and strict label validation. `BoseSetupProbeActivity` creates an Android `ACTION_SENDTO` mail intent only following explicit user action.
+- STR Remote version comes from the installed package, Android version/API from the OS. Neither is sent in the background. No GitHub login, GitHub API feedback call, app-level SMTP, privileged permissions or new runtime library.
+- Test behavior with a configured email client and without one before merging. Manual review of incoming mail remains required before an additional SoundTouch model can be marked as verified.
