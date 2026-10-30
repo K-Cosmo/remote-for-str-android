@@ -54,9 +54,15 @@ internal object AppUpdateChecker {
 
         // Do not announce incomplete releases without a downloadable official APK.
         val assets = release.optJSONArray("assets") ?: return null
-        val expectedApkName = "STR-Remote-${candidate.version}.apk"
+        // New releases use the adopted product name. Accept the legacy asset
+        // format too, so existing historical release naming is not confused
+        // with an incomplete release during the migration.
+        val allowedApkNames = setOf(
+            "Remote-for-STR-${candidate.version}.apk",
+            "STR-Remote-${candidate.version}.apk"
+        )
         val foundApk = (0 until assets.length()).any { i ->
-            assets.optJSONObject(i)?.optString("name") == expectedApkName
+            assets.optJSONObject(i)?.optString("name") in allowedApkNames
         }
         return candidate.takeIf { foundApk }
     }
