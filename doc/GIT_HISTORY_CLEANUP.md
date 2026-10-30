@@ -6,7 +6,7 @@
 
 ## Motivation and scope
 
-One real private LAN host address appeared in two early Android QA Markdown files. The current development branch uses a reserved documentation placeholder instead. The older value remains reachable from main and published release tags. Only the **exact historic host address** should be replaced across all Git text objects. Do not rewrite all private IP literals indiscriminately: Bose setup endpoints, test vectors, and the SSDP multicast group are part of application logic.
+One real private LAN host address appeared in two early Android QA Markdown files. The current development branch uses a reserved documentation placeholder instead. The current `main` and PR branch Markdown has been redacted, but the older value remains reachable from historic commits in the ancestry of `main`, published release tags and possibly GitHub PR refs. Only the **exact historic host address** should be replaced across all Git text objects. Do not rewrite all private IP literals indiscriminately: Bose setup endpoints, test vectors, and the SSDP multicast group are part of application logic.
 
 The current audit did not identify an obvious committed password, token, MAC address or private key in present tracked text; that does NOT prove every historical blob or fork is clean.
 
@@ -35,7 +35,7 @@ The script requests the historical private IPv4 interactively; obtain it only fr
 
 The script creates two fresh full mirrors: ORIGINAL-full-mirror.git (sensitive offline backup) and CLEANED-preview.git (rewritten history). It also records an original ref snapshot, uses a temporary replacement file outside Git, prepares deletion of the six obsolete branches in the cleaned mirror, checks that the old address is absent from remaining branch/tag tip trees and commit diff search, and deletes the temporary mapping.
 
-**It does not push or delete any remote references.** The offline backup itself contains the old information. Keep it encrypted and away from public storage.
+**It does not push or delete any remote references. It verifies that the old text is absent from all commits reachable from rewritten refs, not merely the newest file versions.** The offline backup itself contains the old information. Keep it encrypted and away from public storage.
 
 ## Phase B — review the rewritten history
 
@@ -82,3 +82,9 @@ Do not push refs/pull/* blindly: GitHub pull-request refs are managed/read-only.
 GitHub warns that rewriting history changes all downstream commit hashes, can invalidate signed Git commits/tags, breaks PR diff views and can leave hidden references intact. An ordinary private LAN address is low-sensitivity operational information compared to an exposed credential, but the cleanup can still be performed if its consequences are accepted and coordinated. An open PR, previously verified release tags and published checksum-bearing APKs make a push without review inappropriate.
 
 **Completion definition:** all six remote obsolete branches deleted; rewritten main and active feature/release history verified; tags and signed APKs accounted for; relevant pull-request/other-clone/cache limitations recorded; final CI and device testing remain valid. Until then STR-024 stays PARTIAL.
+
+## Documentation convergence follow-up
+
+Present-day `/doc` separates normative source-of-truth, accepted release identity/gates, planned work and historical BUILD/QA evidence. The top-level `doc/README.md` now explicitly differentiates the accepted public **0.3.0** from the unsigned **0.3.1** candidate. Archival records should not be deleted or silently restated as current policies. `doc/SECURITY.md` now uses the renamed repository's direct canonical Releases API address.
+
+Preserve original release SHA-256, signer fingerprints and old commit/tag ID mappings in the sensitive offline backup. After the rewrite, write a public provenance note that previous source commit/tag IDs changed but the signed APK files and checksums did not. Do not claim old signatures or signed release provenance remains identical.

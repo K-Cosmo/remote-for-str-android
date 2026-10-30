@@ -8,7 +8,7 @@
 
 - Reviewed the present 51 tracked `doc/` text documents and 99 other tracked nonbinary/text files for apparent IP/MAC/credential assignments, embedded private keys, email addresses and local user paths. Pattern screening is heuristic, not a substitute for full credential scanning or historical blob inspection.
 - Two dated 2026-09-26 real-device QA reports contained one actual RFC1918 LAN endpoint. Their **current PR-branch content has been redacted**, replaced with reserved `192.0.2.29` documentation addresses and explanatory notes. The exact original endpoint is intentionally **not** repeated in this audit.
-- The same pre-redaction blob is still accessible from `main` and previous public release tags. Git history is **not clean**. Merely deleting unused branches cannot erase these objects.
+- The same pre-redaction blob is still accessible through **older commits reachable from `main`** and public release tags, although the current `main` tip was subsequently redacted. This dated audit originally preceded the main-tip edit. Git history is **not clean**. Merely deleting unused branches cannot erase these objects.
 - Additional RFC1918 addresses in historical Bose SoftAP test notes are documented candidate setup endpoints, not evidence of a user's household LAN identifier. Code/unit-test addresses and the fixed project support mailbox serve a functional purpose. Do **not** blindly delete all RFC1918 literals or replace protocol endpoints during a history rewrite.
 - No apparent committed passwords, private key blocks, token assignments, MAC addresses or private home directory paths were detected by this scoped **current-text** screening. This is not a claim that every historical object or binary is free of sensitive information. Embedded icon artwork was not exhaustively inspected for privacy issues.
 
@@ -27,6 +27,6 @@
 
 ## Next action: destructive operations still outstanding
 
-The connected GitHub integration supports editing, creating Git objects and moving branch refs, **but does not expose deletion of branch refs or a full mirror fetch/push/history rewrite**, and the execution environment cannot reach GitHub over Git transport. Therefore **branch deletion and complete historical purging were not claimed as performed**.
+The connected GitHub integration supports editing, creating Git objects and moving branch refs, **but does not expose deletion of branch refs or a full mirror fetch/push/history rewrite**, and the execution environment cannot reach GitHub over Git transport. GitHub-managed `refs/pull/*` are not ordinary writable Git refs. Therefore **branch deletion and complete historical purging were not claimed as performed**.
 
 Use the checked-in runbook `doc/GIT_HISTORY_CLEANUP.md` from a machine with Git, `git-filter-repo` and authenticated push access. It requires a protected offline mirror backup; a narrowly scoped replacement (never all private IPs); coordinated tag and PR updates; verifying no leaked blob is reachable; and explicit action to clear GitHub cached PR views where necessary. **Do not merge/publish while the rewrite is partly applied.**

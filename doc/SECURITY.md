@@ -60,9 +60,9 @@ Subsequent read-only LAN verification requires that the discovered device's Bose
 Bose device identity, optional LAN IP, setup-verification state and room label are stored in app-private preferences solely to represent speakers awaiting STR; they are not STR login credentials.
 
 
-## GitHub release notification (BUILD-0013, pending next signed release)
+## GitHub release notification (0.3.1, unreleased candidate)
 
-The new version checker only accesses the fixed `https://api.github.com/repos/K-Cosmo/str-remote-android/releases/latest` over TLS, with bounded read size and timeouts. Only a strictly parsed `vMAJOR.MINOR.PATCH` newer than installed is eligible; GitHub draft/prerelease versions, incomplete releases without matching named APK asset and malformed tags are ignored. Any displayed release link is synthesized from the validated tag and fixed `github.com/K-Cosmo/str-remote-android` path, not taken from arbitrary remote JSON fields. User decides whether to open the external browser. No automatic APK download, package installation, new Android permission or sensitive network data is introduced.
+The new version checker only accesses the fixed `https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest` over TLS, with bounded read size and timeouts. Only a strictly parsed `vMAJOR.MINOR.PATCH` newer than installed is eligible; GitHub draft/prerelease versions, incomplete releases without matching named APK asset and malformed tags are ignored. Any displayed release link is synthesized from the validated tag and fixed `github.com/K-Cosmo/str-remote-android` path, not taken from arbitrary remote JSON fields. User decides whether to open the external browser. No automatic APK download, package installation, new Android permission or sensitive network data is introduced.
 
 For the embedded STR WebView, static CSS is injected only into the already permitted local STR page after an exact upstream `#dev` and `#powerBtn` DOM check. No JavaScript bridge or access to other domains is added; STR controls remain unchanged.
 
@@ -77,4 +77,4 @@ The offline model suggestion catalog reflects Bose's SoundTouch app support list
 
 ## Public QA evidence and Git history
 
-Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`.
+Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`. Editing current Markdown does not remove old blobs referenced by historic commits, release tags, PR refs or forks.
