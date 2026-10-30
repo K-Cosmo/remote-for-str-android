@@ -140,3 +140,12 @@
 ## D-035 — Four distinct wizard tasks; Finish is a verified terminal-state action
 
 **Decision:** Model choice is a labeled, visibly selectable dropdown, not a radio group hidden by theme styling. Keep four explicit pages: prepare/model, connect to Bose SoftAP, select SSID from the approved popup (or manual entry), and enter masked password. An eye indicator must describe the actual *current* visibility state while the screen-reader label describes its action. A single send button starts the existing one-time Bose WLAN POST and navigates to a dedicated processing page. The result and STR handoff are separate from the processing page; a **Fertig** action is shown only when the LAN verification has produced a terminal outcome, including bounded timeouts clearly identified as unverified. Enforce this with testable state/presentation policy rather than arbitrary button enabling. Discovery retry must never resubmit WLAN credentials. Existing device listing, Wi-Fi picker, STR probing and the accepted 0.2.1 release must not be modified for this UX work.
+
+
+## D-036 — Optional app update notification; avoid WebView double safe-area padding
+
+**Decision (2026-10-30, BUILD-0013):** Adopt the successful `abfahrtsradar-android` GitHub Releases notification pattern, but keep STR Remote's platform dependencies small: a bounded HTTPS GET from `MainActivity` in a background thread plus a localized native dialog to open the official release in the external browser. Stable semantic versions only, numeric comparison, require the public release's expected APK, at most one successful check per 24 h; neither automatic install/download nor background notification service. Do not run this for the isolated debug `.poc` package.
+
+To reclaim the highlighted top spacing, do not crop the whole STR screen or hide the upstream header. The upstream phone PWA's `body > header` adds `padding-top:calc(16px + env(safe-area-inset-top))` for browser chrome while Android's native frame already consumes system-bar insets. Inject only `padding-top:0` guarded on known STR speaker/power DOM IDs. On unexpected upstream DOM or failed WebView load, do nothing; test real hardware and navigation before release. Existing signed v0.3.0 remains immutable.
+
+**Hardware validation note:** SoundTouch 10 original-firmware WLAN provisioning succeeded using the user's separate test profile; subsequent development may show a scoped verified label but must not imply general firmware/WPA compatibility. See `doc/evidence/qa/2026-10-30-st10-original-wifi-test-profile.md`.

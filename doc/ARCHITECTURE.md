@@ -66,3 +66,13 @@ The native root owns Android system-bar insets. Toolbar/device-list spacing is c
 - `DiscoveryCycleGuard`, `SpeakerTapPolicy`: JVM-testable policies for finite probing and predictable behavior of STR-enabled versus Bose-only rows.
 
 The production APK shares the original `app.strremote.android` package ID to permit upgrades from 0.2.1. Android 8/9 continue to use the existing STR features, while the Bose setup activity is only reachable from Android 10+. Browser installation guidance opens the upstream STR website.
+
+
+## Development — optional update checker and STR WebView compact header (BUILD-0013)
+
+- `AppUpdatePolicy`: JVM-testable stable version comparison for `vMAJOR.MINOR.PATCH`, release link composed solely from a fixed official GitHub host.
+- `AppUpdateChecker`: asynchronous, bounded GitHub latest-release metadata request; returns a valid candidate only with a matching APK asset; no third-party runtime service or build-time code generation. Only the original production Android package is eligible, not the separately installable `.poc` debug APK.
+- `MainActivity.checkForAppUpdate`: at most one successful request per 24 h, asynchronous, nonblocking, localized native `AlertDialog`; no service or OS notification. Network failures are invisible to STR playback.
+- `StrWebViewHeader`: guarded, static, one-time CSS removal of upstream PWA top safe-area padding in recognized STR pages; the native frame already handles system insets. No upstream header elements or controls removed.
+
+Pending Android UI screenshot/regression verification before a separately signed next release.

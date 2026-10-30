@@ -23,3 +23,8 @@ Removing application data or uninstalling STR Remote removes this app-private me
 The optional setup assistant uses the phone's Android-approved connection to the temporary Bose setup Wi-Fi. The selected SSID and password are passed directly from this app to the speaker's **original Bose firmware** over local, unencrypted HTTP. They are not sent to STR Remote servers or analytics services; STR Remote runs no such servers. The Wi-Fi password is kept only for the active attempt and is not written to preferences or logs.
 
 After the attempt, this app may locally retain a Bose device identifier, verified local IP address, setup status and user-assigned room to display the speaker separately from STR-enabled devices until STR becomes reachable. The selected Wi-Fi password is never part of that record. Other platform-level backup policies remain governed by Android settings.
+
+
+## Planned optional update check (BUILD-0013, not in released 0.3.0)
+
+Once implemented and distributed, the Android app will query GitHub's **public** `api.github.com/repos/K-Cosmo/str-remote-android/releases/latest` endpoint over HTTPS on app start, at most once per 24 h after a successful response. This requires a direct request to GitHub: GitHub can observe the requesting IP address, standard network information and the minimal `STR-Remote-Android` User-Agent. The app sends no speaker identifier, Wi-Fi SSID, password, usage analytics, account ID or device telemetry. The result is only used to show a local release notification; the last successful check timestamp is kept in app-private preferences. The app does not fetch or install APK files automatically.
