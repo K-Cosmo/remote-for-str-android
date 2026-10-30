@@ -49,9 +49,9 @@ import java.net.URL
  * BUILD-0012 / T02 — model-scoped, non-destructive SoundTouch 20 setup Wi-Fi probe.
  *
  * Uses system-consented WifiNetworkSpecifier; does not bind the process to the
- * requested Network. GET probes remain read-only. A separate opt-in debug-only B2
- * hardware mode can perform one confirmed WLAN-profile POST; no credentials are
- * saved or logged, and API acknowledgement alone is not considered provisioning success.
+ * requested Network. Read-only capability checks precede exactly one
+ * user-triggered Wi-Fi profile transfer. Credentials are never saved or
+ * logged; API acknowledgement alone does not prove Wi-Fi association.
  */
 internal class BoseSetupProbeActivity : Activity() {
     private companion object {
@@ -154,7 +154,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     /**
      * Diagnostic events deliberately exclude SSIDs, BSSIDs, MACs, IP addresses,
-     * passwords, response bodies and Android Network objects. Debug source only.
+     * passwords, response bodies and Android Network objects.
      */
     private fun trace(event: String) {
         val elapsed = if (requestStartedAtMs > 0L) {
@@ -168,8 +168,8 @@ internal class BoseSetupProbeActivity : Activity() {
                 "session=$debugSessionId event=$event elapsedMs=$elapsed api=${Build.VERSION.SDK_INT}"
             )
         }
-        // A deliberately sanitized debug-only fallback when adb logcat is
-        // unavailable. Event names never contain SSIDs, network IDs, credentials,
+        // Sanitized in-app diagnostics are available if logcat cannot be read.
+        // Event names never contain SSIDs, network IDs, credentials,
         // addresses, XML, response bodies or Android Network objects.
         synchronized(diagnosticEvents) {
             if (diagnosticEvents.size >= 70) diagnosticEvents.removeAt(0)
@@ -190,7 +190,7 @@ internal class BoseSetupProbeActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b2Mode = true // Debug-only: the guided setup is now the default.
+        b2Mode = true // The guided setup is available in the production app.
         resumeWithFreshSearch = intent.getBooleanExtra(EXTRA_RESTART_AND_SEARCH, false)
         selectedModel = BoseSetupModel.fromId(
             savedInstanceState?.getString(EXTRA_MODEL_ID)
@@ -1102,7 +1102,7 @@ internal class BoseSetupProbeActivity : Activity() {
             }
         }
         // Keep the original, device-validated immediate connection path.
-        // Retry instead recreates the entire PoC Activity after callback release.
+        // Retry recreates the setup Activity after callback release.
         activeCallback = callback
         try {
             trace("requestNetwork_call token=$token")
@@ -1167,7 +1167,7 @@ internal class BoseSetupProbeActivity : Activity() {
                 trace("http_probe_result token=$token index=${observations.size} result=${if (observation.contains("-> HTTP 200")) "http200" else "other"}")
             }
             if (Thread.currentThread().isInterrupted) return@Thread
-            // Phase B1: bounded, read-only capability inquiry. Only the names
+            // Bounded read-only capability inquiry. Only the names
             // of three known Wi-Fi-related API endpoints are surfaced; the
             // original XML body is discarded and cannot enter logs/UI.
             trace("b1_supported_urls_start token=$token")
