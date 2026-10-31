@@ -176,33 +176,41 @@
 **Evidence:** physical Android test report from 2026-10-30: email application chooser appeared, selected mail client opened, recipient was present, but subject and body were blank.
 **Observed:** the draft formatter generated the subject and body correctly but `ACTION_SENDTO` relied solely on `Intent.EXTRA_SUBJECT` and `Intent.EXTRA_TEXT`, which did not work with the tested client.
 **Action:** retain `ACTION_SENDTO` and existing extras, additionally encode `subject` and `body` in an RFC 6068 `mailto:` URI using UTF-8 percent encoding and CRLF; add unit regression coverage and explicit on-device client QA. No automatic send, SMTP, credential or device identifier collection.
-**State:** FIX IMPLEMENTED in PR #5, phone retest and exact-revision CI acceptance pending.
+**State (2026-10-31):** CLOSED in signed 0.3.1 on-device acceptance; recipient, subject and body were confirmed. The no-email-client negative case remains [NOT TESTED / deferred](https://github.com/K-Cosmo/remote-for-str-android/issues/7).
 
 ## F-028 — BUILD-0013 WebView CSS relies on private upstream STR DOM
 
 **Evidence:** upstream STR maintainer review of draft PR #5 on 2026-10-30.
 **Observed:** `body > header`, `#dev` and `#powerBtn` are internal markup selectors and not a stable extension API. The visible 10px spacing was approved on device but future STR markup can break injection.
 **Action:** discuss the desired safe-area adjustment with STR maintainer and prefer an explicit supported hook; retain compatibility regression testing until resolved. Track in STR-022.
-**State:** OPEN compatibility risk, not a blocker in the already published 0.3.0.
+**State (2026-10-31):** OPEN upstream compatibility risk in *published 0.3.1*, not a defect reproduced in the tested setup. See [STR-022](PLANNED.md#str-022--stable-str-webui-embedding-interface-proposal).
 
 ## F-029 — 0.3.0 accepted release status contradicted by legacy tail line
 
 **Evidence:** `doc/STATUS.md` header correctly identified 0.3.0 RELEASED/ACCEPTED while its final sentence still claimed 0.2.1 was the current accepted release.
 **Action:** correct the stale sentence on the ongoing feature branch without rewriting signed release evidence or historical release tags.
-**State:** DOCUMENTATION FIX IMPLEMENTED in PR #5; consistency gate pending.
+**State (2026-10-31):** CLOSED by signed 0.3.1 publication documentation and CI.
 
 ## F-030 — Early hardware QA address remains in historical Git references
 
-**State:** OPEN / security/privacy maintenance, 2026-10-30.
+**State (2026-10-31):** PARTIALLY RESOLVED: ordinary Git branches and five pre-existing tags rewritten, six stale branches retired; residual GitHub-managed old PR refs/caches remain open. See [provenance](GIT_HISTORY_PROVENANCE.md).
 
 **Evidence:** Current branch redacts one real RFC1918 host address from two dated QA Markdown files using RFC 5737 documentation addresses. The original blob remains reachable through published historical refs, including `main` and release tags. There is no observed private key, token or password in the current tracked text audit. The old host address is not itself an Internet-routable secret, but it is unnecessary public operational metadata.
 
-**Resolution:** Controlled, backed-up history rewrite across all relevant refs plus obsolete branch cleanup; review GitHub PR caches and external clones. Record exact impact on signed release source/tag identities before execution. No history purge has occurred merely by editing a branch.
+**Resolution:** Controlled, backed-up history rewrite across all relevant refs plus obsolete branch cleanup; review GitHub PR caches and external clones. Record exact impact on signed release source/tag identities before execution. This original observation preceded the executed ordinary-ref history rewrite; GitHub-managed old PR refs remain outside that rewrite.
 
 ## F-031 — Normative documentation version and process drift
 
-**State:** CONVERGED on active PR branch, CI proof pending, 2026-10-30.
+**State (2026-10-31):** PRIOR DRIFT CLOSED after main/PR CI; new F-032 records post-0.3.1 drift.
 
 **Evidence:** `doc/README.md` still described 0.2.0 as the public release; `doc/BLOCKERS.md` still described the accepted 0.2.0 baseline; governance text incorrectly said the document consistency script runs only locally although GitHub CI now invokes it. Current public signed release is 0.3.0, while 0.3.1 remains the unreleased candidate. Historical work/evidence records are intentionally not rewritten solely for outdated wording.
 
 **Resolution:** Update current-state authorities, retain historical evidence and ensure `STATUS.md` is the canonical release-state source.
+
+## F-032 — Post-0.3.1 documentation drift and misplaced public policy
+
+**Evidence (2026-10-31):** Following signed 0.3.1 publication, root README had 124 lines with implementation, release-provenance and normative security detail that belongs under `doc/`. Current normative `SECURITY.md`, `PRIVACY.md` and `ARCHITECTURE.md` called released features planned; `BLOCKERS.md` treated finished PR #5 release gates as open; `SECURITY.md` still used an obsolete repository path. Upstream CSS uses private header markup, so no supported embedding API can be claimed.
+
+**Action:** Shorten root README to public essentials, correct current canonical documents, retain dated QA/work notes and decision chronology, document upstream CSS hook only as a STR-022 proposal, and broaden current-doc link/ID consistency checks. See [dated review matrix](evidence/qa/2026-10-31-documentation-review.md).
+
+**State:** REVIEW IMPLEMENTED on documentation-only branch; final CI verification required before acceptance.
