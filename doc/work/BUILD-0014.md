@@ -19,7 +19,9 @@
 
 - [x] Exact-source CI for `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`: push run `41203798614` and PR run `41203849504`, both successful.
 - [x] User confirmed six on-device PASS scenarios against the locally signed candidate: launcher **Remote STR**; full **Remote for STR** identity and community/brand disclosures; About contact destination; SoundTouch feedback destination and prepared details; in-place 0.3.1→0.3.2 update preserving speakers/rooms; STR remote functionality and restart persistence.
-- [ ] Independently record local APK SHA-256/checksum text and original-certificate/signature/16 KiB alignment log for the exact signed artifact before publication. Those bytes/logs were not supplied for this documentation update. Do not manufacture a digest.
-- [ ] Fresh CI for acceptance-documentation commit and explicit owner merge/release approval. No tag, GitHub Release, re-signing or old-tag reassignment.
+- [x] **Tester-supplied local signed APK SHA-256 (2026-10-31):** `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec` for `Remote-for-STR-0.3.2.apk`, source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`. The digest was **reported by the user**, not independently computed from an uploaded binary.
+- [ ] Before publication, compare actual local APK and `.apk.sha256.txt` contents against this expected digest; retain original-certificate, `apksigner verify` and 16 KiB zipalign evidence. No verification transcript/binary was provided in the conversation. Do not claim this missing evidence passed.
+- [x] First post-device-acceptance documentation-only CI passed at `cd310d5defd70813930fb31fa2b8f7ea6c290b34` ([push 41208464702](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41208464702), [PR 41208468955](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41208468955)).
+- [ ] Fresh CI for the later SHA-256 evidence documentation commit and **explicit owner merge/release approval**. No tag, GitHub Release, re-signing or old-tag reassignment.
 
 Dated source: [signed handset test evidence](../evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md). Documentation-only commits after the signing-time source SHA are **not** the source of the tested APK.
