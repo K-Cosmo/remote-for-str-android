@@ -48,6 +48,34 @@ $changelogFile = Read-Required "doc/CHANGELOG.md"
 $gatesFile = Read-Required "doc/RELEASE_GATES.md"
 $plannedFile = Read-Required "doc/PLANNED.md"
 
+# Anti-harvest guard for the current checkout: never introduce an actual mailbox
+# address literal in public Markdown or Android source/resources/test fixtures.
+# This is preventive only. It cannot erase older commits or public APKs.
+# Never print a matched address in CI logs.
+$emailLiteral = [regex]'(?i)(?<![a-z0-9._%+-])[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}(?![a-z0-9.-])'
+$mailboxFiles = @()
+foreach ($part in @("doc", "specs", ".specify")) {
+    $dir = Join-Path $ProjectRoot $part
+    if (Test-Path -LiteralPath $dir -PathType Container) {
+        $mailboxFiles += @(Get-ChildItem -LiteralPath $dir -Recurse -File -Filter "*.md")
+    }
+}
+$mailboxFiles += @(Get-ChildItem -LiteralPath $ProjectRoot -File -Filter "*.md")
+$appSource = Join-Path $ProjectRoot "app/src"
+if (Test-Path -LiteralPath $appSource -PathType Container) {
+    $mailboxFiles += @(Get-ChildItem -LiteralPath $appSource -Recurse -File |
+        Where-Object { $_.Extension -in @(".kt", ".java", ".xml") })
+}
+foreach ($file in $mailboxFiles) {
+    $rows = @(Get-Content -LiteralPath $file.FullName -Encoding UTF8)
+    for ($i = 0; $i -lt $rows.Count; $i++) {
+        if ($emailLiteral.IsMatch($rows[$i])) {
+            $relative = $file.FullName.Substring($ProjectRoot.Length).TrimStart('\', '/')
+            Add-Failure "Mailbox address literal in $($relative):$($i + 1). Redact from docs; encode the one app-only recipient at runtime. No address value is logged."
+        }
+    }
+}
+
 # Privacy-hygiene guard: repository evidence/doc must use documentation test
 # ranges instead of real household or organizational LAN endpoints.
 # The sole exception is Bose's explicitly documented alternative setup host.

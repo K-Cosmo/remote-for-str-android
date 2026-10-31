@@ -2,6 +2,22 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.3.2 — RELEASED / ACCEPTED (STR-028 / BUILD-0014)
+
+- [x] Original signed/tested source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`: Android build/lint/tests plus anti-harvest doc gate CI PASS ([push](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614), [PR](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504)).
+- [x] All six signed-device test scenarios PASS (compact launcher; full independent-brand/About notice; About and SoundTouch email drafts; signed in-place 0.3.1→0.3.2 upgrade retaining devices/rooms; STR connection/controls and restart persistence).
+- [x] Tester-executed signed APK integrity: exact original APK SHA-256 `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec` and companion checksum, `apksigner verify`, original certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`, `zipalign -c -P 16 -v 4` PASS; recorded verifier output, not independently supplied APK bytes.
+- [x] Owner explicitly approved 0.3.2 merge and publication; normal [PR #9 merge](https://github.com/K-Cosmo/remote-for-str-android/pull/9) `d937365e6187fefe1d097aacb2d68b4ae8b393f6` completed and [post-merge CI](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41214563587) PASS.
+- [x] Annotated Git `v0.3.2` tag object `a076305a65f9207c2df36acfedf5ba94c6e576a9` dereferenced on GitHub and targets the **exact signed source** `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`. Git tag itself is unsigned.
+- [x] Public [v0.3.2 release](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.2) verified (GitHub ID `430018074`, 2026-10-31T15:29:07Z, non-draft, non-prerelease, `releases/latest`).
+- [x] GitHub APK asset ID `695738568`, 1,197,701 bytes: GitHub-reported digest `sha256:19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec` exactly matches original signed APK.
+- [x] Checksum file asset ID `695738567`, 92 bytes: separately published; user explicitly reports re-downloading and verifying public APK and checksum. The assistant independently checked GitHub asset metadata, not the downloaded file bytes.
+- [x] Deferred negative paths and unverified Bose configurations remain under [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7) as NOT TESTED, not implicitly accepted.
+
+The 0.3.2 release is **ACCEPTED for the verified scope**. See [publication evidence](evidence/qa/2026-10-31-release-0.3.2.md) for tag/asset provenance and verification limitations.
+
+---
+
 ## 0.3.1 — RELEASED / ACCEPTED (BUILD-0013, PR #6)
 
 - [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**

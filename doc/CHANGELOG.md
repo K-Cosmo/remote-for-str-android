@@ -2,6 +2,13 @@
 
 Only implemented changes belong here. Verification/acceptance evidence remains in `STATUS.md`, `RELEASE_GATES.md` and dated QA records.
 
+## 0.3.2 — 2026-10-31
+
+- Released `versionName=0.3.2` and `versionCode=13` as signed [GitHub v0.3.2](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.2); the existing app identity and stored speakers/rooms remain compatible with in-place upgrades.
+- Shorten the Android launcher label to **Remote STR** while keeping **Remote for STR** as project, toolbar and About identity.
+- Share one updated project-feedback recipient between WLAN model feedback and the native About link. Decode it at runtime instead of committing a complete mailbox plaintext literal; this is **not** secrecy against APK reverse engineering.
+- Redact public Markdown contact strings and add a deterministic CI anti-harvest gate for docs and Android source/resources.
+
 ## 0.3.1 — 2026-10-31
 
 - Renamed Android app to **Remote for STR** in the launcher, native Devices toolbar, German/English UI, guided SoundTouch setup explanations and community email draft version field.

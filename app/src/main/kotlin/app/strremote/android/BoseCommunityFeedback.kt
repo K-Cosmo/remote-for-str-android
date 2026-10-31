@@ -15,7 +15,21 @@ internal data class BoseCommunityEmailDraft(
 )
 
 internal object BoseCommunityFeedback {
-    const val RECIPIENT = "str-remote-android@gmx.org"
+    /**
+     * Public-source anti-harvesting measure, NOT secrecy or encryption.
+     * Decode the fixed feedback recipient only when an email draft is created.
+     * Never commit a complete mailbox address as a literal in source or docs.
+     */
+    val RECIPIENT: String by lazy {
+        val encoded = intArrayOf(
+            40, 63, 55, 53, 46, 63, 119, 60, 53, 40,
+            119, 41, 46, 40, 119, 59, 52, 62, 40, 53,
+            51, 62, 26, 61, 55, 34, 116, 53, 40, 61
+        )
+        buildString(encoded.size) {
+            encoded.forEach { append((it xor 0x5A).toChar()) }
+        }
+    }
     private const val MAX_MODEL_LENGTH = 60
 
     /**

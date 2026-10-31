@@ -34,10 +34,14 @@ The released Android app can query GitHub's **public** `api.github.com/repos/K-C
 
 On choosing “Anderes SoundTouch-Modell”, a voluntary form asks for the model name and a manually selected success/failure response (no default answer). As the user types, suggestions come from a local static historic Bose catalog; no typed text is sent to a remote service for matching. The model remains freely editable.
 
-Only after the user taps **“Feedback als E-Mail vorbereiten”** does Android open an installed email app with a draft addressed to `str-remote-android@gmx.org`. The draft includes the entered model, selected outcome, installed Remote for STR version (with a Debug qualifier when applicable), and Android version/API level. This version information is shared only as part of the draft, not uploaded silently. Users review and send the message themselves; no GitHub account is required.
+Only after the user taps **“Feedback als E-Mail vorbereiten”** does Android open an installed email app with a draft addressed to the app's fixed project-feedback mailbox. The draft includes the entered model, selected outcome, installed Remote for STR version (with a Debug qualifier when applicable), and Android version/API level. This version information is shared only as part of the draft, not uploaded silently. Users review and send the message themselves; no GitHub account is required.
 
 No Wi-Fi SSID or password, Bose device ID, IP/MAC address, diagnostic trace, attachment, Google account or any other identifier is automatically included. The user’s email client/provider and recipient process normal email metadata (including the sender address) if the user actually sends. No email address, message or selected model is saved by Remote for STR as an analytics record.
 
 ## Scope and deferred cases
 
 The public 0.3.1 release contains the update checker and voluntary feedback functionality described above. No-email-client handling, WLAN-permission refusal and network-failure paths were not included in the six positive signed-APK acceptance checks; they remain [explicitly deferred](https://github.com/K-Cosmo/remote-for-str-android/issues/7), **not verified**. See [Release status](STATUS.md) for current evidence.
+
+## In development — recipient handling for 0.3.2
+
+The next version centralizes the project-feedback recipient for both About and SoundTouch setup mail drafts, reconstructed at runtime from reversible character codes rather than committed as a complete plaintext address. This does not prevent extraction from a client APK and does not change user-controlled, explicit sending, network disclosure or the email provider's handling of ordinary sender metadata. No backend is introduced.

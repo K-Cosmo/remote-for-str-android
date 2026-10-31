@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Remote for STR</string>
+    <string name="launcher_name">Remote STR</string>
     <string name="devices">Devices</string>
     <string name="searching">Searching for SoundTouch Reborn speakers…</string>
     <string name="found_devices">Found devices</string>

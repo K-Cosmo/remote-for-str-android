@@ -98,10 +98,17 @@ For a public release:
 - current planning no longer points at an already accepted final-publication step;
 - relative links in public/root entry-point Markdown and current normative `doc/*.md` files resolve (dated work/evidence remain historical records);
 - root helper Markdown does not duplicate normative `/doc` policy;
-- canonical decision (`D-nnn`) and finding (`F-nnn`) IDs are unique.
+- canonical decision (`D-nnn`) and finding (`F-nnn`) IDs are unique;
+- no complete literal email addresses appear in any public Markdown or Android source/resource/test files; CI must not log sensitive matched values.
 
 A successful compile alone is not functional evidence.
 
 ## Private-data check before public evidence or release
 
 The CI documentation-consistency tool checks tracked `/doc/**/*.md` text for unexpected RFC1918 host addresses, allowing only the explicitly documented Bose setup alternate endpoint. New screenshots, user-supplied logs and test reports must be sanitized before committing: use RFC 5737 example addresses and remove SSIDs, MAC/serial numbers, tokens, usernames, account identifiers and unnecessary personal paths. This preventive check only covers current Markdown; historical commits require a separately coordinated `git-filter-repo` cleanup. See `GIT_HISTORY_CLEANUP.md`.
+
+## Compact launcher and feedback recipient QA (next version)
+
+- JVM-test deterministic recipient reconstruction and user-consented draft creation for both German and English, without a complete mailbox literal anywhere in source or tests.
+- Ensure native About and the SoundTouch feedback action both use the same `BoseCommunityFeedback.RECIPIENT` value.
+- Upgrade the **exact newly signed 0.3.2 APK** in place over public 0.3.1 on a device. Check launcher icon label **Remote STR**, in-app Devices title **Remote for STR**, About trademark/community disclosure, existing speakers/rooms, and actual email-client destination for both paths. Compilation or unit tests alone do not clear these device gates.
