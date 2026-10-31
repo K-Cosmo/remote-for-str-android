@@ -97,7 +97,7 @@
     <string name="bose_password_security_note">Your SoundTouch needs compatible WPA2 Wi-Fi. Bose transfers the password over unencrypted HTTP on the temporary setup network. Only use this in a trusted environment.</string>
     <string name="bose_verify_intro">Android will restore your regular Wi-Fi. We will check your SoundTouch and show the result.</string>
     <string name="bose_str_explainer">SoundTouch Reborn (STR) must be installed on the speaker before you can control it with Remote for STR. Until then, it stays grey in the device list.</string>
-    <string name="bose_feedback_email_intro">Optional: Open a draft email to str-remote-android@gmx.org with your model, result, app and Android versions. Review before sending. No Wi-Fi data.</string>
+    <string name="bose_feedback_email_intro">Optional: Open an email draft with your model, result, app and Android versions. Review the recipient and content before sending. No Wi-Fi data.</string>
     <string name="bose_cancel_confirm_message">Wi-Fi credentials may already have been sent. Check your speaker before trying again.</string>
     <string name="bose_setup_button_steps">1. Turn on the speaker.\n2. Hold preset 2 and Volume Down (−) together for about five seconds.\n3. Wait for the Wi-Fi light to turn solid amber.</string>
     <string name="bose_other_warning">Untested model: These steps may not work. If you do not see an amber Wi-Fi light or a Bose setup network, do not send Wi-Fi settings. You can report an unsuccessful attempt.</string>

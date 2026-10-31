@@ -1099,8 +1099,8 @@ class MainActivity : Activity() {
     /**
      * Native, always-accessible project identity and support information.
      * No network request occurs until the user taps an external link.
-     * The currently displayed name is provisional; keep it separate from
-     * applicationId and the signing identity during future rebranding.
+     * Public project branding stays Remote for STR, while the device launcher
+     * can use a shorter label. Preserve applicationId and signing identity.
      */
     private fun showAboutDialog() {
         @Suppress("DEPRECATION")
@@ -1147,7 +1147,7 @@ class MainActivity : Activity() {
         }
         linkButton(R.string.about_email_link) {
             val uri = Uri.parse(
-                "mailto:str-remote-android@gmx.org?subject=" +
+                "mailto:${BoseCommunityFeedback.RECIPIENT}?subject=" +
                     Uri.encode(getString(R.string.about_email_subject))
             )
             try {

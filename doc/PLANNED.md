@@ -10,6 +10,7 @@
 | **STR-025** | P1 | Request a Community Apps listing for Remote for STR; not yet confirmed |
 | **STR-023** | P1 | Set up federated community support: upstream discovery thread, app Issues and optional email |
 | **STR-027** | P1 | Run explicitly deferred negative-path QA and validate future positive release-update notification |
+| **STR-028** | P1 | Validate the new short Android launcher label, updated shared mail recipient and public-doc/source anti-harvest gate for a signed 0.3.2 candidate |
 | **STR-024** | P1 | Follow up on residual GitHub-managed historical PR references and caches |
 | **STR-026 / STR-012** | P2 | Independently collect original Bose-firmware provisioning / STR remote compatibility evidence |
 | **STR-014 / BUILD-0008** | P2 | Evaluate Gradle 9.8.x as isolated maintenance work |
@@ -42,8 +43,16 @@ Sources: [current Android override](../app/src/main/kotlin/app/strremote/android
 
 The STR maintainer's response of 2026-10-30 requested a distinct Android app name, visible unofficial/independent-community information and an understandable English WLAN assistant. **All three have been implemented and accepted for the tested 0.3.1 scope; the upstream listing itself is not yet confirmed.**
 
-Request inclusion under **Remote for STR**, with links to the [repository](https://github.com/K-Cosmo/remote-for-str-android), [releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest), and optional upstream community Show-and-tell thread. App-specific issues belong in this repository's [Issues](https://github.com/K-Cosmo/remote-for-str-android/issues); volunteers without GitHub can prepare feedback in the app for `str-remote-android@gmx.org`. No new backend or automatic telemetry is planned.
+Request inclusion under **Remote for STR**, with links to the [repository](https://github.com/K-Cosmo/remote-for-str-android), [releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest), and optional upstream community Show-and-tell thread. App-specific issues belong in this repository's [Issues](https://github.com/K-Cosmo/remote-for-str-android/issues); volunteers without GitHub can prepare optional email feedback directly in the app. No new backend or automatic telemetry is planned.
 
 ## Later candidates
 
 Play Store / F-Droid distribution, further hardware evidence and possible STR authentication changes remain separate future priorities. Preserve the original Android package ID, signing identity, stored user data and already published APKs.
+
+## STR-028 — 0.3.2 display label and feedback recipient acceptance
+
+- [x] User confirmed **Remote STR** under the Android app icon after an in-place upgrade from signed public 0.3.1. The native Devices title, About notices and public project name remain **Remote for STR**.
+- [x] User confirmed both SoundTouch model-feedback and About contact open mail drafts to the updated project mailbox on a real phone. Do not publish recipient addresses in QA logs or documentation.
+- [x] User confirmed the tested signed 0.3.2 candidate upgrades 0.3.1 in place and preserves speaker/room preferences and remote controls; Android package identity is unchanged. Tested source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`.
+- [ ] Before public release, record local signed APK SHA-256, checksum and release-signing verification, then obtain explicit merge and publication approval. Preserve all prior signed releases.
+- The reversible runtime string is an anti-harvest nuisance measure, not encryption, guaranteed secrecy or server-side spam filtering.

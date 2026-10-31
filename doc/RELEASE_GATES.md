@@ -2,6 +2,21 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.3.2 — DEVICE AND LOCAL ARTIFACT QA PASSED / NOT RELEASED (STR-028 / BUILD-0014)
+
+- [x] Source-commit CI green: Android build/lint, Kotlin JVM unit tests and current-doc anti-harvest checks at `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323` ([push 41203798614](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614), [PR 41203849504](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504)). **New documentation-only commits require their own CI check**, but do not change the already handset-tested app source.
+- [x] **Tester-confirmed on-device PASS (2026-10-31):** Android launcher shows **Remote STR**, while in-app Devices title and About/community/trademark identity remain **Remote for STR**.
+- [x] **Tester-confirmed on-device PASS:** both WLAN SoundTouch-model feedback and About contact compose voluntary mail drafts to the **new project mailbox**; reported subject/body and version information as applicable. No email is sent automatically.
+- [x] **Tester-confirmed handset update PASS:** locally signed 0.3.2 candidate installed in place over public signed 0.3.1 without wiping speakers or rooms; STR connection, playback, volume, presets and restart persistence passed. User identified tested source as `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`.
+- [x] **Tester-reported signed-APK SHA-256 (2026-10-31):** `Remote-for-STR-0.3.2.apk` = `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec`. This is the hash reported by the user for the already device-accepted local candidate from source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`; not an independent binary inspection or public GitHub asset digest.
+- [x] **Local signed artifact verification, owner-executed (2026-10-31):** Tester ran the supplied read-only `Verify-RemoteSTR-0.3.2.ps1` against the existing signed `Remote-for-STR-0.3.2.apk` and matching `.apk.sha256.txt`. The returned output states **PASS** for exact APK SHA-256 `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec`, companion checksum contents, `apksigner verify --verbose --print-certs`, historic signing certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`, and `zipalign -c -P 16 -v 4`. This is **tester-supplied local execution output**, not independent inspection of uploaded binary bytes. No rebuild, re-sign, merge, tag, upload or publication occurred.
+- [ ] **Post-publication provenance:** after explicit owner authorization and upload of the **same signed APK and checksum bytes**, compare GitHub asset SHA-256 against `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec`; do not mark this completed before a real asset exists.
+- [ ] **No owner merge or release approval yet.** Explicit approval required before a normal PR merge, creation of `v0.3.2` tag on tested source commit and public GitHub Release. After authorization, publish the *same* signed APK/checksum bytes and verify the GitHub asset digest. Preserve released 0.3.1.
+
+The six device QA cases, local APK digest and subsequent successful read-only verifier output were explicitly supplied by the tester on 2026-10-31. The local signing/checksum/alignment gate is satisfied **by tester-executed verification**; neither actual APK bytes nor a full underlying apksigner transcript were supplied for independent inspection. This does not authorize publication. See [signed candidate handset QA](evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md). Reversible mailbox encoding is **not** encryption or full anti-spam protection; the earlier published APK/source history is unaffected.
+
+---
+
 ## 0.3.1 — RELEASED / ACCEPTED (BUILD-0013, PR #6)
 
 - [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**

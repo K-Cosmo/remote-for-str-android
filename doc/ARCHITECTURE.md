@@ -81,6 +81,10 @@ The signed 0.3.1 APK passed the agreed six on-device acceptance checks and the c
 ## Release 0.3.1 — optional model email feedback and offline suggestions
 
 - `BoseSoundTouchCatalog` provides a static local list of historic SoundTouch-app model names, including different generations and equipment that uses SoundTouch adapters. It is a hint-only catalog, not an approved WLAN provisioning set; the user may freely enter any other plausible model.
-- `BoseCommunityFeedback` is a pure model/yes-no/version draft composer; fixed recipient `str-remote-android@gmx.org` and strict label validation. `BoseSetupProbeActivity` creates an Android `ACTION_SENDTO` mail intent only following explicit user action.
+- `BoseCommunityFeedback` is a pure model/yes-no/version draft composer; one centrally configured runtime-decoded feedback recipient (not a plaintext source literal) and strict label validation. `BoseSetupProbeActivity` creates an Android `ACTION_SENDTO` mail intent only following explicit user action.
 - Remote for STR version comes from the installed package, Android version/API from the OS. Neither is sent in the background. No GitHub login, GitHub API feedback call, app-level SMTP, privileged permissions or new runtime library.
 - The configured-mail-client draft flow passed the agreed on-device check. The **no-mail-client negative path** was explicitly deferred and remains [NOT TESTED](https://github.com/K-Cosmo/remote-for-str-android/issues/7). Manual review of incoming mail remains required before an additional SoundTouch model can be marked as verified.
+
+## In development — 0.3.2 compact Android launcher label and feedback recipient
+
+The public project name, native Devices toolbar and About/community attribution remain **Remote for STR**. Only the Android application/launcher label shortens to **Remote STR**. The `applicationId`, signing identity and stored user data must not change. `BoseCommunityFeedback` becomes the single recipient source for WLAN-model and About email drafts. It reconstructs the mailbox at runtime from reversible numeric character encoding solely to discourage elementary literal harvesting; it is **not encryption or a secrecy guarantee**. Real-device upgrade QA remains required for the future 0.3.2 release.

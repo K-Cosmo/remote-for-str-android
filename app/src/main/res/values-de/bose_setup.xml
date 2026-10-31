@@ -97,7 +97,7 @@
     <string name="bose_password_security_note">Die SoundTouch benötigt ein kompatibles WPA2-WLAN. Bose überträgt das Passwort im temporären Einrichtungs-WLAN per unverschlüsseltem HTTP. Verwende diese Funktion nur in einer vertrauenswürdigen Umgebung.</string>
     <string name="bose_verify_intro">Android stellt das normale WLAN wieder her. Wir prüfen die SoundTouch automatisch und zeigen danach das Ergebnis.</string>
     <string name="bose_str_explainer">Für die Steuerung mit Remote for STR muss SoundTouch Reborn (STR) noch auf dem Lautsprecher eingerichtet sein. Ohne STR bleibt das Gerät in der Liste grau.</string>
-    <string name="bose_feedback_email_intro">Freiwillig: Dein Mailprogramm öffnet einen Entwurf an str-remote-android@gmx.org mit Modell, Ergebnis, App- und Android-Version. Prüfe ihn vor dem Senden. Keine WLAN-Daten.</string>
+    <string name="bose_feedback_email_intro">Freiwillig: Dein Mailprogramm öffnet einen Entwurf mit Modell, Ergebnis, App- und Android-Version. Prüfe Empfänger und Inhalt vor dem Senden. Keine WLAN-Daten.</string>
     <string name="bose_cancel_confirm_message">Die WLAN-Daten könnten bereits gesendet worden sein. Bitte prüfe die Box vor einem weiteren Versuch.</string>
     <string name="bose_setup_button_steps">1. Schalte den Lautsprecher ein.\n2. Halte Preset 2 und Leiser (−) gleichzeitig etwa fünf Sekunden gedrückt.\n3. Warte, bis die WLAN-Anzeige dauerhaft gelb leuchtet.</string>
     <string name="bose_other_warning">Ungeprüftes Modell: Diese Schritte sind ein Versuch. Wenn keine gelbe WLAN-Anzeige oder kein Bose-Setup-WLAN erscheint, versuche keine WLAN-Übertragung. Du kannst auch einen Fehlversuch melden.</string>

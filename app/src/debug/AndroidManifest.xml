@@ -3,6 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Distinct debug application can still be installed beside the signed app. -->
     <application
-        android:label="STR Remote (Debug)"
+        android:label="Remote STR (Debug)"
         tools:replace="android:label" />
 </manifest>

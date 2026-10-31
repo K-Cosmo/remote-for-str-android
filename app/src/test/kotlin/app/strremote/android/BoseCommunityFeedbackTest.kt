@@ -10,6 +10,11 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 class BoseCommunityFeedbackTest {
+    // Construct expected behavior without a harvestable full mailbox literal.
+    private fun expectedRecipient(): String =
+        listOf("remote", "for", "str", "android").joinToString("-") +
+            "@" + "gmx" + "." + "org"
+
     @Test fun onlyExplicitModelAndOutcomeProduceDraft() {
         assertNull(BoseCommunityFeedback.compose("", BoseCommunityOutcome.SUCCESS, "0.3.0", "16 (API 36)"))
         assertNull(BoseCommunityFeedback.compose("SoundTouch 30", null, "0.3.0", "16 (API 36)"))
@@ -26,7 +31,7 @@ class BoseCommunityFeedbackTest {
             " SoundTouch Portable ", BoseCommunityOutcome.SUCCESS,
             "0.3.0 (Debug)", "16 (API 36)"
         )!!
-        assertEquals("str-remote-android@gmx.org", mail.recipient)
+        assertEquals(expectedRecipient(), mail.recipient)
         assertEquals(
             "SoundTouch WLAN-Feedback: SoundTouch Portable – Erfolgreich",
             mail.subject
@@ -78,7 +83,7 @@ class BoseCommunityFeedbackTest {
     }
 
     @Test fun fixedRecipientDoesNotRequireGitHubAccount() {
-        assertEquals("str-remote-android@gmx.org", BoseCommunityFeedback.RECIPIENT)
+        assertEquals(expectedRecipient(), BoseCommunityFeedback.RECIPIENT)
     }
 
     @Test fun mailtoUriRoundTripsGermanSubjectAndMultilineBody() {
@@ -87,7 +92,7 @@ class BoseCommunityFeedbackTest {
             "0.3.0 (Debug)", "16 (API 36)", "de"
         )!!
         val uri = BoseCommunityFeedback.mailtoUri(draft)
-        assertTrue(uri.startsWith("mailto:str-remote-android@gmx.org?subject="))
+        assertTrue(uri.startsWith("mailto:${expectedRecipient()}?subject="))
         assertTrue(uri.contains("&body="))
         assertTrue(uri.contains("%0D%0A"))
         assertFalse(uri.contains("+"))
@@ -113,4 +118,13 @@ class BoseCommunityFeedbackTest {
         assertFalse(uri.contains("ssid=", ignoreCase = true))
     }
 
+    @Test fun emailRecipientIsSharedByFeedbackAndAbout() {
+        val draft = BoseCommunityFeedback.compose(
+            "SoundTouch 10", BoseCommunityOutcome.SUCCESS,
+            "0.3.2", "16 (API 36)"
+        )!!
+        assertEquals(expectedRecipient(), draft.recipient)
+        assertTrue(BoseCommunityFeedback.mailtoUri(draft)
+            .startsWith("mailto:${expectedRecipient()}?subject="))
+    }
 }
