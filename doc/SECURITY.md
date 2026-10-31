@@ -71,10 +71,14 @@ For the embedded STR WebView, the app currently injects a narrowly scoped 10 CSS
 
 The unknown model option uses the same single-attempt Bose WLAN transfer as the tested models, but an identical setup shortcut or interface is not presumed. User feedback never automatically changes the known-good model list.
 
-Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed Remote for STR version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
+Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed project-feedback mailbox (centrally configured in app code; no plaintext address in public docs), with the installed Remote for STR version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
 
 The offline model suggestion catalog reflects Bose's SoundTouch app support list; it is not a verified compatibility matrix for original-firmware WLAN provisioning. The outgoing draft excludes WLAN SSID/password, IP/MAC, device ID, diagnostics and other automatically collected identifiers. Users are advised not to add such information manually.
 
 ## Public QA evidence and Git history
 
 Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`. Editing current Markdown does not remove old blobs referenced by historic commits, release tags, PR refs or forks.
+
+## In development — public contact anti-harvesting (0.3.2)
+
+Runtime decoding of the feedback mailbox raises the cost of elementary literal-text harvesting; it is **not encryption, an access-control boundary or a guarantee against binary reverse engineering**. The same recipient must be used for opt-in About and SoundTouch drafts, and the external email app shows the actual destination. Prevent accidental full mailbox literals in new Markdown, Kotlin and XML with CI. Earlier public commits and old signed APKs can still be inspected; these immutable historical artifacts are not retroactively concealed by the current change.
