@@ -32,7 +32,7 @@ See [Privacy](doc/PRIVACY.md), [Security](doc/SECURITY.md) and [tested compatibi
 
 **Unofficial community app.** Remote for STR is independently developed and is **not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project**. **Bose** and **SoundTouch** are trademarks of Bose Corporation.
 
-For bugs and feature requests, use [GitHub Issues](https://github.com/K-Cosmo/remote-for-str-android/issues). Feedback about an unverified SoundTouch Wi-Fi setup can also be prepared from the app and voluntarily sent to `str-remote-android@gmx.org` without a GitHub account.
+For bugs and feature requests, use [GitHub Issues](https://github.com/K-Cosmo/remote-for-str-android/issues). For unverified SoundTouch Wi-Fi setups, you can prepare an optional feedback email directly in the app and send it through your email client. No GitHub account is needed.
 
 [Project documentation](doc/README.md) · [Changelog](doc/CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
 
