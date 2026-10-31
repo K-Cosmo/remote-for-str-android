@@ -8,7 +8,7 @@ Remote for STR discovers STR-enabled SoundTouch speakers on the local network an
 
 **Current release:** 0.3.0
 
-This published version was issued as **STR Remote**. **Remote for STR 0.3.1** is prepared on the development branch, but is **not yet signed, accepted or published**.
+This published version was issued as **STR Remote**. **Remote for STR 0.3.1** has a **locally signed, device-tested release candidate** in draft PR #6 (tested source `0e6bab9d9e1b`); it is **not yet published**. Public downloads still provide v0.3.0 until the release gates are completed.
 
 **Download:** [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest)
 

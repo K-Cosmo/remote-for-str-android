@@ -2,12 +2,12 @@
 
 Only implemented changes belong here. Verification/acceptance state is tracked separately.
 
-## Unreleased (0.3.1 candidate, BUILD-0013, PR #5)
+## Unreleased (0.3.1 signed candidate, BUILD-0013, PR #6)
 
 - Renamed Android app to **Remote for STR** in the launcher, native Devices toolbar, German/English UI, guided SoundTouch setup explanations and community email draft version field.
 - Prepared the next signed release APK naming convention: `Remote-for-STR-<version>.apk`. The update checker also recognizes historical `STR-Remote-<version>.apk` assets.
 - Renamed development CI artifact to `remote-for-str-debug` and Gradle project display name to `RemoteForSTR`.
-- Staged Android `versionName=0.3.1` and `versionCode=12` on the **unreleased** branch; no signed APK or tag yet.
+- Staged Android `versionName=0.3.1` and `versionCode=12` in the unreleased development branch; the signed local candidate exists but no GitHub `v0.3.1` tag or public release exists.
 - Left production Android application ID `app.strremote.android` and original signing certificate untouched, preserving update compatibility.
 - Added documentation/version consistency verification to GitHub CI and sanitized the current files for two historical QA logs using reserved documentation IP addresses.
 - GitHub repository was renamed to `K-Cosmo/remote-for-str-android` and direct API/release/source/support URLs were updated; added a regression assertion for the canonical Releases API URL. No new signed public version or v0.3.0 artifact modification.

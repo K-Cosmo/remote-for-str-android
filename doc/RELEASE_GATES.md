@@ -7,17 +7,17 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**
 - [x] Model search for “30” and “SoundTouch”, readable suggestions and compact feedback page confirmed on phone
 - [x] Recipient, subject and body of volunteer email draft confirmed on tested email client; decorative paragraph spacing unsupported there, cosmetic/deferred
-- [x] Android CI passed on rewritten `main` (`951e38130fa5`) and rewritten feature push (`2d1e2d7bda54`); final exact-candidate CI remains a gate
-- [ ] Accept new launcher/Devices header as **Remote for STR ⓘ**, Info visible only on Devices, and native control regressions on phone
-- [ ] Validate updated GitHub Releases URL in production app and new-version notification behavior (debug app intentionally skips check)
+- [x] GitHub Actions Android build, lint and unit tests passed for **exact signed source commit** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a` ([push run 41146044403](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146044403), [PR run 41146049240](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146049240)); post-documentation PR-head CI must also pass before merge
+- [x] User-confirmed signed-APK smartphone acceptance: **Remote for STR** launcher; info icon next to title on Devices only; playback, volume, presets and connection; app restart and saved speaker/room persistence
+- [ ] Production update checker: confirm best-effort no-alert behavior against current `v0.3.0` and a future genuinely newer stable release when one exists. Strict version/asset/URL behavior is unit-tested; no fake/broken public release will be created solely to test the checker
 - [x] Rewrite normal branch/tag refs and remove six obsolete branches; preserve five signed releases. [ ] Follow up on GitHub-managed old PR refs/caches separately
-- [ ] Complete negative-case smoke tests required for release (including absence of a mail client), or explicitly defer with rationale
+- [ ] Negative-case release signoff: no installed email client, rejected Android Wi-Fi permission, network failure and untested hardware combinations were **not included** in the six passed device scenarios; explicitly accept a scoped deferral or perform targeted tests before publication. Missing-mail-app fallback exists in source but device behavior was not confirmed
 - [x] Stage candidate Android `versionName=0.3.1` / `versionCode=12` without changing `applicationId`
-- [ ] Build and sign production APK with **original** signing key, validate certificate/zipalign and `Remote-for-STR-0.3.1.apk` naming
-- [ ] Confirm exact signed artifact updates over installed v0.3.0 preserving saved speakers and rooms; approve the signed release candidate
-- [ ] Final exact-commit CI, merge approval, tagged GitHub release, published checksum verification
+- [x] User successfully ran the fail-closed local release script on clean source `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`; resulting signed `Remote-for-STR-0.3.1.apk`, SHA-256 `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`. Script requires original signing-certificate SHA-256, `apksigner verify` and 16 KiB zipalign before reporting Final artifact
+- [x] **Tester-reported PASS on the exact signed APK:** 0.3.0 → 0.3.1 in-place upgrade without uninstall, saved speakers/rooms, STR remote playback/volume/presets, DE/EN wizard, optional email draft, About icon placement, app restart/persistence. All six presented device acceptance checks were explicitly confirmed on 2026-10-31
+- [ ] Final post-documentation CI and review/merge approval, explicit negative-case/deferred-scope decision, immutable `v0.3.1` tag referencing the **tested source commit** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`, publish the **same signed APK bytes** plus existing checksum file, independently verify public asset digest
 
-This checklist is **not accepted**; public `v0.3.0` is unchanged. The user’s English-language acceptance does not automatically clear the other gates.
+The **signed 0.3.1 release candidate and six specified handset scenarios are accepted**, not yet the public release. Open negative-case signoff and publication/review gates remain. `v0.3.0` remains the latest published release. Source and artifact evidence: [2026-10-31 signed candidate](evidence/qa/2026-10-31-release-candidate-0.3.1.md). Documentation-only commits after signing do **not** change the signed source SHA or justify rebuilding a different APK.
 
 ---
 

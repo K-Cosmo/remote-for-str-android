@@ -21,15 +21,15 @@
 
 ## Next development and community integration (2026-10-30)
 
-The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to the open development PR, **not** an accepted hardware test or a public release. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
+The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to code in draft PR #6. The **six specified smartphone checks for the signed 0.3.1 candidate passed** on 2026-10-31; public release and remaining negative scenarios are still open. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
 
 | ID | Item | Priority | State |
 |---|---|---:|---|
-| STR-017 | BUILD-0013: foreground GitHub release checker + compact STR WebView header | P1 | IMPLEMENTED in PR #6; final QA, upstream CSS contract pending |
-| STR-018 | Three-model wizard, offline suggestions, optional feedback, complete German/English strings | P1 | **English WLAN wizard phone QA PASS (2026-10-30)**; model dropdown and feedback layout device tested. Negative-case/regression release QA outstanding |
-| STR-019 | E-mail compose interoperability: prefill recipient **and** subject/body across mail clients; no automatic sending | P0 | VERIFIED on tested client; extra paragraph styling not preserved on user's device — cosmetic, DEFERRED; no-mail-app path QA pending |
-| STR-020 | Public product name **Remote for STR**; UI, docs and future artifacts; preserve Android package ID and original signer | P0 | IMPLEMENTED in PR #6; GitHub repo renamed to `K-Cosmo/remote-for-str-android` and canonical URLs migrated; final CI + device/release QA pending |
-| STR-021 | Visible bilingual Info/About: independent unofficial community app, no Bose/STR affiliation, trademark notice and README | P0 | User verified About screen opens; UI adjusted so circled info sits next to title on Devices only; updated placement and EN phone QA pending |
+| STR-017 | BUILD-0013: GitHub update checker + compact STR WebView header | P1 | 0.3.1 signed candidate phone QA PASS; live future-version update alert not yet observable; upstream CSS contract pending |
+| STR-018 | Three-model wizard, offline suggestions, optional feedback, DE/EN strings | P1 | English language, dropdown, compact feedback, signed candidate wizard PASS on phone; exhaustive negative cases still untested |
+| STR-019 | Email composer: voluntary user-triggered feedback, prefill recipient/subject/body | P0 | Signed candidate phone QA PASS with installed mail client; no-client failure path untested; text spacing cosmetic/deferred |
+| STR-020 | Product branding **Remote for STR**; preserve package and original signing identity | P0 | **Signed 0.3.1 phone QA PASS**, including 0.3.0 in-place upgrade and saved devices; public release not yet issued |
+| STR-021 | Bilingual native independent-community Info/About notice next to Devices title | P0 | **Signed 0.3.1 phone QA PASS** for visible title/About placement and absence on Remote; exhaustive accessibility/negative cases not claimed |
 | STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #6 compatibility risk |
 | STR-023 | Federated community support: own STR upstream Show-and-tell thread; link to project's GitHub Discussions/Issues + optional email feedback (no GitHub account needed) | P1 | PLANNED |
 | STR-024 | Sanitize historical LAN information in Git refs, remove stale branches | P0 | **NORMAL REFS DONE:** 2 branches/5 tags rewritten, six stale branches deleted. **RESIDUAL:** GitHub-managed old PR refs and caches |
