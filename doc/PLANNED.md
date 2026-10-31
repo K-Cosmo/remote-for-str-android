@@ -46,7 +46,7 @@ Request inclusion under **Remote for STR**, with links to the [repository](https
 
 ## Google Play Console — staged distribution backlog (SEPARATE FROM RELEASED 0.3.2)
 
-The owner reported completing developer-account registration and paying Google's one-time USD 25 fee on 2026-09-26. **An STR app entry, closed testing, developer/package verification, Play approval and publication have not been confirmed; public **GitHub 0.3.2** is already released and accepted.** Keep GitHub APK releases and the Play Store rollout independently gated. See [Backlog STR-029–STR-034](BACKLOG.md#google-play-console-launch-preparation-2026-10-31-not-yet-published).
+The owner reported paying Google's one-time USD 25 developer registration fee on 2026-09-26. **A Play Console app entry, closed testing, developer/package verification, Play approval and Play Store publication are not confirmed.** The separate **GitHub release 0.3.2 is already published and accepted.** Keep GitHub APK releases and the Play Store rollout independently gated. See [Backlog STR-029–STR-034](BACKLOG.md#google-play-console-launch-preparation-2026-10-31-not-yet-published).
 
 | ID | Priority | Next action / acceptance evidence |
 |---|---|---|
