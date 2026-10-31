@@ -2,6 +2,22 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.3.3 — INTERNAL GOOGLE PLAY CANDIDATE / NOT RELEASED (BUILD-0015)
+
+- [x] Candidate versions staged: `versionName=0.3.3`, `versionCode=14` (strictly greater than GitHub 0.3.2 `versionCode=13`), production package `app.strremote.android` preserved.
+- [x] Owner reported that the Google Play **app-signing** SHA-256 matches the existing GitHub 0.3.2 signer `3c:c2:e7:27:2d:8c:2d:14:33:a5:7c:44:62:df:39:ad:fe:5e:8c:19:31:a4:a9:24:71:0c:0e:40:87:aa:1e:32`; no sensitive key material received by assistant.
+- [ ] Final candidate source-head Android CI/lint/unit/doc guard successful.
+- [x] Owner-reported **local** upload-key inspection: alias `remote-str-upload`, PrivateKeyEntry, RSA 4096 bit / SHA384withRSA, SHA-256 `41:BF:FC:71:05:A5:34:5D:F3:F2:C1:C6:5C:BB:52:59:5D:B5:04:8C:4C:80:A2:45:64:C2:86:33:31:FA:77:91`; distinct from enrolled app-signing certificate. No private-key material supplied.
+- [x] **Owner-confirmed on 2026-10-31:** Play Console **Upload key certificate** SHA-256 is exactly `41:BF:FC:71:05:A5:34:5D:F3:F2:C1:C6:5C:BB:52:59:5D:B5:04:8C:4C:80:A2:45:64:C2:86:33:31:FA:77:91`, matching the local `remote-str-upload` keystore. Evidence is user-supplied Play Console text; no Console account access, private key material or uploaded bundle was provided.
+- [ ] Release AAB built from clean exact candidate source using **upload keystore** (not debug key or GitHub distribution keystore); `jarsigner -verify -strict` PASS, signer cert fingerprint verified, AAB SHA-256 recorded, no key files/passwords committed.
+- [ ] Explicit owner authorization for **first Google Play internal-test upload**. A draft PR/this checklist does not authorize private-key export, AAB upload or track rollout.
+- [ ] Actual Play-delivered signing cert verified equal to GitHub app-signer SHA-256; in-place `0.3.2` (code 13) → Play `0.3.3` (code 14) device upgrade PASS, saved speakers/rooms and STR controls retained; no uninstall or data clear.
+- [ ] Internal-track QA feedback, privacy/security policy and store listing review accepted; separate closed-test/production-access gates still required. Do not claim the 12-testers/14-days closed-test condition has been met by internal testers.
+
+**Never** confuse Play's app-signing key (used on delivered APKs) with the separate upload key (used to sign AABs). See [BUILD-0015](work/BUILD-0015.md). Public GitHub `v0.3.2` is unaffected.
+
+---
+
 ## 0.3.2 — RELEASED / ACCEPTED (STR-028 / BUILD-0014)
 
 - [x] Original signed/tested source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`: Android build/lint/tests plus anti-harvest doc gate CI PASS ([push](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614), [PR](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504)).
