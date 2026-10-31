@@ -1,13 +1,28 @@
 # Status
 
-## Remote for STR 0.3.2 — DEVICE / LOCAL ARTIFACT QA PASSED, RELEASE PENDING
+## Remote for STR 0.3.2 — RELEASED / ACCEPTED
 
 **Development version:** 0.3.2
-**Latest public release:** 0.3.1
-**Status:** DEVICE / LOCAL ARTIFACT QA PASSED / RELEASE PENDING
+**Latest public release:** 0.3.2
+**Status:** RELEASED / ACCEPTED
 **Date:** 2026-10-31
 
-STR-028 staged the compact **Remote STR** Android launcher label (public project and Devices title remain **Remote for STR**), one updated runtime-decoded mailbox for both opt-in email actions, and the public Markdown / Android-source anti-harvesting guard. The user explicitly confirmed **all six signed 0.3.2 device-acceptance checks passed on 2026-10-31**, including in-place update over 0.3.1 with stored devices/rooms retained and functioning controls. Tested app source: `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`; source CI [push 41203798614](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614) and [PR 41203849504](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504) both passed. The user subsequently reported the exact local signed APK SHA-256 `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec` on 2026-10-31; the tester has now also supplied successful output from the read-only local artifact checker: APK and `.apk.sha256.txt` match `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec`; `apksigner verify`, the historical signer certificate `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32` and 16 KiB `zipalign` all PASS. This closes the **tester-executed local artifact gate**, but no APK bytes were uploaded for independent inspection and no public GitHub asset hash can be verified before publication. **PR #9 remains Draft/unmerged; no `v0.3.2` tag, GitHub Release or publication approval.** Production `app.strremote.android`, signing compatibility and saved speaker/room data were maintained in the tested upgrade; published **0.3.1** is unchanged. See [BUILD-0014](work/BUILD-0014.md), [dated device evidence](evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md) and [release gates](RELEASE_GATES.md).
+**Latest signed public version:** [Remote for STR 0.3.2](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.2), published **2026-10-31 at 15:29:07 UTC (16:29:07 CET)**. GitHub Release ID `430018074`, `draft=false`, `prerelease=false`, returned by `releases/latest`. The prior public v0.3.1 release remains unchanged.
+
+### Release provenance
+
+- **Exact signed and on-device-tested source:** `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`; annotated `v0.3.2` tag object `a076305a65f9207c2df36acfedf5ba94c6e576a9` resolves to that commit. The Git tag is **not cryptographically signed**; APK signing is separate.
+- **Merge and CI:** [PR #9](https://github.com/K-Cosmo/remote-for-str-android/pull/9) normal merge `d937365e6187fefe1d097aacb2d68b4ae8b393f6` preserved the tested source in history. The post-merge [main CI](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41214563587) passed.
+- **Version:** `versionName=0.3.2`, `versionCode=13`, production `applicationId=app.strremote.android` unchanged. Android launcher **Remote STR**; project name/native title **Remote for STR**.
+- **Public APK:** [`Remote-for-STR-0.3.2.apk`](https://github.com/K-Cosmo/remote-for-str-android/releases/download/v0.3.2/Remote-for-STR-0.3.2.apk), size **1,197,701 bytes**, GitHub Asset ID `695738568`, GitHub-reported SHA-256 `19b0cf987351fde11ad76c9c61d5334784dbeb5466f98e5b5602ea91549e10ec` exactly matches the local expected/tester-verified signed artifact.
+- **Companion checksum:** [`Remote-for-STR-0.3.2.apk.sha256.txt`](https://github.com/K-Cosmo/remote-for-str-android/releases/download/v0.3.2/Remote-for-STR-0.3.2.apk.sha256.txt), GitHub Asset ID `695738567`, 92 bytes, GitHub-reported asset digest `sha256:aac04dbe6760d4f7cb406b1feb429143f1fdf7b19afe45b9c854330dae97f645`. The user reports successfully re-downloading and checking both public assets.
+- **Local verification (tester-executed):** existing signed APK and checksum file PASS; `apksigner verify`, historic signer certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`, and 16 KiB `zipalign` PASS. User also confirmed all **six** device QA scenarios, including 0.3.1→0.3.2 upgrade with retained speakers/rooms and STR controls. This is user-supplied verification output, not an independent APK binary inspection by the assistant.
+- **Changes:** compact launcher label, centralized runtime-decoded optional-feedback email recipient, deterministic source/docs guard against complete mailbox literals. Address obfuscation is not encryption.
+
+**Still not certified:** no-email-app fallback, denied WLAN permission, failures/timeouts, untested Bose firmware/hardware configurations, and a live positive update-alert test against the newly released version. These remain separately tracked under [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7), not recorded as PASS.
+
+Detailed [0.3.2 publication evidence](evidence/qa/2026-10-31-release-0.3.2.md), [release gates](RELEASE_GATES.md) and [BUILD-0014](work/BUILD-0014.md).
+
 
 ## Remote for STR 0.3.1 — RELEASED / ACCEPTED
 
