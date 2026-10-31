@@ -2,6 +2,11 @@
 
 Only implemented changes belong here. Verification/acceptance evidence remains in `STATUS.md`, `RELEASE_GATES.md` and dated QA records.
 
+## Unreleased — 0.3.3 internal Play candidate
+
+- Stage Android `versionName=0.3.3`, `versionCode=14` for a first Play-internal AAB. This is a **version-only** app change relative to public GitHub `v0.3.2`; no new app features, changed signing identity or public release are claimed.
+- Retain `app.strremote.android` and require Play-delivered signing identity plus in-place user-data/STR controls QA before any broader rollout. Actual AAB creation/signing/upload remain owner-gated.
+
 ## 0.3.2 — 2026-10-31
 
 - Released `versionName=0.3.2` and `versionCode=13` as signed [GitHub v0.3.2](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.2); the existing app identity and stored speakers/rooms remain compatible with in-place upgrades.
