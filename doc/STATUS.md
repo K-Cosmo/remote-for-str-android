@@ -1,8 +1,8 @@
 # Status
 
-## Remote for STR 0.3.1 — signed, phone-accepted release candidate on PR #6
+## Remote for STR 0.3.1 — signed, phone-accepted candidate merged to main
 
-The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The user confirmed English Wi-Fi wizard device QA (2026-10-30), then accepted all six checks of the signed 0.3.1 APK on a real phone (2026-10-31). Unexercised negative cases were explicitly deferred by the owner for 0.3.1 on 2026-10-31; they remain NOT TESTED. CI/normal-merge approval was given; public release authorisation remains separate.
+The product name **Remote for STR** has been selected and merged into `main` via [PR #6](https://github.com/K-Cosmo/remote-for-str-android/pull/6), with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The user confirmed English Wi-Fi wizard device QA (2026-10-30), then accepted all six checks of the signed 0.3.1 APK on a real phone (2026-10-31). Unexercised negative cases were explicitly deferred by the owner for 0.3.1 on 2026-10-31; they remain NOT TESTED. CI/normal-merge approval was given; public release authorisation remains separate.
 
 **Signed release candidate:** `0.3.1` / `versionCode=12` was built and signed locally using `tools/build-signed-release.ps1` from **exact commit** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`. User-reported artifact: `dist/Remote-for-STR-0.3.1.apk`, SHA-256 `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`; local checksum file exists. The signed APK completed all six on-phone acceptance checks, including upgrade over the existing 0.3.0 preserving speakers/rooms. **No `v0.3.1` tag or public Release exists yet.** Published `0.3.0` remains ACCEPTED and unchanged. Production `applicationId=app.strremote.android` remains stable. See [release-candidate evidence](evidence/qa/2026-10-31-release-candidate-0.3.1.md).
 
@@ -10,10 +10,10 @@ The product name **Remote for STR** has been selected and implemented in the act
 
 **Development version:** 0.3.1
 **Latest public release:** 0.3.0
-**Status:** IN DEVELOPMENT / RELEASE PREPARATION
+**Status:** MERGED / RELEASE PREPARATION (NOT PUBLISHED)
 **Date:** 2026-10-31
 
-**Exact signed-source CI:** [push 41146044403](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146044403) and [pull request 41146049240](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146049240) both passed for `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`. PR #6 has explicit owner approval for normal merge after final green CI. Untested negative cases are scoped/deferred to follow-up, not marked as passed; public Release and tag remain separately unapproved. Later documentation-only commits are not part of the APK source.
+**Exact signed-source CI:** [push 41146044403](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146044403) and [pull request 41146049240](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146049240) both passed for `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`. PR #6 was merged normally, **without squash or rebase**, as commit `ed7652783a9752e107449a572c5b6f2dff624922` after the final branch CI passed ([push 41189139487](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41189139487), [PR 41189143522](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41189143522)). The signed-source commit `0e6bab9d9e1bcac19b542755b7a1774c69d2776a` is still in main ancestry. Deferred negative cases are tracked in [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7) and not marked as passed. Public Release and tag remain separate and unapproved. Later documentation-only commits are not part of the APK source.
 
 ## 0.3.0 release — ACCEPTED
 

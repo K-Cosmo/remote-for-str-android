@@ -5,7 +5,7 @@
 ## Current release
 
 - latest signed public release: **0.3.0** (published as *STR Remote*)
-- current unreleased development candidate: **Remote for STR 0.3.1** (draft PR #6)
+- current **merged but unpublished** signed candidate: **Remote for STR 0.3.1** (normal merge of PR #6 to main; signed source and QA recorded separately)
 - public **0.3.0** status: **RELEASED / ACCEPTED**; **0.3.1** status: **SIGNED CANDIDATE / DEVICE QA PASSED**, not publicly released
 - release status and artifact identity: `STATUS.md`
 - accepted release gates: `RELEASE_GATES.md`
