@@ -1,5 +1,10 @@
 # Decision log
 
+## Reading chronological decisions
+
+Entries preserve the **decision and reasoning from their original date**; old alternatives are not current policy. D-038 supersedes D-037's GitHub-Issue feedback channel with a voluntary email draft. D-042 finalizes the app name after D-041's alternatives, and D-043 confirms the canonical GitHub slug after D-042's proposed name. Current product policy lives in [Source of Truth](SOURCE_OF_TRUTH.md), [Architecture](ARCHITECTURE.md), and [Status](STATUS.md); open proposals in [Planned](PLANNED.md), release proof in [QA evidence](evidence/qa/2026-10-31-release-0.3.1.md).
+
+
 ## D-001 — Thin-wrapper architecture
 
 **Decision:** STR Remote remains an Android integration layer around STR's existing web UI rather than reimplementing playback/business logic.

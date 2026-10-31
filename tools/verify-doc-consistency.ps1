@@ -118,40 +118,71 @@ Write-Host "Development:      $developmentVersion"
 Write-Host "Public release:   $latestRelease"
 Write-Host "Status:           $statusState"
 
-# Check relative links in the public README only. Internal documentation remains a human-maintained corpus.
+# Validate links in public entry points and current normative doc/*.md files.
+# Dated work/evidence and specs are preserved snapshots, not current policy.
 $linkPattern = [regex]'!?\[[^\]]*\]\(([^)]+)\)'
-foreach ($match in $linkPattern.Matches($readmeFile)) {
-    $target = $match.Groups[1].Value.Trim()
-    if (-not $target) { continue }
+$entryFiles = @("README.md", "AGENTS.md", "CONTRIBUTING.md", "PRIVACY.md") |
+    ForEach-Object { Join-Path $ProjectRoot $_ }
+$normativeFiles = @(Get-ChildItem -LiteralPath $docRoot -File -Filter "*.md" |
+    ForEach-Object { $_.FullName })
+$markdownFiles = @($entryFiles) + $normativeFiles
 
-    if ($target -match '^(\S+)\s+["''].*["'']$') {
-        $target = $matches[1]
-    }
-    $target = $target.Trim('<', '>')
-
-    if ($target -match '^(?i:https?|mailto|ftp):' -or $target.StartsWith('#')) {
+foreach ($file in $markdownFiles) {
+    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {
+        Add-Failure "Missing Markdown entry point: $file"
         continue
     }
 
-    $target = ($target -split '#', 2)[0]
-    $target = ($target -split '\?', 2)[0]
-    if (-not $target) { continue }
+    $text = Get-Content -LiteralPath $file -Raw -Encoding UTF8
+    $relativeSource = $file.Substring($ProjectRoot.Length).TrimStart('\', '/')
 
-    try {
-        $target = [Uri]::UnescapeDataString($target)
-    } catch {
-        Add-Failure "Invalid README link encoding: $target"
-        continue
+    foreach ($match in $linkPattern.Matches($text)) {
+        $target = $match.Groups[1].Value.Trim()
+        if (-not $target) { continue }
+
+        if ($target -match '^(\S+)\s+["''].*["'']$') {
+            $target = $matches[1]
+        }
+        $target = $target.Trim('<', '>')
+
+        if ($target -match '^(?i:https?|mailto|ftp):' -or $target.StartsWith('#')) {
+            continue
+        }
+        $target = ($target -split '#', 2)[0]
+        $target = ($target -split '\?', 2)[0]
+        if (-not $target) { continue }
+
+        try {
+            $target = [Uri]::UnescapeDataString($target)
+        } catch {
+            Add-Failure "Invalid Markdown link encoding in $($relativeSource)"
+            continue
+        }
+
+        if ($target.StartsWith('/')) {
+            $candidate = Join-Path $ProjectRoot $target.TrimStart('/')
+        } else {
+            $candidate = Join-Path (Split-Path -Parent $file) $target
+        }
+
+        if (-not (Test-Path -LiteralPath $candidate)) {
+            Add-Failure "Broken relative Markdown link in $($relativeSource): $target"
+        }
     }
+}
 
-    if ($target.StartsWith('/')) {
-        $candidate = Join-Path $ProjectRoot $target.TrimStart('/')
-    } else {
-        $candidate = Join-Path $ProjectRoot $target
-    }
-
-    if (-not (Test-Path -LiteralPath $candidate)) {
-        Add-Failure "Broken relative README link: $target"
+# Regression guard for canonical decision and finding identifiers.
+foreach ($register in @(
+    @{ Path = "doc/DECISIONS.md"; Prefix = "D" },
+    @{ Path = "doc/FINDINGS.md"; Prefix = "F" }
+)) {
+    $document = Read-Required $register.Path
+    $pattern = '(?m)^##\s+(' + $register.Prefix + '-\d{3})\b'
+    $ids = @([regex]::Matches($document, $pattern) |
+        ForEach-Object { $_.Groups[1].Value })
+    $duplicates = @($ids | Group-Object | Where-Object { $_.Count -gt 1 })
+    foreach ($duplicate in $duplicates) {
+        Add-Failure "Duplicate register ID in $($register.Path): $($duplicate.Name)"
     }
 }
 

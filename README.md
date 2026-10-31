@@ -1,123 +1,39 @@
 # Remote for STR
 
-A small independent Android companion app for the **phone remote built into [SoundTouch Reborn (STR)](https://github.com/JRpersonal/streborn)**.
+**Remote for STR** is an independent Android companion for [SoundTouch Reborn (STR)](https://github.com/JRpersonal/streborn). It discovers STR-enabled Bose SoundTouch speakers on the local Wi-Fi network and displays STR's existing phone remote in an Android app. Playback and streaming features are provided by STR.
 
-Remote for STR discovers STR-enabled SoundTouch speakers on the local network and opens the existing STR phone interface in a dedicated Android app. It does **not** replace STR or reimplement playback controls.
-
-> Remote for STR is an independent, unofficial community app and is not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project. **Bose** and **SoundTouch** are trademarks of Bose Corporation.
-
-**Current release:** 0.3.1
-
-**Remote for STR 0.3.1** is published and is the latest signed GitHub release. Former versions were called **STR Remote**; existing users can update in place with the original application ID and signing identity. The signed 0.3.0 → 0.3.1 upgrade was accepted on a real phone with speakers and rooms preserved. Source: `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`; verified public APK SHA-256: `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`. [Download the signed APK](https://github.com/K-Cosmo/remote-for-str-android/releases/download/v0.3.1/Remote-for-STR-0.3.1.apk).
-
-**Download:** [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest)
+**Current release:** 0.3.1 · [Download signed APK](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1) · **Android 8.0+** (Android 10+ for Wi-Fi setup)
 
 ## Features
 
-- automatic discovery of STR speakers on the local network;
-- current and legacy STR discovery support;
-- automatic fallback between STR ports 8888 and 17008;
-- finite discovery with actionable no-Wi-Fi, no-device and STR-unreachable states;
-- retry after Wi-Fi becomes available without restarting the app;
-- direct Android Wi-Fi settings access from no-Wi-Fi Remote and Devices states;
-- persistent saved-speaker management with stable Online/Offline reachability presentation;
-- quick switching between discovered and saved speakers;
-- optional room assignment with built-in and custom room names;
-- clear current-speaker indication and a direct return path to the active remote;
-- manual host/IP entry as a fallback;
-- guided Bose SoundTouch Wi-Fi setup on Android 10+ before STR installation, with model-specific preparation, speaker-side WLAN selection and password entry;
-- separate Bose-only device rows while STR is not yet available, with room assignment and a direct STR installation link;
-- last-successful-speaker reconnect;
-- embedded STR phone remote;
-- German and English UI;
-- a native bilingual About dialog with independent community attribution, trademark notice, version, source and support links;
-- Android 8.0+;
-- no account, analytics, telemetry or Remote for STR backend.
+- Discover and control STR-enabled SoundTouch speakers; reconnect to the last speaker.
+- Save speakers, assign rooms, switch between devices and find offline devices.
+- Use the original STR web remote with playback, volume and presets.
+- Configure Wi-Fi on supported original-firmware SoundTouch speakers **before** installing STR (Android 10+); SoundTouch 10 and 20 Series III have been tested in specific configurations. Other models and firmware combinations are **not verified**.
+- German and English interface, with an independent-community About dialog.
+- Optional GitHub update notification and voluntary, user-initiated setup feedback by email.
 
-**Project identity:** The Android package remains `app.strremote.android` and future updates use the original signing certificate. The repository has been renamed to **`K-Cosmo/remote-for-str-android`** and all live GitHub links point directly to that canonical address. The old v0.3.0 tag and signed APK remain unchanged.
+## Installation
 
-## Requirements and installation
+1. For remote control, [install STR](https://st-reborn.de) on the speaker. If the speaker still runs original Bose firmware, the Android 10+ Wi-Fi assistant can help prepare its network connection; **it does not install STR**.
+2. Connect the phone to the same Wi-Fi network as the STR-enabled speaker.
+3. Download and install the signed APK from [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest). Existing installations update in place; do not uninstall first.
+4. Open Remote for STR and select a discovered speaker. Manual host entry is available if discovery does not find it.
 
-For remote control, Remote for STR requires **SoundTouch Reborn to be installed and running on the speaker**. Starting with version 0.3.0, the Android app can first help configure Wi-Fi on a compatible SoundTouch using its original Bose firmware. Wi-Fi setup does not install STR.
+## Privacy and safety
 
-1. Install STR using the upstream project:
-   - [STR website](https://st-reborn.de)
-   - [STR on GitHub](https://github.com/JRpersonal/streborn)
-2. Connect the Android device to the same local Wi-Fi network as the speaker.
-3. Download the published signed APK from [GitHub Releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest). The current APK is `Remote-for-STR-0.3.1.apk`; the historic v0.3.0 APK remains available as `STR-Remote-0.3.0.apk`.
-4. Install the APK and grant the local-network permission when Android requests it.
+Remote for STR does not require an account, collect analytics or operate its own backend. Speaker and room settings remain in Android's app-private storage. The optional update check contacts GitHub; sending community feedback requires opening and explicitly sending an email in your mail app.
 
-Remote for STR does not install STR, modify speaker firmware or bundle the STR agent.
+**Wi-Fi setup warning:** Original Bose firmware receives the Wi-Fi password over **unencrypted HTTP** on its temporary setup network. Use only a trusted setup environment. Remote for STR does not store or log the password.
 
-## Bose Wi-Fi setup compatibility (0.3.1)
+See [Privacy](doc/PRIVACY.md), [Security](doc/SECURITY.md) and [tested compatibility / open cases](doc/STATUS.md).
 
-- **SoundTouch 20 Series III**: provisioning flow hardware-tested on the reference original Bose firmware. Results may vary with other firmware revisions.
-- **SoundTouch 10**: original Bose firmware provisioning was subsequently **hardware-tested successfully with a separate test WLAN profile** (2026-10-30). Other WLAN/router/firmware combinations remain unverified. The current 0.3.1 app identifies the two specifically tested models as checked and other models as unverified.
-- Other SoundTouch generations are **not claimed compatible** with this provisioning flow.
-- Requires Android 10+ for Android's system-approved Bose setup network picker; the STR remote itself remains usable on Android 8/9.
+## Community and attribution
 
-**Important:** Bose's original provisioning endpoint uses **unencrypted HTTP** to transfer the Wi-Fi password over the temporary Bose setup network. Perform setup only in a trusted physical/network environment, and choose an isolated WPA2 network if you want to minimize credential exposure. Never reuse a sensitive password on an untrusted network. The app does not log or persist the entered password and does not automatically repeat a failed/uncertain transfer.
+**Unofficial community app.** Remote for STR is independently developed and is **not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project**. **Bose** and **SoundTouch** are trademarks of Bose Corporation.
 
-## Update checker and optional community feedback (0.3.1)
+For bugs and feature requests, use [GitHub Issues](https://github.com/K-Cosmo/remote-for-str-android/issues). For unverified SoundTouch Wi-Fi setups, you can prepare an optional feedback email directly in the app and send it through your email client. No GitHub account is needed.
 
-Version 0.3.1 includes a best-effort foreground GitHub Releases update check (no recurring background work). When a **newer stable version with an official APK** is published, the app can offer to open its official release page. Remote for STR does **not** silently download or install APKs. An end-to-end positive notification from a future newer release remains explicitly deferred to [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7).
+[Project documentation](doc/README.md) · [Changelog](doc/CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
 
-The redundant top padding in STR's browser/PWA header has been reduced to a user-approved 10 CSS px separation without hiding the speaker selector, power or accessibility controls.
-
-The optional “Anderes SoundTouch-Modell” feedback uses offline suggestions drawn from Bose's historical support list and an email draft to `str-remote-android@gmx.org` (model, user-reported success, Remote for STR/Android versions), with a separate email app handling voluntary sending. It does not require a GitHub account or silently transmit data.
-
-## Compatibility
-
-The released 0.3.1 baseline is:
-
-- Android 8.0+ (`minSdk 26`);
-- compile/target API 37;
-- real-device verification with a SoundTouch 10;
-- STR local web endpoints on ports 8888/17008.
-
-Additional STR-supported SoundTouch models are expected to use the same upstream interface, but they have not yet been independently verified by this project. Exact release/build evidence is kept under [`doc/evidence/qa/`](doc/evidence/qa/).
-
-## Security and privacy
-
-Remote for STR communicates directly with the speaker on the local network. The current STR web interface is served over local HTTP, so the local network is the trust boundary.
-
-The Android wrapper intentionally keeps its own scope small:
-
-- no account or cloud service;
-- no analytics or telemetry;
-- no native JavaScript bridge;
-- WebView file/content access disabled;
-- external web links open in the system browser;
-- local STR navigation is restricted to the selected speaker and expected STR ports.
-
-The app stores local speaker metadata, saved-speaker entries, optional room labels and local UI preferences in Android app-private preferences. This data is not cloud-synced.
-
-See [Security](doc/SECURITY.md) and [Privacy](doc/PRIVACY.md) for the normative details.
-
-## Relationship to SoundTouch Reborn
-
-STR owns the speaker-side agent, playback behavior, presets, services and web remote. Remote for STR only provides the Android integration around that existing local interface.
-
-If STR changes discovery, ports, authentication or its local web/API contract, Remote for STR may require a compatibility update.
-
-## Project documentation
-
-The normative project documentation lives under [`/doc`](doc/README.md). In particular:
-
-- [Current status](doc/STATUS.md)
-- [Architecture](doc/ARCHITECTURE.md)
-- [Android/build compatibility](doc/ANDROID_COMPATIBILITY.md)
-- [Changelog](doc/CHANGELOG.md)
-- [Contributing](doc/CONTRIBUTING.md)
-
-Root-level helper files do not define a second policy/documentation set.
-
-Development is AI-assisted for implementation, debugging, review and documentation. The Android app itself contains no AI/LLM runtime and does not send user data to an AI service.
-
-## License
-
-Remote for STR is distributed under the [MIT License](LICENSE).
-
-## Wizard languages (0.3.1)
-
-The published Wi-Fi setup assistant is localized for **German and English**, including its warnings and consent steps. Model autocomplete remains offline; suggestions have a readable, bounded popup, and feedback email wording follows the app language. Other Bose firmware/model combinations and the untested negative cases remain tracked in [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7).
+Development is AI-assisted; the published Android app has **no AI runtime or AI-service data path**.
