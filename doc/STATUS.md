@@ -1,5 +1,20 @@
 # Status
 
+## Remote for STR 0.3.3 — INTERNAL PLAY CANDIDATE / NOT UPLOADED
+
+**Development version:** 0.3.3
+**Latest public release:** 0.3.2
+**Status:** IMPLEMENTED / TEST PENDING
+**Date:** 2026-10-31
+
+**Candidate only, not a published GitHub or Google Play release.** This branch prepares a minimal internal-Play test version `0.3.3` / `versionCode=14` from the public 0.3.2 source. It preserves `applicationId=app.strremote.android`, the existing user data layout, launcher identity and STR functionality. The only application source change is Android version metadata; no signing key, Google Play upload or rollout is included.
+
+**Owner-reported Google Play setup evidence (2026-10-31):** the Play Console reports that its **app-signing certificate SHA-256** exactly matches the historical signed GitHub APK certificate `3c:c2:e7:27:2d:8c:2d:14:33:a5:7c:44:62:df:39:ad:fe:5e:8c:19:31:a4:a9:24:71:0c:0e:40:87:aa:1e:32`, after using Google's PEPK own-key enrollment. This establishes the expected app-signing certificate identity **by owner report**, but not yet the registered **separate upload certificate**, an AAB signature, a Play-delivered APK or a working on-device GitHub→Play update.
+
+**Remaining release gates:** register/confirm distinct upload certificate in Play Console; build a release AAB locally with the **separate upload key**; verify `jarsigner` and the embedded AAB uploader certificate; record AAB digest and tested source commit; upload only following the owner's **separate explicit Play-track approval**; confirm Play App Signing certificate on the actual installed package and signed in-place update preserving devices/rooms; perform smoke tests before considering closed tests. No production access or approval is implied.
+
+Previous public release 0.3.2 remains unchanged. Historical 0.3.2 evidence below is maintained intact. See [BUILD-0015](work/BUILD-0015.md) and [0.3.3 candidate gates](RELEASE_GATES.md).
+
 ## Remote for STR 0.3.2 — RELEASED / ACCEPTED
 
 **Development version:** 0.3.2
