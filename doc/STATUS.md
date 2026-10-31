@@ -1,13 +1,13 @@
 # Status
 
-## Remote for STR 0.3.2 — IN DEVELOPMENT / QA
+## Remote for STR 0.3.2 — DEVICE QA PASSED / RELEASE PENDING
 
 **Development version:** 0.3.2
 **Latest public release:** 0.3.1
-**Status:** IN DEVELOPMENT / QA
+**Status:** DEVICE QA PASSED / RELEASE PENDING
 **Date:** 2026-10-31
 
-STR-028 stages the compact **Remote STR** Android launcher label (project and Devices title remain **Remote for STR**), a single updated and runtime-decoded feedback mailbox for both opt-in email actions, and a public Markdown / Android-source anti-harvesting regression check. The `app.strremote.android` production package, signing identity and user preferences remain unchanged. No signed 0.3.2 APK, phone-upgrade acceptance or new GitHub release exists yet. The currently published **0.3.1** APK is unchanged. See [BUILD-0014](work/BUILD-0014.md) and [planned QA](PLANNED.md#str-028--032-display-label-and-feedback-recipient-acceptance).
+STR-028 staged the compact **Remote STR** Android launcher label (public project and Devices title remain **Remote for STR**), one updated runtime-decoded mailbox for both opt-in email actions, and the public Markdown / Android-source anti-harvesting guard. The user explicitly confirmed **all six signed 0.3.2 device-acceptance checks passed on 2026-10-31**, including in-place update over 0.3.1 with stored devices/rooms retained and functioning controls. Tested app source: `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`; source CI [push 41203798614](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614) and [PR 41203849504](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504) both passed. The user has **not supplied the local signed APK SHA-256 or signing-script transcript** for GitHub publication provenance. **PR #9 remains Draft/unmerged; no `v0.3.2` tag, GitHub Release or publication approval.** Production `app.strremote.android`, signing compatibility and saved speaker/room data were maintained in the tested upgrade; published **0.3.1** is unchanged. See [BUILD-0014](work/BUILD-0014.md), [dated device evidence](evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md) and [release gates](RELEASE_GATES.md).
 
 ## Remote for STR 0.3.1 — RELEASED / ACCEPTED
 

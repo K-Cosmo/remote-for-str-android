@@ -2,15 +2,16 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
-## 0.3.2 — OPEN / NOT RELEASED (STR-028 / BUILD-0014)
+## 0.3.2 — SIGNED DEVICE QA PASSED / NOT RELEASED (STR-028 / BUILD-0014)
 
-- [ ] Green final PR CI for documentation anti-harvesting, JVM tests, Android build/lint; verify production package/signature invariants.
-- [ ] On-device launcher label **Remote STR** while in-app title, About and trademark/community text remain **Remote for STR**.
-- [ ] Both SoundTouch-model feedback and About contact compose voluntary email drafts to the updated destination, with appropriate localized subject/body where applicable.
-- [ ] Sign exact committed source with the original key; verify APK SHA-256, signature and 16 KiB alignment; test *in-place upgrade from signed 0.3.1* and saved speaker/room persistence.
-- [ ] Owner review, explicit merge and publication approval, annotated tag on signing source, exact public APK/checksum verification. Preserve published 0.3.1 assets.
+- [x] Source-commit CI green: Android build/lint, Kotlin JVM unit tests and current-doc anti-harvest checks at `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323` ([push 41203798614](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203798614), [PR 41203849504](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41203849504)). **New documentation-only commits require their own CI check**, but do not change the already handset-tested app source.
+- [x] **Tester-confirmed on-device PASS (2026-10-31):** Android launcher shows **Remote STR**, while in-app Devices title and About/community/trademark identity remain **Remote for STR**.
+- [x] **Tester-confirmed on-device PASS:** both WLAN SoundTouch-model feedback and About contact compose voluntary mail drafts to the **new project mailbox**; reported subject/body and version information as applicable. No email is sent automatically.
+- [x] **Tester-confirmed handset update PASS:** locally signed 0.3.2 candidate installed in place over public signed 0.3.1 without wiping speakers or rooms; STR connection, playback, volume, presets and restart persistence passed. User identified tested source as `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`.
+- [ ] **Publication provenance still required:** capture local 0.3.2 APK SHA-256 and exact checksum-file contents, plus signing/certificate and post-sign 16 KiB alignment verification output from the local release script. Neither the binary nor its digest/signing transcript was provided to the GitHub-side documentation update. Never claim an independently verified artifact hash or build a different APK under the same tested-source identity without renewed acceptance.
+- [ ] **No owner merge or release approval yet.** Explicit approval required before a normal PR merge, creation of `v0.3.2` tag on tested source commit and public GitHub Release. After authorization, publish the *same* signed APK/checksum bytes and verify the GitHub asset digest. Preserve released 0.3.1.
 
-The reversible mailbox encoding is **not** encryption or full anti-spam protection. The earlier publicly released APK/source history is unaffected.
+The six device QA cases were explicitly accepted by the user on 2026-10-31. They do not constitute raw ADB/log/signature evidence or public release authorization. See [signed candidate handset QA](evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md). Reversible mailbox encoding is **not** encryption or full anti-spam protection; the earlier published APK/source history is unaffected.
 
 ---
 

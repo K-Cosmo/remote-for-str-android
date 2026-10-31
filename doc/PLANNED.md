@@ -51,7 +51,8 @@ Play Store / F-Droid distribution, further hardware evidence and possible STR au
 
 ## STR-028 — 0.3.2 display label and feedback recipient acceptance
 
-- Confirm **Remote STR** under the Android app icon after an in-place upgrade from signed public 0.3.1. The native Devices title, About notices and public project name remain **Remote for STR**.
-- Test both SoundTouch model-feedback and About contact actions on a real device, verifying their drafts go to the updated project mailbox. Never publish recipient addresses in QA logs or documentation.
-- Original app ID, signing key, saved speakers/rooms and existing v0.3.1 signed APK must be preserved. Build/sign 0.3.2 from a clean exact source commit only after PR review.
+- [x] User confirmed **Remote STR** under the Android app icon after an in-place upgrade from signed public 0.3.1. The native Devices title, About notices and public project name remain **Remote for STR**.
+- [x] User confirmed both SoundTouch model-feedback and About contact open mail drafts to the updated project mailbox on a real phone. Do not publish recipient addresses in QA logs or documentation.
+- [x] User confirmed the tested signed 0.3.2 candidate upgrades 0.3.1 in place and preserves speaker/room preferences and remote controls; Android package identity is unchanged. Tested source `547fe4e52935bac03ddb0c3eb1f1ca4c7e517323`.
+- [ ] Before public release, record local signed APK SHA-256, checksum and release-signing verification, then obtain explicit merge and publication approval. Preserve all prior signed releases.
 - The reversible runtime string is an anti-harvest nuisance measure, not encryption, guaranteed secrecy or server-side spam filtering.
