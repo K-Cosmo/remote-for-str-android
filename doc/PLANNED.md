@@ -44,6 +44,21 @@ The STR maintainer's response of 2026-10-30 requested a distinct Android app nam
 
 Request inclusion under **Remote for STR**, with links to the [repository](https://github.com/K-Cosmo/remote-for-str-android), [releases](https://github.com/K-Cosmo/remote-for-str-android/releases/latest), and optional upstream community Show-and-tell thread. App-specific issues belong in this repository's [Issues](https://github.com/K-Cosmo/remote-for-str-android/issues); volunteers without GitHub can prepare feedback in the app for `str-remote-android@gmx.org`. No new backend or automatic telemetry is planned.
 
+## Google Play Console — staged distribution backlog (NOT a 0.3.2 release gate)
+
+The owner reported completing developer-account registration and paying Google's one-time USD 25 fee on 2026-09-26. **An STR app entry, closed testing, developer/package verification, Play approval and publication have not been confirmed.** Keep GitHub APK releases and the Play Store rollout independently gated. See [Backlog STR-029–STR-034](BACKLOG.md#google-play-console-launch-preparation-2026-10-31-not-yet-published).
+
+| ID | Priority | Next action / acceptance evidence |
+|---|---|---|
+| **STR-029** | P1 | Verify developer account / existing-package ownership; create Play Console entry for unchanged `app.strremote.android`; capture dashboard status without exposing account identifiers |
+| **STR-030** | P0 for Play | Decide and validate Play App Signing with **the existing GitHub release-signing identity**. A Play-generated different signing certificate can prevent an in-place update of a sideloaded GitHub APK. Prepare AAB/upload-key workflow and test an actual channel transition without data loss before first rollout |
+| **STR-031** | P1 | Complete bilingual store listing, imagery, support, privacy/Data safety and declarations. State that STR is required for remote functions and the app is independent/unofficial. Avoid publishing complete mailbox literals in repo docs/source; evaluate Play's necessarily public support-contact field separately |
+| **STR-032** | P1 | Invite voluntary testers through STR community and GitHub once the scope is ready, without asserting upstream endorsement. If a post-2023 personal developer account, run Google's qualifying closed test with at least **12 continuously enrolled testers for 14 days**, record real feedback, and request production eligibility only when criteria are met |
+| **STR-033** | P1 | Specify channel-aware update behavior, signed AAB/APK artifact provenance and monotonically increasing versionCode; avoid sending Play-managed installs blindly to a GitHub APK download |
+| **STR-034** | P1 | Gather applicable hardware and negative-path acceptance (STR-027), comply with Google review/permissions/API policy, and obtain a **separate explicit approval** before any Play testing upload or production rollout |
+
+Do not treat a paid Play developer registration as a created or approved app. Play app-signing choice, package ownership and public support-contact disclosure are **open decisions**, not silently authorized architectural changes. Google's target-API requirement for new mobile apps since 2026-08-31 is API 36+; the current project target is API 37, but Play submission acceptance still requires review of the actual AAB and Console policy forms. [Official Play testing rules](https://support.google.com/googleplay/android-developer/answer/14151465) · [Signing guidance](https://developer.android.com/studio/publish/app-signing) · [2026 developer verification](https://developer.android.com/developer-verification/guides/pdf-guides/pdc-guide.pdf) · [API rules](https://support.google.com/googleplay/android-developer/answer/11926878).
+
 ## Later candidates
 
-Play Store / F-Droid distribution, further hardware evidence and possible STR authentication changes remain separate future priorities. Preserve the original Android package ID, signing identity, stored user data and already published APKs.
+F-Droid distribution, further hardware evidence and possible STR authentication changes remain separate future priorities. Preserve the original Android package ID, signing identity, stored user data and already published APKs.
