@@ -29,9 +29,9 @@ keytool -printcert -file "$UploadCert"
 if ($LASTEXITCODE -ne 0) { throw "Cannot read public upload certificate." }
 ```
 
-Only compare/share the **public** SHA-256 fingerprints, not passwords or keys. If the upload certificate is not yet enrolled with Google, follow Google's **upload-certificate registration** flow first; do not upload a bundle assuming enrollment succeeded.
+Only compare/share the **public** SHA-256 fingerprints, not passwords or keys. The owner already confirmed the matching registered Play upload fingerprint above; repeat the check if the upload key or Play configuration changes.
 
-## Local candidate build (after separate approval)
+## Local candidate AAB build (offline preparation; Play upload requires separate owner approval)
 
 1. Fetch this PR branch at its approved exact source commit. Confirm the clean working tree and `app/build.gradle.kts`: `applicationId=app.strremote.android`, `versionName=0.3.3`, `versionCode=14`. Confirm GitHub CI for this exact commit passed.
 2. In **Android Studio → Build → Generate Signed Bundle / APK → Android App Bundle → app → Next**, select the **dedicated upload-keystore**, its upload alias, and **release** build type. Let Android Studio ask for key/store passwords locally. **Never** put passwords into tracked `build.gradle.kts`, `gradle.properties`, project files or command arguments.
@@ -40,14 +40,19 @@ Only compare/share the **public** SHA-256 fingerprints, not passwords or keys. I
 
 ```powershell
 $Aab = "C:\path\outside-repository\app-release.aab"
-jarsigner -verify -strict -verbose "$Aab"
+jarsigner -verify -strict -verbose -keystore "$UploadKeystore" "$Aab"
 if ($LASTEXITCODE -ne 0) { throw "AAB JAR-signature verification failed." }
 
 keytool -printcert -jarfile "$Aab"
 if ($LASTEXITCODE -ne 0) { throw "Cannot read AAB signer certificate." }
 
 Get-FileHash -Algorithm SHA256 -LiteralPath "$Aab"
+
+# Compare the public signer SHA-256 printed above with the
+# registered Google Play UPLOAD certificate, never with the APP signer.
 ```
+
+**Important:** the upload certificate is self-signed. Without `-keystore "$UploadKeystore"`, `jarsigner -verify -strict` may reject its *trust chain* even when the AAB's signature is intact. Providing the previously verified local upload-keystore allows an accurate strict check. This was reproduced with a separate temporary self-signed test key, not the owner's private key.
 
 5. **STOP** if the AAB signer SHA-256 does not match the **registered Play upload certificate**, if `versionCode` is not 14, if the bundle is unsigned, if tests fail, or if there is no explicit owner approval to upload.
 6. Following approval, create the Play **internal test** using the signed AAB and opt in the authorized tester(s). Do not confuse internal testing with the 12-person/14-day qualifying **closed** test; the two tracks have separate eligibility and enrollment.
