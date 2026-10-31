@@ -21,7 +21,7 @@
 
 ## Post-0.3.1 development and community integration (2026-10-31)
 
-The historical public release `v0.3.0` remains unchanged. **Remote for STR `v0.3.1` is now the latest published signed release**, with exactly matching APK digest and six device checks passed. PR #6 was merged normally with green CI. The owner explicitly deferred untested negative cases to STR-027: they are **not certified**. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
+The historical public release `v0.3.0` remains unchanged. **Remote for STR `v0.3.2` is now the latest published signed release**, with exactly matching APK digest and six device checks passed. PR #6 was merged normally with green CI. The owner explicitly deferred untested negative cases to STR-027: they are **not certified**. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
 
 | ID | Item | Priority | State |
 |---|---|---:|---|
@@ -36,6 +36,6 @@ The historical public release `v0.3.0` remains unchanged. **Remote for STR `v0.3
 | STR-025 | Request listing on upstream STR Community Apps page after brand, About notice, EN wizard QA | P1 | **READY TO REQUEST**; naming/Info/EN release requirements met in v0.3.1. Actual upstream listing not yet confirmed |
 | STR-026 | Extend **original Bose-firmware WLAN provisioning** evidence for untested SoundTouch models; crowd reports remain unverified | P2 | BACKLOG; distinct from STR remote/control compatibility (STR-012) |
 | STR-027 | [Follow-up QA after 0.3.1](https://github.com/K-Cosmo/remote-for-str-android/issues/7): absent email app, denied Wi-Fi permission, failure/timeout recovery, unverified Bose/router/firmware combinations and future-version update alert | P1 | **OWNER-APPROVED DEFERRED from 0.3.1 on 2026-10-31; NOT TESTED**. Track explicitly and avoid general compatibility claims |
-| STR-028 | Android display label **Remote STR**, centralized runtime-decoded feedback recipient and CI mailbox-harvesting guard | P1 | **SIGNED CANDIDATE PHONE QA PASS (6/6)** and exact-source CI green 2026-10-31; APK hash/signing transcript not yet recorded; PR #9 Draft/unmerged and public release not authorized |
+| STR-028 | Android display label **Remote STR**, centralized runtime-decoded feedback recipient and CI mailbox-harvesting guard | P1 | **RELEASED / ACCEPTED in 0.3.2**; 6/6 signed-device PASS, local artifact integrity PASS, PR #9 merge, CI and public APK checksum PASS |
 
 Do not conflate optional user-reported Wi-Fi feedback with certified compatibility. Do not rename the Android `applicationId`, reset app data, alter published release tags or add automatic email/network telemetry.
