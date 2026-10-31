@@ -96,8 +96,9 @@ For a public release:
 - README Current release equals `doc/STATUS.md` Latest public release;
 - accepted releases have a matching `doc/CHANGELOG.md` heading and no unchecked release gates;
 - current planning no longer points at an already accepted final-publication step;
-- relative Markdown links resolve inside the repository;
-- root helper Markdown does not duplicate normative `/doc` policy.
+- relative links in public/root entry-point Markdown and current normative `doc/*.md` files resolve (dated work/evidence remain historical records);
+- root helper Markdown does not duplicate normative `/doc` policy;
+- canonical decision (`D-nnn`) and finding (`F-nnn`) IDs are unique.
 
 A successful compile alone is not functional evidence.
 

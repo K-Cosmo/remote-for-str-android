@@ -62,7 +62,8 @@ It verifies at minimum:
 - the latest public release has a corresponding `/doc/CHANGELOG.md` heading;
 - an ACCEPTED release has no unchecked entries in `RELEASE_GATES.md`;
 - an ACCEPTED release is no longer described as the current final-publication step in `PLANNED.md`;
-- relative Markdown links resolve inside the repository.
+- relative Markdown links in root public entry points and current `doc/*.md` authorities resolve; dated work/QA remain historical snapshots.
+- decision and finding IDs are unique in their respective canonical registers.
 
 The script runs locally **and in GitHub Android CI** before compilation. CI verifies version/release metadata and the Android build; human review is still required for semantic drift and private-data risks that cannot be detected deterministically.
 
