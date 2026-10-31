@@ -32,13 +32,13 @@ Evidence scope: **tester-confirmed checks**, not automatically captured device l
 - Upstream STR WebUI CSS selector stability is not a guaranteed API; coordinate a more robust safe-area hook as separate STR-022.
 - Java/Kotlin lint warnings are not claimed to have all been eliminated; CI and the local final build completed without blocking lint errors.
 
-These are scoped residual risks, **not test PASS entries**. Before public release explicitly accept a limited deferral or carry out additional testing; do not invent evidence.
+These are scoped residual risks, **not test PASS entries**. **2026-10-31 owner decision:** explicitly defer the untested special/negative cases for 0.3.1 (no mail client, denied WLAN permission, connectivity failures, unverified hardware) and retain a tracked follow-up in STR-027; the future-positive update-checker flow also remains unobserved until a newer genuine public release exists. This permits a scoped release-candidate signoff, **not** a claim of passing these scenarios.
 
 ## Publication handoff — preserve the exact signed bytes
 
 1. Confirm the local APK and checksum-file content match `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`; never sign a new variant under the same published version without repeating acceptance.
 2. Review the remaining negative-case deferrals; keep developer-facing details in [release gates](../../RELEASE_GATES.md).
-3. After documentation-only reconciliation commit(s), check GitHub PR #6 CI and obtain explicit merge/release approval. If merging, use a **normal merge commit** (no squash or rebase), preserving the tested source commit in main ancestry.
+3. After documentation-only reconciliation commit(s), check GitHub PR #6 CI; **the owner explicitly approved a normal merge on 2026-10-31, but public release was not separately authorised**. If merging, use a **normal merge commit** (no squash or rebase), preserving the tested source commit in main ancestry.
 4. Create immutable annotated tag `v0.3.1` pointing to the **exact tested signed-source commit** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a` (not the later docs-only head or merge commit), and verify the tag target.
 5. Publish GitHub Release `v0.3.1` titled **Remote for STR 0.3.1**, upload **exactly** `Remote-for-STR-0.3.1.apk` and its `Remote-for-STR-0.3.1.apk.sha256.txt`; verify GitHub's returned APK SHA-256 matches `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759` before announcing the release.
 6. Only after verified publication update root README Current release, `doc/STATUS.md` Latest public release, `doc/CHANGELOG.md` release heading and final gate state. The public release's tag source must remain pinned to the signing-time commit. GitHub-managed old PR refs remain a separate privacy follow-up.
@@ -50,3 +50,7 @@ These are scoped residual risks, **not test PASS entries**. Before public releas
 Highlights: streamlined STR remote header, bilingual independent-community About screen, German/English SoundTouch WLAN assistant with model selection and voluntary user-triggered email feedback, and an optional GitHub Releases update notification. No account, analytics, automatic feedback or automatic APK installation is introduced.
 
 Compatibility: Android 8+ for the remote; Android 10+ for SoundTouch WLAN onboarding. Original Bose firmware/model support is limited to the explicitly documented hardware tests. The app remains unofficial and independent from Bose and the upstream STR project.
+
+## Owner decision — scoped deferral and merge authorization (2026-10-31)
+
+The project owner explicitly agreed to defer non-tested edge cases such as absent mail handler and denied setup-WLAN permission for 0.3.1, and authorized **CI and normal merge** of PR #6. This decision is limited to development integration; it does **not** attest edge-case test success and does **not** authorize a public v0.3.1 GitHub Release or the tagging/upload of private signed assets. Final documentation-only commit CI must pass first. Track the deferred cases and future update-checker positive path in STR-027. The accepted signing-time source remains `0e6bab9d9e1bcac19b542755b7a1774c69d2776a` and the signed APK digest remains `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`.
