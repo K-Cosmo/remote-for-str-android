@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">STR Remote</string>
+    <string name="app_name">Remote for STR</string>
     <string name="devices">Devices</string>
     <string name="searching">Searching for SoundTouch Reborn speakers…</string>
     <string name="found_devices">Found devices</string>
@@ -31,7 +31,7 @@
     <string name="str_unreachable">A speaker was discovered, but its SoundTouch Reborn web remote is not reachable. Check that STR is installed and running.</string>
     <string name="saved_unreachable">The saved speaker is currently not reachable. Check Wi-Fi and SoundTouch Reborn, then try again.</string>
     <string name="permission_title">Local network access required</string>
-    <string name="permission_body">STR Remote needs local network access to discover and open the web remote served by your speaker.</string>
+    <string name="permission_body">Remote for STR needs local network access to discover and open the web remote served by your speaker.</string>
     <string name="grant_permission">Allow local network</string>
     <string name="discovery_failed">Discovery failed (error %1$d).</string>
     <string name="manual_invalid">Please enter a valid host name or IP address.</string>
@@ -75,4 +75,20 @@
     <string name="selected_speaker_room">%1$s · %2$s</string>
     <string name="speaker_room_title">%1$s · %2$s</string>
     <string name="speaker_management_hide">Hide this hint</string>
+    <string name="update_available_title">Remote for STR update available</string>
+    <string name="update_available_message">Version %1$s is available on GitHub. Open the release page to download and install the update?</string>
+    <string name="update_view_release">View release</string>
+    <string name="update_later">Later</string>
+    <string name="about_action">About this app</string>
+    <string name="about_title">About this app</string>
+    <string name="about_version_format">App version: %1$s</string>
+    <string name="about_community_notice">An independent, unofficial community app for SoundTouch Reborn. This app is not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn (STR) project.</string>
+    <string name="about_trademark_notice">Bose and SoundTouch are trademarks of Bose Corporation.</string>
+    <string name="about_support_heading">Source code and support</string>
+    <string name="about_source_link">Source code on GitHub</string>
+    <string name="about_issues_link">Report a bug or suggest a feature (GitHub)</string>
+    <string name="about_email_link">Contact by email (no GitHub account needed)</string>
+    <string name="about_email_subject">Android community app feedback</string>
+    <string name="about_no_email_client">No email app found.</string>
+    <string name="about_close">Close</string>
 </resources>

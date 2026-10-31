@@ -1,11 +1,12 @@
 # Project documentation
 
-`/doc` is the single normative source of truth for STR Remote. Root-level files may provide public or tooling entry points, but they must not duplicate normative project rules.
+`/doc` is the single normative source of truth for Remote for STR. Root-level files may provide public or tooling entry points, but they must not duplicate normative project rules.
 
 ## Current release
 
-- public release: **0.2.0**
-- status: **RELEASED — ACCEPTED**
+- latest signed public release: **0.3.0** (published as *STR Remote*)
+- current unreleased development candidate: **Remote for STR 0.3.1** (draft PR #6)
+- public **0.3.0** status: **RELEASED / ACCEPTED**; **0.3.1** status: **SIGNED CANDIDATE / DEVICE QA PASSED**, not publicly released
 - release status and artifact identity: `STATUS.md`
 - accepted release gates: `RELEASE_GATES.md`
 - implemented release history: `CHANGELOG.md`
@@ -27,13 +28,15 @@
 - `FINDINGS.md` / `BLOCKERS.md` — findings and current blockers
 - `PLANNED.md` / `BACKLOG.md` — future work
 - `CHANGELOG.md` — canonical implemented-change history
+- `GIT_HISTORY_CLEANUP.md` — historical rewrite procedure and pending PR-ref cleanup
+- `GIT_HISTORY_PROVENANCE.md` — verified rewritten Git tags, unchanged signed APK identity and residual PR-reference exposure
 
 ## Historical records
 
 The following locations are evidence/process history, not current-state policy:
 
 - `work/` — build-scoped execution records
-- `evidence/qa/` — dated QA/build/release evidence
+- `evidence/qa/` — dated QA/build/release evidence (including the 2026-10-30 privacy/documentation audit)
 - `/specs/` — development specifications/plans/tasks for completed or active work
 - `/.specify/` — process orchestration only
 

@@ -140,3 +140,58 @@
 ## D-035 — Four distinct wizard tasks; Finish is a verified terminal-state action
 
 **Decision:** Model choice is a labeled, visibly selectable dropdown, not a radio group hidden by theme styling. Keep four explicit pages: prepare/model, connect to Bose SoftAP, select SSID from the approved popup (or manual entry), and enter masked password. An eye indicator must describe the actual *current* visibility state while the screen-reader label describes its action. A single send button starts the existing one-time Bose WLAN POST and navigates to a dedicated processing page. The result and STR handoff are separate from the processing page; a **Fertig** action is shown only when the LAN verification has produced a terminal outcome, including bounded timeouts clearly identified as unverified. Enforce this with testable state/presentation policy rather than arbitrary button enabling. Discovery retry must never resubmit WLAN credentials. Existing device listing, Wi-Fi picker, STR probing and the accepted 0.2.1 release must not be modified for this UX work.
+
+
+## D-036 — Optional app update notification; avoid WebView double safe-area padding
+
+**Decision (2026-10-30, BUILD-0013):** Adopt the successful `abfahrtsradar-android` GitHub Releases notification pattern, but keep STR Remote's platform dependencies small: a bounded HTTPS GET from `MainActivity` in a background thread plus a localized native dialog to open the official release in the external browser. Stable semantic versions only, numeric comparison, require the public release's expected APK, at most one successful check per 24 h; neither automatic install/download nor background notification service. Do not run this for the isolated debug `.poc` package.
+
+To reclaim the highlighted top spacing, do not crop the whole STR screen or hide the upstream header. The upstream phone PWA's `body > header` adds `padding-top:calc(16px + env(safe-area-inset-top))` for browser chrome while Android's native frame already consumes system-bar insets. Inject a compact `padding-top:10px` guarded on known STR speaker/power DOM IDs. On unexpected upstream DOM or failed WebView load, do nothing; test real hardware and navigation before release. Existing signed v0.3.0 remains immutable.
+
+**Hardware validation note:** SoundTouch 10 original-firmware WLAN provisioning succeeded using the user's separate test profile; subsequent development may show a scoped verified label but must not imply general firmware/WPA compatibility. See `doc/evidence/qa/2026-10-30-st10-original-wifi-test-profile.md`.
+
+
+## D-037 — Community reports without implicit hardware compatibility claims
+
+**Decision (2026-10-30):** The model dropdown shows `SoundTouch 20 III · geprüft`, `SoundTouch 10 · geprüft` and `Anderes SoundTouch-Modell`. Both named models have reported successful original-firmware WLAN provisioning on hardware; ST10 evidence comes from a separate WPA2 test profile. The unknown model reuses the same established one-time network API process, accompanied by a caution that the preset+volume setup entry may differ. Do not make automatic compatibility assertions.
+
+Optional, explicit community feedback asks only for a manually entered model label and binary user-reported WLAN setup outcome. Never infer user success from POST acknowledgement or a possibly inconclusive LAN lookup. Use a distinct final UI page, plus an early-failure entry point, to avoid forcing long forms into the verified wizard pages. On user click open a **pre-filled, unsubmitted** GitHub issue draft on the fixed project origin. The user must manually submit it in GitHub. Warn about public disclosure and refrain from including SSID/password, device IDs, IP/MAC or technical traces. Repository Issues are enabled; no GitHub login/credential integration is installed. Only maintainer-reviewed corroborated evidence may justify later additions to the „geprüft“ catalog. Existing signed 0.3.0 and its tag remain immutable.
+
+
+## D-038 — Email feedback without GitHub account and offline Bose model autocomplete
+
+**Decision (2026-10-30, supersedes D-037's GitHub-Issue feedback channel):** Because GitHub issue authors need GitHub accounts, the optional unknown-model feedback uses an explicitly triggered Android email draft to `str-remote-android@gmx.org`. The draft contains user-entered SoundTouch model and yes/no success, plus installed STR Remote version and Android version/API level. The user must deliberately send in an external email application; STR Remote collects no mail credentials or device/network identifiers. If no email client is installed, explain the limitation in the wizard.
+
+The model text entry uses a local `AutoCompleteTextView` backed by 35 curated historical SoundTouch-app-compatible device names from Bose support documentation. Support in the original Bose SoundTouch application does **not** establish compatibility with our local WLAN setup endpoint; optional, freely typed models remain supported. Community reports require review before adding verified status. The published v0.3.0 remains immutable.
+
+## D-039 — Readable bounded model autocomplete and complete DE/EN Wi-Fi setup
+
+**Decision (2026-10-30, BUILD-0013):** Fix the unreadable dark native suggestion popup by setting **both** the autocomplete window and dropdown row backgrounds to white with dark foreground. Limit suggestions to 190dp high with compact, accessible rows; keep offline matching and freeform model names. On the unknown-model preparation page remove duplicate explanatory warnings so actions fit on screen. On optional feedback show only model, Yes/No, brief privacy text and voluntary email action; hide unrelated technical diagnostics/status on that page.
+
+Internationalize the full user-facing wizard using Android resource directories `values` (English fallback) and `values-de` (German), including model options/hints, setup instructions, WifiNetworkSpecifier errors, progress and terminal verification. Email feedback subject and body follow the app locale and still disclose the exact installed STR Remote and Android version. Do not change proven Bose network API semantics, existing 0.3.0 tag or release. Require real-phone screenshots and bilingual QA before merging.
+
+## D-040 — Native bilingual About entry without prematurely choosing the new app name
+
+**Decision (2026-10-30):** To satisfy the STR maintainer's Community Apps requirements, provide an always-accessible native About dialog from the app's existing top toolbar. Explain in DE/EN that the product is an **unofficial, independent community app** and is not affiliated with or endorsed by Bose Corporation or the SoundTouch Reborn project. State that Bose and SoundTouch are Bose Corporation trademarks. Show the app version derived from the installed package and offer explicitly tapped source, project-issue and email-contact actions; the email path must not require GitHub login or auto-send.
+
+Do not silently choose a successor name, change `applicationId`, modify the signing identity or rewrite already-published 0.3.0 artifacts. Keep the UI as a platform-native information surface, not a new WebView/remote page. The safe-area/toolbar integration and both translations require phone QA. The app-name decision (STR-020) is independent and still PLANNED.
+
+## D-041 — Show project Info only next to the Devices-page app title
+
+**Decision (2026-10-30, BUILD-0013):** Based on user-tested visibility of About, change the information entry point from an always-on right-aligned toolbar icon to a title-adjacent circled `ⓘ` action on the **Devices** page, with a 48dp target and localized content description. Hide it when a Remote/WebView or connection-error panel is active. Do not change the About content, links, privacy behavior or known device-control logic.
+
+The user proposed two possible replacement public names, `Remote for STR` and `Remote 4 STR`. The former is the preferred recommendation for readability, **not yet an adopted final decision**. The app ID and signing key should normally remain stable so existing v0.3.0 installs can receive updates; changing app ID is a new installation and does not migrate app-private preferences. A later GitHub repo rename may be done separately after selecting the brand and updating canonical links, especially GitHub Releases update-check URLs.
+
+## D-042 — Adopt Remote for STR as the public Android product name
+
+**Decision (2026-10-30):** User explicitly selected **Remote for STR** over Remote 4 STR. This is the successor brand to the existing Android **STR Remote**, removing name ambiguity with the separate iOS app. Rebrand the DE/EN launcher/title, user-visible helper/error/update copy, community email version label, README and future signed APKs. Use `Remote-for-STR-<version>.apk` for subsequent release artifacts, while allowing legacy `STR-Remote-<version>.apk` in the updater during transition.
+
+**Compatibility:** Preserve Android `applicationId=app.strremote.android`, the signing key and installed user data; changing that technical identifier would register a separate Android app and require manual migration. Preserve historical `v0.3.0` tag, APK, checksum and CI evidence under the old product name.
+
+**Repository:** Proposed future name `K-Cosmo/remote-for-str`. Do not switch the hard-coded GitHub Releases API URL, website links or repository remote until an actual GitHub repository rename is completed and tested. Android project/module technical package names may remain stable. Complete PR CI, physical-device locale/UI QA and signed upgrade test before merging/releasing.
+
+## D-043 — Actual GitHub repository rename and canonical URL cutover
+
+**Decision (2026-10-30):** The user has renamed the GitHub repository to **`K-Cosmo/remote-for-str-android`**; the GitHub connection verified the repository and open PR #5 at the new address. This is the authoritative slug, not the earlier candidate `remote-for-str`. Update the in-app GitHub Releases API endpoint (which disables automatic HTTP redirects), release-page links, About/source/issue links, regression-test assertions and current documentation directly to the new path.
+
+Do not change Android `applicationId=app.strremote.android`, the original signing key, local saved data, previous release tags or signed APK contents. Do not assume a GitHub redirect is sufficient for clients with disabled redirects. Canonical repository URLs should be verified before final release. PR remains unmerged pending quality gates.

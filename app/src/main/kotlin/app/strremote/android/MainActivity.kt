@@ -39,6 +39,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ScrollView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.ProgressBar
@@ -55,6 +56,7 @@ class MainActivity : Activity() {
         const val WIFI_CALLBACK_INITIALIZATION_MS = 500L
         const val REMOTE_RETRY_SETTLE_MS = 600L
         const val STR_WEBSITE = "https://st-reborn.de"
+        const val UPDATE_CHECK_INTERVAL_MS = 24L * 60L * 60L * 1000L
     }
 
     private lateinit var prefs: PreferencesStore
@@ -66,6 +68,7 @@ class MainActivity : Activity() {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private lateinit var statusText: TextView
+    private lateinit var aboutButton: TextView
     private lateinit var deviceButton: Button
     private lateinit var discoveryPanel: LinearLayout
     private lateinit var discoveryProgress: ProgressBar
@@ -157,6 +160,7 @@ class MainActivity : Activity() {
         registerBackCallback()
         configureWebView()
         registerWifiMonitor()
+        checkForAppUpdate()
     }
 
     override fun onResume() {
@@ -254,9 +258,38 @@ class MainActivity : Activity() {
             includeFontPadding = false
             setTypeface(typeface, Typeface.BOLD)
         }
-        titleColumn.addView(
+        val titleRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        titleRow.addView(
             title,
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        aboutButton = TextView(this).apply {
+            text = "ⓘ"
+            textSize = 21f
+            gravity = Gravity.CENTER
+            contentDescription = getString(R.string.about_action)
+            isClickable = true
+            isFocusable = true
+            setBackgroundResource(android.R.drawable.list_selector_background)
+            setOnClickListener { showAboutDialog() }
+        }
+        titleRow.addView(
+            aboutButton,
+            LinearLayout.LayoutParams(dp(48), dp(48))
+        )
+        titleColumn.addView(
+            titleRow,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         )
 
         statusText = TextView(this).apply {
@@ -586,6 +619,13 @@ class MainActivity : Activity() {
                 currentEndpoint?.let { endpoint ->
                     prefs.saveReachability(endpoint, true)
                     updateSavedRowReachability(endpoint, reachable = true)
+                }
+                if (isAllowedSpeakerNavigation(Uri.parse(url))) {
+                    // STR's PWA top safe area is already handled by Android's
+                    // native header. Keep all STR interactive controls intact.
+                    view.evaluateJavascript(
+                        StrWebViewHeader.compactTopPaddingScript, null
+                    )
                 }
                 showWebView()
             }
@@ -1056,6 +1096,116 @@ class MainActivity : Activity() {
         strHelpButton.visibility = if (showStrHelp) View.VISIBLE else View.GONE
     }
 
+    /**
+     * Native, always-accessible project identity and support information.
+     * No network request occurs until the user taps an external link.
+     * The currently displayed name is provisional; keep it separate from
+     * applicationId and the signing identity during future rebranding.
+     */
+    private fun showAboutDialog() {
+        @Suppress("DEPRECATION")
+        val version = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+        } catch (_: Exception) {
+            "?"
+        }
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(10), dp(20), dp(10))
+        }
+
+        fun paragraph(value: String, emphasized: Boolean = false) {
+            layout.addView(TextView(this).apply {
+                text = value
+                textSize = 15f
+                if (emphasized) setTypeface(typeface, Typeface.BOLD)
+                setPadding(0, 0, 0, dp(14))
+            })
+        }
+
+        fun linkButton(label: Int, action: () -> Unit) {
+            layout.addView(Button(this).apply {
+                text = getString(label)
+                isAllCaps = false
+                setOnClickListener { action() }
+            }, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            ))
+        }
+
+        paragraph(getString(R.string.about_version_format, version), emphasized = true)
+        paragraph(getString(R.string.about_community_notice))
+        paragraph(getString(R.string.about_trademark_notice))
+        paragraph(getString(R.string.about_support_heading), emphasized = true)
+
+        linkButton(R.string.about_source_link) {
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/remote-for-str-android"))
+        }
+        linkButton(R.string.about_issues_link) {
+            openExternalUri(Uri.parse("https://github.com/K-Cosmo/remote-for-str-android/issues"))
+        }
+        linkButton(R.string.about_email_link) {
+            val uri = Uri.parse(
+                "mailto:str-remote-android@gmx.org?subject=" +
+                    Uri.encode(getString(R.string.about_email_subject))
+            )
+            try {
+                startActivity(Intent(Intent.ACTION_SENDTO, uri))
+            } catch (_: Exception) {
+                Toast.makeText(this, R.string.about_no_email_client, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        val scrollView = ScrollView(this).apply {
+            isFillViewport = false
+            addView(layout)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.about_title)
+            .setView(scrollView)
+            .setPositiveButton(R.string.about_close, null)
+            .show()
+    }
+
+    private fun checkForAppUpdate() {
+        // Debug uses a separate .poc package and must not offer the production APK.
+        if (packageName != "app.strremote.android") return
+
+        val checkPrefs = getSharedPreferences("str_remote_update_check", MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val lastSuccess = checkPrefs.getLong("last_success_ms", 0L)
+        if (lastSuccess > 0L && now >= lastSuccess &&
+            now - lastSuccess < UPDATE_CHECK_INTERVAL_MS
+        ) return
+
+        @Suppress("DEPRECATION")
+        val installedVersion = try {
+            packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        } catch (_: Exception) {
+            return
+        }
+        Thread({
+            val result = AppUpdateChecker.fetch(installedVersion)
+            if (result != null) {
+                checkPrefs.edit().putLong("last_success_ms", System.currentTimeMillis()).apply()
+                result.available?.let { update ->
+                    runOnUiThread {
+                        if (isFinishing || isDestroyed) return@runOnUiThread
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.update_available_title)
+                            .setMessage(getString(R.string.update_available_message, update.version))
+                            .setPositiveButton(R.string.update_view_release) { _, _ ->
+                                openExternalUri(Uri.parse(update.releaseUrl))
+                            }
+                            .setNegativeButton(R.string.update_later, null)
+                            .show()
+                    }
+                }
+            }
+        }, "StrRemoteUpdateCheck").start()
+    }
+
     private fun openStrWebsite() {
         openExternalUri(Uri.parse(STR_WEBSITE))
     }
@@ -1118,6 +1268,7 @@ class MainActivity : Activity() {
         }
 
         pageVisible = true
+        aboutButton.visibility = View.GONE
         deviceButton.text = getString(R.string.devices)
         deviceButton.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
@@ -1132,6 +1283,7 @@ class MainActivity : Activity() {
         showRetry: Boolean
     ) {
         pageVisible = true
+        aboutButton.visibility = View.GONE
         deviceButton.text = getString(R.string.devices)
         deviceButton.visibility = View.VISIBLE
         statusText.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
@@ -1248,6 +1400,7 @@ class MainActivity : Activity() {
 
     private fun showDiscoveryPanel() {
         pageVisible = false
+        aboutButton.visibility = View.VISIBLE
         deviceButton.text = getString(R.string.remote)
         deviceButton.visibility = if (currentEndpoint != null) View.VISIBLE else View.GONE
         statusText.visibility = View.GONE

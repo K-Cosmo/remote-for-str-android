@@ -38,7 +38,7 @@ function Capture-Required([string]$Text, [string]$Pattern, [string]$Label) {
     return $match.Groups[1].Value.Trim()
 }
 
-Write-Host "== STR Remote documentation consistency =="
+Write-Host "== Remote for STR documentation consistency =="
 Write-Host "Project: $ProjectRoot"
 
 $buildFile = Read-Required "app/build.gradle.kts"
@@ -47,6 +47,30 @@ $readmeFile = Read-Required "README.md"
 $changelogFile = Read-Required "doc/CHANGELOG.md"
 $gatesFile = Read-Required "doc/RELEASE_GATES.md"
 $plannedFile = Read-Required "doc/PLANNED.md"
+
+# Privacy-hygiene guard: repository evidence/doc must use documentation test
+# ranges instead of real household or organizational LAN endpoints.
+# The sole exception is Bose's explicitly documented alternative setup host.
+# Never print matched private addresses into CI logs.
+$docRoot = Join-Path $ProjectRoot "doc"
+$privateIpv4 = [regex]'\b(?:10\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b'
+$protocolExamples = @("192.168.1.1")
+if (Test-Path -LiteralPath $docRoot -PathType Container) {
+    Get-ChildItem -LiteralPath $docRoot -Recurse -File -Filter "*.md" |
+        ForEach-Object {
+            $file = $_
+            $rows = Get-Content -LiteralPath $file.FullName -Encoding UTF8
+            for ($lineIndex = 0; $lineIndex -lt $rows.Count; $lineIndex++) {
+                foreach ($hit in $privateIpv4.Matches($rows[$lineIndex])) {
+                    if ($hit.Value -notin $protocolExamples) {
+                        $relative = $file.FullName.Substring($ProjectRoot.Length).TrimStart('\', '/')
+                        Add-Failure "Potential real LAN IPv4 at $($relative):$($lineIndex + 1). Replace with RFC5737 documentation IP; do not log the original."
+                    }
+                }
+            }
+        }
+}
+
 
 $appVersion = Capture-Required $buildFile 'versionName\s*=\s*"([^"]+)"' "application versionName"
 $versionCode = Capture-Required $buildFile 'versionCode\s*=\s*(\d+)' "application versionCode"

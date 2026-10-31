@@ -28,6 +28,25 @@ jobs:
         shell: pwsh
         run: ./tools/test-apksigner-certificate.ps1
 
+      - name: Parse-check offline Git history cleanup script (NO execution)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/prepare-history-rewrite.ps1",
+            [ref]$tokens,
+            [ref]$parseErrors
+          ) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            $parseErrors | ForEach-Object { Write-Error $_.Message }
+            throw "PowerShell history-rewrite script syntax errors"
+          }
+
+      - name: Check documentation/version/release consistency
+        shell: pwsh
+        run: ./tools/verify-doc-consistency.ps1
+
       - name: Verify wrapper and build
         run: |
           chmod +x ./gradlew
@@ -37,5 +56,5 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: str-remote-debug
+          name: remote-for-str-debug
           path: app/build/outputs/apk/debug/app-debug.apk

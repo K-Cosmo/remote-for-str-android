@@ -2,6 +2,26 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## Next release (unreleased, BUILD-0013 / PR #6)
+
+- [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**
+- [x] Model search for “30” and “SoundTouch”, readable suggestions and compact feedback page confirmed on phone
+- [x] Recipient, subject and body of volunteer email draft confirmed on tested email client; decorative paragraph spacing unsupported there, cosmetic/deferred
+- [x] Exact signed-source Android CI passed at `0e6bab9d9e1bcac19b542755b7a1774c69d2776a` ([push 41146044403](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146044403), [PR 41146049240](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146049240)); documentation-only candidate commit `67916ad816e77d1408c58238f01dc69bae1fb04f` passed [push 41188614827](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41188614827) and [PR 41188618925](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41188618925). Recheck CI on this final acceptance documentation commit before merge
+- [x] User-confirmed signed-APK smartphone acceptance: **Remote for STR** launcher; info icon next to title on Devices only; playback, volume, presets and connection; app restart and saved speaker/room persistence
+- [x] **Scoped deferral accepted by owner 2026-10-31:** live end-to-end positive update-checker notification cannot be exercised until a newer official stable APK release exists; deterministic version/asset/URL unit tests passed. No fake public Release for testing. Record a future-version production check as follow-up, **not PASS**
+- [x] Rewrite normal branch/tag refs and remove six obsolete branches; preserve five signed releases. [ ] Follow up on GitHub-managed old PR refs/caches separately
+- [x] **Explicit owner-approved 0.3.1 deferral (2026-10-31):** no-email-client fallback, rejected Wi-Fi permission, network failure/timeout, and untested SoundTouch/router/firmware combinations were outside the six positive phone checks. Keep these cases as **NOT TESTED**, scope supported claims to tested conditions and track follow-up. Existing code fallback is not evidence of real-phone behavior
+- [x] Stage candidate Android `versionName=0.3.1` / `versionCode=12` without changing `applicationId`
+- [x] User successfully ran the fail-closed local release script on clean source `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`; resulting signed `Remote-for-STR-0.3.1.apk`, SHA-256 `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`. Script requires original signing-certificate SHA-256, `apksigner verify` and 16 KiB zipalign before reporting Final artifact
+- [x] **Tester-reported PASS on the exact signed APK:** 0.3.0 → 0.3.1 in-place upgrade without uninstall, saved speakers/rooms, STR remote playback/volume/presets, DE/EN wizard, optional email draft, About icon placement, app restart/persistence. All six presented device acceptance checks were explicitly confirmed on 2026-10-31
+- [x] Owner explicitly approved CI and a **normal, non-squash/non-rebase merge** on 2026-10-31. **Execution gate:** final acceptance-docs CI must pass before merging.
+- [ ] Separate public release gate: explicit publication authorization, immutable `v0.3.1` annotated tag targeting **tested signed source** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`, publication of exact tested APK/checksum, verification of GitHub asset SHA-256 and update of published-release docs
+
+The **signed 0.3.1 release candidate and six specified handset scenarios are accepted**; untested negative cases are explicitly **deferred, not passed**. CI/merge are owner-approved, with a last-run CI gate. Public release remains separately unauthorised. `v0.3.0` remains the latest published release. Source and artifact evidence: [2026-10-31 signed candidate](evidence/qa/2026-10-31-release-candidate-0.3.1.md). Documentation-only commits after signing do **not** change the signed source SHA or justify rebuilding a different APK.
+
+---
+
 ## 0.3.0 — ACCEPTED
 
 ### Product and security
@@ -26,7 +46,7 @@ A release candidate may be marked final/ACCEPTED only when all applicable gates 
 - [x] public GitHub Release v0.3.0 (ID 429390125) has verified signed APK and matching SHA-256 asset, not draft/prerelease
 - [x] latest-release links, README and STATUS updated to public 0.3.0, and acceptance evidence recorded
 
-Release evidence: [2026-10-30](evidence/qa/2026-10-30-release-0.3.0.md), source commit `5b351f04dc9f989eee48fc262764f3add8641573`; APK SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`.
+Release evidence: [2026-10-30](evidence/qa/2026-10-30-release-0.3.0.md), rewritten tag source `edc64cd5468e60edff355ec1dd1fd73c338004af` (the historic APK was not rebuilt); APK SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`.
 
 ---
 

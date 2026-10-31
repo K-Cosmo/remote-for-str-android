@@ -10,8 +10,8 @@ android {
         applicationId = "app.strremote.android"
         minSdk = 26
         targetSdk = 37
-        versionCode = 11
-        versionName = "0.3.0"
+        versionCode = 12
+        versionName = "0.3.1"
     }
 
     buildTypes {
@@ -37,4 +37,6 @@ android {
 // Host-side tests only; no additional runtime dependency in the release APK.
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    // Local JVM tests use the actual JSON parser, not Android's stubbed android.jar.
+    testImplementation("org.json:json:20250517")
 }

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "STRRemote"
+rootProject.name = "RemoteForSTR"
 include(":app")

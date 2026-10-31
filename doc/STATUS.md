@@ -1,9 +1,19 @@
 # Status
 
-**Development version:** 0.3.0
+## Remote for STR 0.3.1 — signed, phone-accepted release candidate on PR #6
+
+The product name **Remote for STR** has been selected and implemented in the active branch, with DE/EN launcher/title and future APK naming. The public **STR Remote 0.3.0** release, original Android package `app.strremote.android`, signing certificate, checksum and saved-app upgrade identity remain unchanged. Next signed release artifacts will be `Remote-for-STR-<version>.apk`, with the updater also accepting the old `STR-Remote-<version>.apk` form. GitHub repository has now been renamed to `K-Cosmo/remote-for-str-android`; active release-check API, project links and documentation target the new canonical address. The user confirmed English Wi-Fi wizard device QA (2026-10-30), then accepted all six checks of the signed 0.3.1 APK on a real phone (2026-10-31). Unexercised negative cases were explicitly deferred by the owner for 0.3.1 on 2026-10-31; they remain NOT TESTED. CI/normal-merge approval was given; public release authorisation remains separate.
+
+**Signed release candidate:** `0.3.1` / `versionCode=12` was built and signed locally using `tools/build-signed-release.ps1` from **exact commit** `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`. User-reported artifact: `dist/Remote-for-STR-0.3.1.apk`, SHA-256 `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`; local checksum file exists. The signed APK completed all six on-phone acceptance checks, including upgrade over the existing 0.3.0 preserving speakers/rooms. **No `v0.3.1` tag or public Release exists yet.** Published `0.3.0` remains ACCEPTED and unchanged. Production `applicationId=app.strremote.android` remains stable. See [release-candidate evidence](evidence/qa/2026-10-31-release-candidate-0.3.1.md).
+
+**Git history state:** both normal branch refs and all five release tags have been rewritten; six stale branches deleted. Original signed APK/checksum assets are unchanged. GitHub-managed old `refs/pull/*` remain outside the ordinary ref rewrite; see [provenance](GIT_HISTORY_PROVENANCE.md).
+
+**Development version:** 0.3.1
 **Latest public release:** 0.3.0
-**Status:** RELEASED / ACCEPTED
-**Date:** 2026-10-30
+**Status:** IN DEVELOPMENT / RELEASE PREPARATION
+**Date:** 2026-10-31
+
+**Exact signed-source CI:** [push 41146044403](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146044403) and [pull request 41146049240](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41146049240) both passed for `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`. PR #6 has explicit owner approval for normal merge after final green CI. Untested negative cases are scoped/deferred to follow-up, not marked as passed; public Release and tag remain separately unapproved. Later documentation-only commits are not part of the APK source.
 
 ## 0.3.0 release — ACCEPTED
 
@@ -12,17 +22,17 @@ BUILD-0012 Bose SoundTouch WLAN-Einrichtung is released and accepted.
 Release identity:
 
 - version: `0.3.0` / versionCode `11`; package `app.strremote.android`;
-- signed APK source commit: `5b351f04dc9f989eee48fc262764f3add8641573`;
-- annotated tag `v0.3.0`, tag object `a071b2b6a4cbb0c6b5fb528cbe33f088969365ed`, resolving to the exact source commit;
-- public [GitHub Release 0.3.0](https://github.com/K-Cosmo/str-remote-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
+- historical APK was signed from pre-rewrite source (original identity retained in encrypted offline mirror); rewritten tag source: `edc64cd5468e60edff355ec1dd1fd73c338004af` (the signed APK was not rebuilt);
+- current rewritten annotated tag `v0.3.0` object: `2e0c29414f71ae711b410b8bfe0b1e370b0aa14b`; this is **not** the original signing-time tag identity;
+- public [GitHub Release 0.3.0](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.0), release ID `429390125`, published 2026-10-30T19:03:45Z;
 - signed APK `STR-Remote-0.3.0.apk`, size 1,156,741 bytes, SHA-256 `c4b1989e00ba21915e34192b2f4e0b73695416c93397e4f0c4d3cc6617a18290`;
 - companion checksum asset `STR-Remote-0.3.0.apk.sha256.txt`;
 - original release-signing certificate SHA-256 `3cc2e7272d8c2d1433a57c4462df39adfe5e8c1931a4a924710c0e4087aa1e32`.
 
 Acceptance:
 
-- exact release-source `main` CI: success, run [41108758228](https://github.com/K-Cosmo/str-remote-android/actions/runs/41108758228);
-- exact release-source `v0.3.0` tag CI: success, run [41111993535](https://github.com/K-Cosmo/str-remote-android/actions/runs/41111993535);
+- exact release-source `main` CI: success, run [41108758228](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41108758228);
+- exact release-source `v0.3.0` tag CI: success, run [41111993535](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41111993535);
 - local signing script reported matching original signing certificate, signature verification and alignment checks;
 - user confirmed that the signed production APK passed the planned smartphone acceptance test;
 - public APK asset SHA-256 is an exact match to the locally signed SHA-256;
@@ -37,9 +47,9 @@ BUILD-0011 is released and accepted.
 
 Release identity:
 
-- source commit: `6a3352928dc177419f2f5d7f5bc49868e9ab0589`;
+- current rewritten tag source commit: `8afa46d25e5ec2be10bf84c07df071eb555b0ed2` (signed APK predates history rewrite);
 - annotated tag: `v0.2.1`;
-- annotated tag object: `7347fad1f8693746ec5e806df25cd43d326e42b2`;
+- rewritten annotated tag object: `f3b020247bb195ee1c9c9d326c8590aa75743ff6`;
 - final APK: `STR-Remote-0.2.1.apk`;
 - APK SHA-256: `bf019801b4a47226ab1af616f4f74f1dd7abfb71731205253e1d9709af76de67`;
 - signer: `C=DE, CN=STR Remote`;
@@ -84,7 +94,7 @@ Speaker Management / Rooms is released and accepted.
 
 Release identity:
 
-- source commit: `b5ff103e318f4342ba3a748b786084108d4093af`;
+- current rewritten tag source commit: `945bb9d7cfaa9f737fd6fb8d24780ada571249f0` (signed APK predates history rewrite);
 - annotated tag: `v0.2.0`;
 - final APK: `STR-Remote-0.2.0.apk`;
 - APK SHA-256: `5e7ba21f39752ae359a6de0103a440b363a1823223874778e44173f285243aa7`;
@@ -137,4 +147,18 @@ Post-0.2.0 documentation drift has been converged:
 - current architecture, compatibility, blocker, privacy, security and test documents describe the accepted 0.2.0 baseline;
 - historical build/spec/evidence records remain unchanged as dated snapshots.
 
-`0.2.1` is the current accepted public release.
+`0.3.0` is the current accepted public release (see release identity and acceptance evidence above).
+
+
+## Pending BUILD-0013 development (not in v0.3.0)
+
+The in-app GitHub release notification, optional compact STR WebView header and ST10 test-profile validation wording are implemented in development; they are not included in the signed, published `v0.3.0` APK. Physical-device WebView spacing and controls regression testing remains required before the next signed update. Separate SoundTouch 10 original-firmware WLAN test-profile success was reported on 2026-10-30, after the v0.3.0 release validation record.
+
+
+## BUILD-0013 extension — pending device acceptance
+
+The working development branch includes the unknown-model selection, offline historical SoundTouch model suggestions and an opt-in E-Mail feedback form. The 10 CSS px STR header spacing is user-accepted visually on the supplied screenshot; the community-feedback workflow, especially its early-failure path, needs real-device testing. This is **not** part of public v0.3.0. No release or signed APK is created from this branch yet.
+
+## BUILD-0013 usability and locale follow-up (2026-10-30)
+
+Tester screenshots identified unreadable black-on-black SoundTouch autocomplete suggestions and excessive first-page/feedback-page content, plus German-only wizard texts despite intended DE/EN product support. The development branch now includes white bounded model suggestions, compact no-scroll first/feedback screens, and a bilingual Wizard string-resource conversion. The published signed 0.3.0 is unchanged; phone UI and bilingual acceptance remain open.

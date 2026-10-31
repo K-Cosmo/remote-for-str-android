@@ -2,7 +2,7 @@
 
 ## Trust boundary
 
-STR currently serves the phone UI over plain HTTP on the local network. STR Remote therefore permits the cleartext access needed for local STR endpoints. The LAN is the current trust boundary.
+STR currently serves the phone UI over plain HTTP on the local network. Remote for STR therefore permits the cleartext access needed for local STR endpoints. The LAN is the current trust boundary.
 
 Because speakers can receive dynamic DHCP addresses, Android Network Security Configuration cannot practically enumerate the single permitted host ahead of time. The wrapper combines the required cleartext base configuration with runtime WebView navigation restrictions.
 
@@ -17,7 +17,7 @@ Because speakers can receive dynamic DHCP addresses, Android Network Security Co
 - other HTTP/HTTPS top-level links handed to the system browser;
 - subresource behavior left to the upstream STR page to avoid reimplementing/breaking STR functionality;
 - no analytics/tracking SDK;
-- no Bluetooth permission unless STR Remote itself gains a documented Bluetooth feature.
+- no Bluetooth permission unless Remote for STR itself gains a documented Bluetooth feature.
 
 Chromium/WebView hidden-API or Bluetooth warnings are not a sufficient reason to broaden permission scope.
 
@@ -58,3 +58,23 @@ The app masks the password by default, provides an intentional reveal control, c
 Subsequent read-only LAN verification requires that the discovered device's Bose `deviceID` match the identity from setup mode. An optional active SSID check can strengthen this proof. A timeout does not mean the transfer failed. STR itself is only considered installed when its local status endpoint responds.
 
 Bose device identity, optional LAN IP, setup-verification state and room label are stored in app-private preferences solely to represent speakers awaiting STR; they are not STR login credentials.
+
+
+## GitHub release notification (0.3.1, unreleased candidate)
+
+The new version checker only accesses the fixed `https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest` over TLS, with bounded read size and timeouts. Only a strictly parsed `vMAJOR.MINOR.PATCH` newer than installed is eligible; GitHub draft/prerelease versions, incomplete releases without matching named APK asset and malformed tags are ignored. Any displayed release link is synthesized from the validated tag and fixed `github.com/K-Cosmo/str-remote-android` path, not taken from arbitrary remote JSON fields. User decides whether to open the external browser. No automatic APK download, package installation, new Android permission or sensitive network data is introduced.
+
+For the embedded STR WebView, static CSS is injected only into the already permitted local STR page after an exact upstream `#dev` and `#powerBtn` DOM check. No JavaScript bridge or access to other domains is added; STR controls remain unchanged.
+
+
+## Optional community email feedback boundaries (BUILD-0013)
+
+The unknown model option uses the same single-attempt Bose WLAN transfer as the tested models, but an identical setup shortcut or interface is not presumed. User feedback never automatically changes the known-good model list.
+
+Feedback requests a validated model designation (2–60 characters) and consciously selected success/failure result. Android `ACTION_SENDTO` opens a **draft** only for the fixed recipient `str-remote-android@gmx.org`, with the installed Remote for STR version and Android version/API level transparently included. No background service or account/token integration is added; no message is automatically sent. Android's email client handles transport after explicit user action.
+
+The offline model suggestion catalog reflects Bose's SoundTouch app support list; it is not a verified compatibility matrix for original-firmware WLAN provisioning. The outgoing draft excludes WLAN SSID/password, IP/MAC, device ID, diagnostics and other automatically collected identifiers. Users are advised not to add such information manually.
+
+## Public QA evidence and Git history
+
+Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`. Editing current Markdown does not remove old blobs referenced by historic commits, release tags, PR refs or forks.

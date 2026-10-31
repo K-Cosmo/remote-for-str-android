@@ -2,7 +2,7 @@
 
 ## Scope
 
-STR Remote remains a thin Android integration layer around the web remote served by SoundTouch Reborn. STR owns playback/business behavior; STR Remote owns Android discovery, endpoint selection, local UI metadata, persistence, permission/network handling and WebView integration.
+Remote for STR remains a thin Android integration layer around the web remote served by SoundTouch Reborn. STR owns playback/business behavior; Remote for STR owns Android discovery, endpoint selection, local UI metadata, persistence, permission/network handling and WebView integration.
 
 ## Components
 
@@ -46,11 +46,11 @@ Persistence is deliberately small and app-private:
 - explicitly saved speakers support durable device management;
 - room metadata is presentation-only;
 - the dismissed-help preference is UI-only;
-- none of this data is uploaded or synchronized by STR Remote.
+- none of this data is uploaded or synchronized by Remote for STR.
 
 ## Dependency direction
 
-The Android wrapper depends on STR's local contracts. STR does not depend on the Android wrapper. There is no hosted STR Remote service.
+The Android wrapper depends on STR's local contracts. STR does not depend on the Android wrapper. There is no hosted Remote for STR service.
 
 ## Native shell geometry
 
@@ -66,3 +66,21 @@ The native root owns Android system-bar insets. Toolbar/device-list spacing is c
 - `DiscoveryCycleGuard`, `SpeakerTapPolicy`: JVM-testable policies for finite probing and predictable behavior of STR-enabled versus Bose-only rows.
 
 The production APK shares the original `app.strremote.android` package ID to permit upgrades from 0.2.1. Android 8/9 continue to use the existing STR features, while the Bose setup activity is only reachable from Android 10+. Browser installation guidance opens the upstream STR website.
+
+
+## Development — optional update checker and STR WebView compact header (BUILD-0013)
+
+- `AppUpdatePolicy`: JVM-testable stable version comparison for `vMAJOR.MINOR.PATCH`, release link composed solely from a fixed official GitHub host.
+- `AppUpdateChecker`: asynchronous, bounded GitHub latest-release metadata request; returns a valid candidate only with a matching APK asset; no third-party runtime service or build-time code generation. Only the original production Android package is eligible, not the separately installable `.poc` debug APK.
+- `MainActivity.checkForAppUpdate`: at most one successful request per 24 h, asynchronous, nonblocking, localized native `AlertDialog`; no service or OS notification. Network failures are invisible to STR playback.
+- `StrWebViewHeader`: guarded, static, one-time CSS removal of upstream PWA top safe-area padding in recognized STR pages; the native frame already handles system insets. No upstream header elements or controls removed.
+
+Pending Android UI screenshot/regression verification before a separately signed next release.
+
+
+## Optional model email feedback and offline suggestions (BUILD-0013)
+
+- `BoseSoundTouchCatalog` provides a static local list of historic SoundTouch-app model names, including different generations and equipment that uses SoundTouch adapters. It is a hint-only catalog, not an approved WLAN provisioning set; the user may freely enter any other plausible model.
+- `BoseCommunityFeedback` is a pure model/yes-no/version draft composer; fixed recipient `str-remote-android@gmx.org` and strict label validation. `BoseSetupProbeActivity` creates an Android `ACTION_SENDTO` mail intent only following explicit user action.
+- Remote for STR version comes from the installed package, Android version/API from the OS. Neither is sent in the background. No GitHub login, GitHub API feedback call, app-level SMTP, privileged permissions or new runtime library.
+- Test behavior with a configured email client and without one before merging. Manual review of incoming mail remains required before an additional SoundTouch model can be marked as verified.
