@@ -24,6 +24,7 @@
 - [ ] After owner-authorized upload of exactly this APK and checksum, compare the GitHub asset digest; no public 0.3.2 asset exists yet.
 - [x] First post-device-acceptance documentation-only CI passed at `cd310d5defd70813930fb31fa2b8f7ea6c290b34` ([push 41208464702](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41208464702), [PR 41208468955](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41208468955)).
 - [x] Both CI runs passed for prior SHA-256 evidence documentation head `3c84d37a856190fd86ffdf41ce11b5bf543aa5a5`: [push](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41209899536), [PR](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41209902852).
-- [ ] Fresh CI for the documentation-only **final local-verification evidence** head, followed by **explicit owner merge/release approval**. No tag, GitHub Release, re-signing or old-tag reassignment.
+- [x] Both CI runs **PASS** for the documented tester-run local-verification evidence head `958307b712550b576a6b26fdeca54f1a09a04ee1`: [push CI 41213677766](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41213677766) and [PR CI 41213680410](https://github.com/K-Cosmo/remote-for-str-android/actions/runs/41213680410). Any subsequent documentation-only commits require their own green CI; final-head results are tracked in PR #9.
+- [ ] **Explicit owner merge/release approval**. No tag, GitHub Release, re-signing or old-tag reassignment.
 
 Dated source: [signed handset test evidence](../evidence/qa/2026-10-31-build-0014-0.3.2-device-qa.md). Documentation-only commits after the signing-time source SHA are **not** the source of the tested APK.
