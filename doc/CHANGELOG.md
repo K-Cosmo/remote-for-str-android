@@ -2,9 +2,9 @@
 
 Only implemented changes belong here. Verification/acceptance evidence remains in `STATUS.md`, `RELEASE_GATES.md` and dated QA records.
 
-## Unreleased — 0.3.2 development candidate
+## 0.3.2 — 2026-10-31
 
-- Stage Android `versionName=0.3.2` and `versionCode=13` for the next separately signed and phone-accepted update. Public 0.3.1 remains unchanged.
+- Released `versionName=0.3.2` and `versionCode=13` as signed [GitHub v0.3.2](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.2); the existing app identity and stored speakers/rooms remain compatible with in-place upgrades.
 - Shorten the Android launcher label to **Remote STR** while keeping **Remote for STR** as project, toolbar and About identity.
 - Share one updated project-feedback recipient between WLAN model feedback and the native About link. Decode it at runtime instead of committing a complete mailbox plaintext literal; this is **not** secrecy against APK reverse engineering.
 - Redact public Markdown contact strings and add a deterministic CI anti-harvest gate for docs and Android source/resources.
