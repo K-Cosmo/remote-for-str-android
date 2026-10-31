@@ -60,11 +60,11 @@ Subsequent read-only LAN verification requires that the discovered device's Bose
 Bose device identity, optional LAN IP, setup-verification state and room label are stored in app-private preferences solely to represent speakers awaiting STR; they are not STR login credentials.
 
 
-## GitHub release notification (0.3.1, unreleased candidate)
+## GitHub release notification (released in 0.3.1)
 
-The new version checker only accesses the fixed `https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest` over TLS, with bounded read size and timeouts. Only a strictly parsed `vMAJOR.MINOR.PATCH` newer than installed is eligible; GitHub draft/prerelease versions, incomplete releases without matching named APK asset and malformed tags are ignored. Any displayed release link is synthesized from the validated tag and fixed `github.com/K-Cosmo/str-remote-android` path, not taken from arbitrary remote JSON fields. User decides whether to open the external browser. No automatic APK download, package installation, new Android permission or sensitive network data is introduced.
+The released optional version checker only accesses the fixed `https://api.github.com/repos/K-Cosmo/remote-for-str-android/releases/latest` over TLS, with bounded read size and timeouts. Only a strictly parsed `vMAJOR.MINOR.PATCH` newer than installed is eligible; GitHub draft/prerelease versions, incomplete releases without matching named APK asset and malformed tags are ignored. Any displayed release link is synthesized from the validated tag and fixed `github.com/K-Cosmo/remote-for-str-android` path, not taken from arbitrary remote JSON fields. User decides whether to open the external browser. No automatic APK download, package installation, new Android permission or sensitive network data is introduced.
 
-For the embedded STR WebView, static CSS is injected only into the already permitted local STR page after an exact upstream `#dev` and `#powerBtn` DOM check. No JavaScript bridge or access to other domains is added; STR controls remain unchanged.
+For the embedded STR WebView, the app currently injects a narrowly scoped 10 CSS px header-spacing override only after the expected upstream `body > header`, `#dev` and `#powerBtn` DOM check. This relies on **private upstream markup, not a supported public STR extension API**. On unexpected markup, no override is applied. No JavaScript bridge or access to other domains is added; STR controls remain unchanged. A durable upstream-controlled integration hook is proposed in [STR-022](PLANNED.md#str-022--stable-str-webui-embedding-interface-proposal).
 
 
 ## Optional community email feedback boundaries (BUILD-0013)

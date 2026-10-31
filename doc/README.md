@@ -2,15 +2,14 @@
 
 `/doc` is the single normative source of truth for Remote for STR. Root-level files may provide public or tooling entry points, but they must not duplicate normative project rules.
 
-## Current release
+## Release status and verification
 
-- latest signed public release: **[Remote for STR 0.3.1](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1)**, **RELEASED / ACCEPTED** (2026-10-31)
-- prior signed public release: **0.3.0** (published as *STR Remote*, unchanged)
-- signed source: `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`; GitHub release APK SHA-256: `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`
-- approved-deferred negative cases: [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7), **NOT TESTED**
-- release status and artifact identity: `STATUS.md`
-- accepted release gates: `RELEASE_GATES.md`
-- implemented release history: `CHANGELOG.md`
+- **Current public release, signed artifact and signing-time source:** [Status](STATUS.md)
+- **Release acceptance and deferred-case disposition:** [Release gates](RELEASE_GATES.md)
+- **Release notes / implemented changes:** [Changelog](CHANGELOG.md)
+- **Dated publication and handset proof:** [QA evidence](evidence/qa/README.md)
+
+Avoid repeating exact version numbers, hashes or release gate results in this index.
 
 ## Current normative documents
 
@@ -29,21 +28,21 @@
 - `FINDINGS.md` / `BLOCKERS.md` — findings and current blockers
 - `PLANNED.md` / `BACKLOG.md` — future work
 - `CHANGELOG.md` — canonical implemented-change history
-- `GIT_HISTORY_CLEANUP.md` — historical rewrite procedure and pending PR-ref cleanup
-- `GIT_HISTORY_PROVENANCE.md` — verified rewritten Git tags, unchanged signed APK identity and residual PR-reference exposure
+- `GIT_HISTORY_CLEANUP.md` — historical/destructive Git rewrite runbook (completed ordinary refs; residual GitHub PR refs)
+- `GIT_HISTORY_PROVENANCE.md` — source/tag provenance after the history rewrite and residual PR-reference exposure
 
 ## Historical records
 
 The following locations are evidence/process history, not current-state policy:
 
-- `work/` — build-scoped execution records
-- `evidence/qa/` — dated QA/build/release evidence (including the 2026-10-30 privacy/documentation audit)
-- `/specs/` — development specifications/plans/tasks for completed or active work
+- `work/` — dated build-scoped implementation and execution records
+- `evidence/qa/` — dated QA, build, release and documentation-review evidence
+- `/specs/` — historical/active development specifications, plans and tasks
 - `/.specify/` — process orchestration only
 
 Historical records intentionally preserve the state and wording that existed when the work was performed. They can therefore contain superseded version numbers, pending gates or old implementation descriptions without creating documentation drift. Current truth always comes from the normative documents listed above.
 
-## Root-level Markdown policy
+## Public entry points
 
 - `README.md` is the public product overview.
 - `AGENTS.md` and `.specify/memory/constitution.md` are non-normative entry points into `/doc`.
