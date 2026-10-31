@@ -15,7 +15,7 @@ A custom room name is stored exactly as local user-entered text. Room/UI metadat
 
 Saved-speaker, room and UI-preference data is not uploaded or cloud-synced by Remote for STR.
 
-Removing application data or uninstalling Remote for STR removes this app-private metadata.
+Removing application data or uninstalling Remote for STR removes its currently stored app-private metadata. However, the production Android manifest currently has `android:allowBackup="true"`; Android's system backup/transfer features may back up or restore eligible app data according to platform settings. Do not promise that room/speaker metadata can never leave the device through OS-level backup. The exact backup inclusion and Play disclosure must be verified before claiming a fully local-only lifecycle.
 
 
 ## Bose Wi-Fi setup (since 0.3.0)
@@ -40,8 +40,8 @@ No Wi-Fi SSID or password, Bose device ID, IP/MAC address, diagnostic trace, att
 
 ## Scope and deferred cases
 
-The public 0.3.1 release contains the update checker and voluntary feedback functionality described above. No-email-client handling, WLAN-permission refusal and network-failure paths were not included in the six positive signed-APK acceptance checks; they remain [explicitly deferred](https://github.com/K-Cosmo/remote-for-str-android/issues/7), **not verified**. See [Release status](STATUS.md) for current evidence.
+The public 0.3.2 release retains the update checker and voluntary feedback functionality described above. No-email-client handling, WLAN-permission refusal and network-failure paths were not included in the six positive signed-APK acceptance checks; they remain [explicitly deferred](https://github.com/K-Cosmo/remote-for-str-android/issues/7), **not verified**. See [Release status](STATUS.md) for current evidence.
 
-## In development — recipient handling for 0.3.2
+## Released in 0.3.2 — recipient handling
 
-The next version centralizes the project-feedback recipient for both About and SoundTouch setup mail drafts, reconstructed at runtime from reversible character codes rather than committed as a complete plaintext address. This does not prevent extraction from a client APK and does not change user-controlled, explicit sending, network disclosure or the email provider's handling of ordinary sender metadata. No backend is introduced.
+Version 0.3.2 centralizes the project-feedback recipient for both About and SoundTouch setup mail drafts, reconstructed at runtime from reversible character codes rather than committed as a complete plaintext address. This does not prevent extraction from a client APK and does not change user-controlled, explicit sending, network disclosure or the email provider's handling of ordinary sender metadata. No backend is introduced.

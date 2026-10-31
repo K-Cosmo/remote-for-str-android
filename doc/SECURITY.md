@@ -79,6 +79,6 @@ The offline model suggestion catalog reflects Bose's SoundTouch app support list
 
 Published diagnostics and reproduction notes must redact household/organizational LAN IP addresses, SSIDs, device IDs, MAC addresses, user paths, authentication data and private credentials. Use RFC 5737 documentation addresses for non-protocol-specific host examples. Current `/doc` Markdown is checked in CI for suspicious RFC1918 endpoints, with the documented Bose candidate setup host explicitly allowed. This is defense in depth, not a complete credential scanner. Previously published Git objects and GitHub Pull Request caches require the separate controlled-history procedure in `GIT_HISTORY_CLEANUP.md`. Editing current Markdown does not remove old blobs referenced by historic commits, release tags, PR refs or forks.
 
-## In development — public contact anti-harvesting (0.3.2)
+## Released in 0.3.2 — public contact anti-harvesting
 
 Runtime decoding of the feedback mailbox raises the cost of elementary literal-text harvesting; it is **not encryption, an access-control boundary or a guarantee against binary reverse engineering**. The same recipient must be used for opt-in About and SoundTouch drafts, and the external email app shows the actual destination. Prevent accidental full mailbox literals in new Markdown, Kotlin and XML with CI. Earlier public commits and old signed APKs can still be inspected; these immutable historical artifacts are not retroactively concealed by the current change.
