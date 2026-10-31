@@ -1,11 +1,17 @@
 # Status
 
+## Remote for STR 0.3.2 — IN DEVELOPMENT / QA
+
+**Development version:** 0.3.2
+**Latest public release:** 0.3.1
+**Status:** IN DEVELOPMENT / QA
+**Date:** 2026-10-31
+
+STR-028 stages the compact **Remote STR** Android launcher label (project and Devices title remain **Remote for STR**), a single updated and runtime-decoded feedback mailbox for both opt-in email actions, and a public Markdown / Android-source anti-harvesting regression check. The `app.strremote.android` production package, signing identity and user preferences remain unchanged. No signed 0.3.2 APK, phone-upgrade acceptance or new GitHub release exists yet. The currently published **0.3.1** APK is unchanged. See [BUILD-0014](work/BUILD-0014.md) and [planned QA](PLANNED.md#str-028--032-display-label-and-feedback-recipient-acceptance).
+
 ## Remote for STR 0.3.1 — RELEASED / ACCEPTED
 
-**Development version:** 0.3.1
-**Latest public release:** 0.3.1
-**Status:** RELEASED / ACCEPTED
-**Date:** 2026-10-31
+**Release date:** 2026-10-31
 
 BUILD-0013 was merged via [PR #6](https://github.com/K-Cosmo/remote-for-str-android/pull/6) and publicly released as **[Remote for STR 0.3.1](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1)** on 2026-10-31 at **09:56:33 UTC** (10:56:33 CET). GitHub Release ID `429849089`, `draft=false`, `prerelease=false`, currently returned by `releases/latest`.
 

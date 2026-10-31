@@ -63,7 +63,8 @@ It verifies at minimum:
 - an ACCEPTED release has no unchecked entries in `RELEASE_GATES.md`;
 - an ACCEPTED release is no longer described as the current final-publication step in `PLANNED.md`;
 - relative Markdown links in root public entry points and current `doc/*.md` authorities resolve; dated work/QA remain historical snapshots.
-- decision and finding IDs are unique in their respective canonical registers.
+- decision and finding IDs are unique in their respective canonical registers;
+- public Markdown (including historical records) and Android source/resources contain **no complete email address literal**. Reference contact functionality without publishing mailbox strings. Runtime string encoding is only a superficial anti-harvest barrier, not cryptographic protection.
 
 The script runs locally **and in GitHub Android CI** before compilation. CI verifies version/release metadata and the Android build; human review is still required for semantic drift and private-data risks that cannot be detected deterministically.
 

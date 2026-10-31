@@ -2,6 +2,18 @@
 
 A release candidate may be marked final/ACCEPTED only when all applicable gates pass.
 
+## 0.3.2 — OPEN / NOT RELEASED (STR-028 / BUILD-0014)
+
+- [ ] Green final PR CI for documentation anti-harvesting, JVM tests, Android build/lint; verify production package/signature invariants.
+- [ ] On-device launcher label **Remote STR** while in-app title, About and trademark/community text remain **Remote for STR**.
+- [ ] Both SoundTouch-model feedback and About contact compose voluntary email drafts to the updated destination, with appropriate localized subject/body where applicable.
+- [ ] Sign exact committed source with the original key; verify APK SHA-256, signature and 16 KiB alignment; test *in-place upgrade from signed 0.3.1* and saved speaker/room persistence.
+- [ ] Owner review, explicit merge and publication approval, annotated tag on signing source, exact public APK/checksum verification. Preserve published 0.3.1 assets.
+
+The reversible mailbox encoding is **not** encryption or full anti-spam protection. The earlier publicly released APK/source history is unaffected.
+
+---
+
 ## 0.3.1 — RELEASED / ACCEPTED (BUILD-0013, PR #6)
 
 - [x] English WLAN wizard usability confirmed by user on actual Android device (2026-10-30); **language/UI gate only**
