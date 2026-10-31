@@ -19,21 +19,21 @@
 | STR-012 | Additional SoundTouch model compatibility evidence | P2 | BACKLOG |
 | STR-006 | Evaluate STR authentication changes when upstream provides them | P2 | BACKLOG |
 
-## Next development and community integration (2026-10-31)
+## Post-0.3.1 development and community integration (2026-10-31)
 
-The signed public release `v0.3.0` stays unchanged. `IMPLEMENTED` refers to code merged from PR #6 into `main`. The **six specified smartphone checks for the signed 0.3.1 candidate passed** on 2026-10-31. The owner approved deferring untested edge cases; normal merge of PR #6 to `main` completed with green CI. Public release is separate. Untested cases are not certified as working. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
+The historical public release `v0.3.0` remains unchanged. **Remote for STR `v0.3.1` is now the latest published signed release**, with exactly matching APK digest and six device checks passed. PR #6 was merged normally with green CI. The owner explicitly deferred untested negative cases to STR-027: they are **not certified**. Refer to [Planned](PLANNED.md) and [BUILD-0013](work/BUILD-0013.md).
 
 | ID | Item | Priority | State |
 |---|---|---:|---|
-| STR-017 | BUILD-0013: GitHub update checker + compact STR WebView header | P1 | 0.3.1 signed candidate phone QA PASS; live future-version update alert not yet observable; upstream CSS contract pending |
-| STR-018 | Three-model wizard, offline suggestions, optional feedback, DE/EN strings | P1 | English language, dropdown, compact feedback, signed candidate wizard PASS on phone; exhaustive negative cases still untested |
-| STR-019 | Email composer: voluntary user-triggered feedback, prefill recipient/subject/body | P0 | Signed candidate phone QA PASS with installed mail client; no-client failure path untested; text spacing cosmetic/deferred |
-| STR-020 | Product branding **Remote for STR**; preserve package and original signing identity | P0 | **Signed 0.3.1 phone QA PASS**, including 0.3.0 in-place upgrade and saved devices; public release not yet issued |
-| STR-021 | Bilingual native independent-community Info/About notice next to Devices title | P0 | **Signed 0.3.1 phone QA PASS** for visible title/About placement and absence on Remote; exhaustive accessibility/negative cases not claimed |
+| STR-017 | BUILD-0013: GitHub update checker + compact STR WebView header | P1 | **RELEASED in 0.3.1**; positive newer-version alert and upstream CSS contract remain deferred/follow-up |
+| STR-018 | Three-model wizard, offline suggestions, optional feedback, DE/EN strings | P1 | **RELEASED / phone QA PASS in 0.3.1**; deferred negative paths STR-027 |
+| STR-019 | Email composer: voluntary user-triggered feedback, prefill recipient/subject/body | P0 | **RELEASED / phone QA PASS in 0.3.1** with mail client; no-client path not tested, deferred STR-027 |
+| STR-020 | Product branding **Remote for STR**; preserve package and original signing identity | P0 | **RELEASED / ACCEPTED in 0.3.1**, upgrade over 0.3.0 preserved speakers/rooms |
+| STR-021 | Bilingual native independent-community Info/About notice next to Devices title | P0 | **RELEASED / phone QA PASS in 0.3.1**; extended accessibility/negative paths not certified |
 | STR-022 | Coordinate robust upstream STR WebUI safe-area/header styling API instead of brittle `body > header`, `#dev`, `#powerBtn` injection | P1 | PLANNED — upstream offered to discuss a stable hook; PR #6 compatibility risk |
 | STR-023 | Federated community support: own STR upstream Show-and-tell thread; link to project's GitHub Discussions/Issues + optional email feedback (no GitHub account needed) | P1 | PLANNED |
 | STR-024 | Sanitize historical LAN information in Git refs, remove stale branches | P0 | **NORMAL REFS DONE:** 2 branches/5 tags rewritten, six stale branches deleted. **RESIDUAL:** GitHub-managed old PR refs and caches |
-| STR-025 | Request listing on the upstream STR Community Apps page after name, About notice and EN wizard QA are complete | P1 | PLANNED — depends on STR-020/021/018 acceptance |
+| STR-025 | Request listing on upstream STR Community Apps page after brand, About notice, EN wizard QA | P1 | **READY TO REQUEST**; naming/Info/EN release requirements met in v0.3.1. Actual upstream listing not yet confirmed |
 | STR-026 | Extend hardware evidence for additional original-Bose-firmware SoundTouch models; crowd reports remain unverified | P2 | BACKLOG |
 
 | STR-027 | [Follow-up QA after 0.3.1](https://github.com/K-Cosmo/remote-for-str-android/issues/7): absent email app, denied Wi-Fi permission, failure/timeout recovery, unverified Bose/router/firmware combinations and future-version update alert | P1 | **OWNER-APPROVED DEFERRED from 0.3.1 on 2026-10-31; NOT TESTED**. Track explicitly and avoid general compatibility claims |

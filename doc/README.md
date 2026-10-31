@@ -4,9 +4,10 @@
 
 ## Current release
 
-- latest signed public release: **0.3.0** (published as *STR Remote*)
-- current **merged but unpublished** signed candidate: **Remote for STR 0.3.1** (normal merge of PR #6 to main; signed source and QA recorded separately)
-- public **0.3.0** status: **RELEASED / ACCEPTED**; **0.3.1** status: **SIGNED CANDIDATE / DEVICE QA PASSED**, not publicly released
+- latest signed public release: **[Remote for STR 0.3.1](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1)**, **RELEASED / ACCEPTED** (2026-10-31)
+- prior signed public release: **0.3.0** (published as *STR Remote*, unchanged)
+- signed source: `0e6bab9d9e1bcac19b542755b7a1774c69d2776a`; GitHub release APK SHA-256: `8100334f067346c9987a68969bdebd9065455bfe73c21a0634f0dba42ddbd759`
+- approved-deferred negative cases: [STR-027](https://github.com/K-Cosmo/remote-for-str-android/issues/7), **NOT TESTED**
 - release status and artifact identity: `STATUS.md`
 - accepted release gates: `RELEASE_GATES.md`
 - implemented release history: `CHANGELOG.md`

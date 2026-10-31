@@ -1,16 +1,16 @@
 # Changelog
 
-Only implemented changes belong here. Verification/acceptance state is tracked separately.
+Only implemented changes belong here. Verification/acceptance evidence remains in `STATUS.md`, `RELEASE_GATES.md` and dated QA records.
 
-## Unreleased (0.3.1 signed candidate, BUILD-0013, PR #6)
+## 0.3.1 — 2026-10-31
 
 - Renamed Android app to **Remote for STR** in the launcher, native Devices toolbar, German/English UI, guided SoundTouch setup explanations and community email draft version field.
-- Prepared the next signed release APK naming convention: `Remote-for-STR-<version>.apk`. The update checker also recognizes historical `STR-Remote-<version>.apk` assets.
+- Introduced signed release APK naming `Remote-for-STR-<version>.apk`. The update checker also recognizes historical `STR-Remote-<version>.apk` assets.
 - Renamed development CI artifact to `remote-for-str-debug` and Gradle project display name to `RemoteForSTR`.
-- Staged Android `versionName=0.3.1` and `versionCode=12` in the unreleased development branch; the signed local candidate exists but no GitHub `v0.3.1` tag or public release exists.
+- Released Android `versionName=0.3.1` and `versionCode=12` after six on-device acceptance checks and an in-place signed upgrade from 0.3.0 preserving saved speakers/rooms.
 - Left production Android application ID `app.strremote.android` and original signing certificate untouched, preserving update compatibility.
 - Added documentation/version consistency verification to GitHub CI and sanitized the current files for two historical QA logs using reserved documentation IP addresses.
-- GitHub repository was renamed to `K-Cosmo/remote-for-str-android` and direct API/release/source/support URLs were updated; added a regression assertion for the canonical Releases API URL. No new signed public version or v0.3.0 artifact modification.
+- GitHub repository was renamed to `K-Cosmo/remote-for-str-android` and direct API/release/source/support URLs were updated; added a regression assertion for the canonical Releases API URL. Published signed GitHub Release [`v0.3.1`](https://github.com/K-Cosmo/remote-for-str-android/releases/tag/v0.3.1) without modifying the historic v0.3.0 release assets.
 
 
 ## 0.3.0 — 2026-10-30
